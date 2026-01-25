@@ -1,0 +1,100 @@
+import { Topic, QuizResult, Concept } from '@/types';
+
+// Initial mock data to seed the app if empty
+const INITIAL_TOPICS: Topic[] = [
+    {
+        id: 'topic-1',
+        name: 'Photosynthesis',
+        concepts: [
+            { id: 'c-1', text: 'Light-dependent reactions', status: 'strong' },
+            { id: 'c-2', text: 'Calvin cycle', status: 'weak' },
+            { id: 'c-3', text: 'Chloroplast structure', status: 'neutral' },
+        ],
+        memoryScore: 65,
+        lastPracticed: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
+        nextReviewDate: new Date(Date.now() - 1000 * 60 * 60 * 2), // Due now
+        totalAttempts: 3,
+    },
+];
+
+const STORAGE_KEY = 'learning-retention-mvp-data';
+
+export const storage = {
+    getTopics: (): Topic[] => {
+        if (typeof window === 'undefined') return INITIAL_TOPICS;
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_TOPICS));
+            return INITIAL_TOPICS;
+        }
+        // Need to parse dates back from strings
+        return JSON.parse(data, (key, value) => {
+            if (key === 'lastPracticed' || key === 'nextReviewDate') return new Date(value);
+            return value;
+        });
+    },
+
+    saveTopic: (topic: Topic) => {
+        const topics = storage.getTopics();
+        const existingIndex = topics.findIndex((t) => t.id === topic.id);
+
+        if (existingIndex >= 0) {
+            topics[existingIndex] = topic;
+        } else {
+            topics.push(topic);
+        }
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(topics));
+        }
+    },
+
+    // Create a new topic from just a name
+    createTopic: (name: string): Topic => {
+        // In a real app, this would extract concepts. For MVP, we mock them.
+        const mockConcepts: Concept[] = [
+            { id: crypto.randomUUID(), text: `Basic principles of ${name}`, status: 'neutral' },
+            { id: crypto.randomUUID(), text: `Advanced application of ${name}`, status: 'neutral' },
+            { id: crypto.randomUUID(), text: `Common pitfalls in ${name}`, status: 'neutral' },
+        ];
+
+        const newTopic: Topic = {
+            id: crypto.randomUUID(),
+            name,
+            concepts: mockConcepts,
+            memoryScore: 0,
+            lastPracticed: new Date(),
+            nextReviewDate: new Date(), // Due immediately
+            totalAttempts: 0
+        };
+
+        storage.saveTopic(newTopic);
+        return newTopic;
+    },
+
+    updateTopicAfterQuiz: (topicId: string, result: QuizResult) => {
+        const topics = storage.getTopics();
+        const topic = topics.find(t => t.id === topicId);
+        if (!topic) return;
+
+        // Simple scoring logic: 
+        // New Score = (Old Score * attempts + current score) / (attempts + 1)
+        // Or just weighted average. Let's keep it simple as per Master Prompt.
+        topic.memoryScore = Math.round((topic.memoryScore * topic.totalAttempts + result.score) / (topic.totalAttempts + 1));
+        topic.totalAttempts += 1;
+        topic.lastPracticed = new Date();
+
+        // Spaced repetition logic (Naive)
+        // If score > 80, 3 days. > 60, 1 day. Else, 4 hours.
+        const hoursToAdd = result.score > 80 ? 72 : result.score > 60 ? 24 : 4;
+        topic.nextReviewDate = new Date(Date.now() + 1000 * 60 * 60 * hoursToAdd);
+
+        // Update concepts
+        topic.concepts = topic.concepts.map(c => {
+            if (result.weakConcepts.includes(c.id)) return { ...c, status: 'weak' };
+            return { ...c, status: 'strong' }; // Assume others are strong if not marked weak
+        });
+
+        storage.saveTopic(topic);
+    }
+};
