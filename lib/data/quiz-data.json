@@ -1,0 +1,79 @@
+{
+  "photosynthesis": {
+    "displayName": "Photosynthesis",
+    "questions": [
+      {
+        "id": "ps-1",
+        "conceptId": "c-1",
+        "type": "mcq",
+        "question": "Which process occurs during light-dependent reactions?",
+        "options": ["ATP and NADPH production", "Glucose synthesis", "Carbon fixation", "Oxygen consumption"],
+        "correctAnswer": "ATP and NADPH production",
+        "explanation": "Light-dependent reactions produce ATP and NADPH."
+      },
+      {
+        "id": "ps-2",
+        "conceptId": "c-2",
+        "type": "card",
+        "question": "Explain the Calvin cycle.",
+        "correctAnswer": "It fixes carbon dioxide into glucose using ATP and NADPH.",
+        "explanation": "Occurs in the stroma."
+      },
+      {
+        "id": "ps-3",
+        "conceptId": "c-3",
+        "type": "mcq",
+        "question": "Where does photosynthesis mainly occur?",
+        "options": ["Chloroplasts", "Mitochondria", "Nucleus", "Cytoplasm"],
+        "correctAnswer": "Chloroplasts",
+        "explanation": "Photosynthesis occurs in the chloroplasts of plant cells."
+      }
+    ]
+  },
+
+
+  "python": {
+    "displayName": "Python",
+    "questions": [
+      {
+        "id": "py-1",
+        "conceptId": "loops",
+        "type": "mcq",
+        "question": "Which loop is used when the number of iterations is unknown?",
+        "options": ["for", "while", "do-while", "foreach"],
+        "correctAnswer": "while",
+        "explanation": "While loops run until a condition becomes false."
+      }
+    ]
+  },
+
+  "world-war-2": {
+    "displayName": "World War II",
+    "questions": [
+      {
+        "id": "ww2-1",
+        "conceptId": "dates",
+        "type": "mcq",
+        "question": "In which year did World War II end?",
+        "options": ["1943", "1945", "1947", "1950"],
+        "correctAnswer": "1945",
+        "explanation": "WWII ended in 1945."
+      }
+    ]
+  },
+
+  "next-js": {
+    "displayName": "Next.js",
+    "questions": [
+      {
+        "id": "nx-1",
+        "conceptId": "routing",
+        "type": "mcq",
+        "question": "Which directory enables App Router?",
+        "options": ["pages", "src", "app", "components"],
+        "correctAnswer": "app",
+        "explanation": "Next.js App Router uses the app directory."
+      }
+    ]
+  }
+}

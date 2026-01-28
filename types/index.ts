@@ -16,6 +16,7 @@ export type Concept = {
 
 export type QuizQuestion = {
     id: string;
+    conceptId: string;
     question: string;
     type: 'mcq' | 'card';
     options?: string[];

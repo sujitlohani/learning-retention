@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { storage } from '@/lib/storage';
-import { generateQuiz } from '@/lib/quiz-generator';
+// import { generateQuiz } from '@/lib/quiz-generator';
 import { Topic, Concept, QuizQuestion, QuizResult } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -11,7 +11,10 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { CheckCircle2, XCircle, ArrowRight, RefreshCcw, Home as HomeIcon } from 'lucide-react';
+import { loadQuiz } from '@/lib/quiz-generator';
 import { Textarea } from '@/components/ui/textarea';
+
+
 
 type Phase = 'review' | 'quiz' | 'result';
 
@@ -30,50 +33,69 @@ export default function LearnPage() {
     const [answers, setAnswers] = useState<Record<string, string>>({}); // valid for MCQ
     const [showFeedback, setShowFeedback] = useState(false);
     const [correctCount, setCorrectCount] = useState(0);
+    const [weakConcepts, setWeakConcepts] = useState<Set<string>>(new Set());
+
+
 
     useEffect(() => {
-        // 1. Fetch topic from storage
         const storedTopics = storage.getTopics();
         const foundTopic = storedTopics.find(t => t.id === topicId);
 
         if (foundTopic) {
             setTopic(foundTopic);
-            // 2. Generate quiz immediately so it's ready
-            setQuizQuestions(generateQuiz(foundTopic.name, foundTopic.concepts));
+            const loadedQuiz = loadQuiz(foundTopic.name, foundTopic.concepts);
+            console.log("Loaded quiz:", loadedQuiz); // debug
+            setQuizQuestions(loadedQuiz);
 
-            // 3. CRITICAL: Reset quiz state for new session
+            // Reset state
             setCurrentQuestionIndex(0);
             setScore(0);
             setAnswers({});
             setShowFeedback(false);
             setCorrectCount(0);
-            setPhase('review'); // Ensure we start at review
+            setWeakConcepts(new Set());
+            setPhase('review');
         } else {
-            // Handle 404
             router.push('/');
         }
     }, [topicId, router]);
 
+
     const handleStartQuiz = () => {
+        if (!quizQuestions.length) {
+            alert("No questions available for this topic.");
+            return;
+        }
         setPhase('quiz');
     };
 
-    const handleAnswer = (answer: string) => {
-        // For card type (manual self-assessment), we treat "I know this" as correct
-        const currentQuestion = quizQuestions[currentQuestionIndex];
 
+    const handleAnswer = (answer: string) => {
+        const currentQuestion = quizQuestions[currentQuestionIndex];
+        if (!currentQuestion) return;
+        
         const isCorrect = currentQuestion.type === 'mcq'
             ? answer === currentQuestion.correctAnswer
-            : answer === 'correct'; // For cards, buttons will return 'correct' or 'incorrect'
+            : answer === 'correct';
 
         if (isCorrect) {
-            setScore(prev => prev + 10); // Standardize points
-            setCorrectCount(prev => prev + 1);
+            setScore(prev => prev + 10); // increment score
+            setCorrectCount(prev => prev + 1); // increment correct count
+        } else {
+            setWeakConcepts(prev => {
+                const next = new Set(prev);
+                next.add(currentQuestion.conceptId);
+                return next;
+            });
         }
 
         setAnswers(prev => ({ ...prev, [currentQuestion.id]: answer }));
-        // For cards, we are already showing feedback, so we just wait for next.
+
+        if (currentQuestion.type === 'mcq') {
+            setShowFeedback(true);
+        }
     };
+
 
     const nextQuestion = () => {
         if (currentQuestionIndex < quizQuestions.length - 1) {
@@ -94,7 +116,7 @@ export default function LearnPage() {
             score: finalScore,
             correctCount,
             totalCount: quizQuestions.length,
-            weakConcepts: [] // TODO: map wrong answers back to concepts
+            weakConcepts: Array.from(weakConcepts)
         };
 
         storage.updateTopicAfterQuiz(topic.id, result);
@@ -145,6 +167,7 @@ export default function LearnPage() {
     // --- VIEW: QUIZ ---
     if (phase === 'quiz') {
         const question = quizQuestions[currentQuestionIndex];
+        if (!question) return <div className="p-8 text-center">No quiz questions found for this topic.</div>;
         const progress = ((currentQuestionIndex) / quizQuestions.length) * 100;
 
         return (

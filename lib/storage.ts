@@ -96,5 +96,17 @@ export const storage = {
         });
 
         storage.saveTopic(topic);
+    },
+
+    deleteTopic: (id: string) => {
+        const topics = storage.getTopics();
+        const filtered = topics.filter(t => t.id !== id);
+
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+            // Force a reload or storage event if needed, but managing state in React is better.
+            // For this simple MVP, callers should reload their local state.
+        }
     }
 };
+
