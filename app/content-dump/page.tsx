@@ -4,12 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { storage } from '@/lib/storage';
 import { Topic } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Library, Search, ChevronRight, BarChart3, Clock, Trash2 } from 'lucide-react';
+import { Library, Search, ChevronRight, BarChart3, Clock, Trash2, BookOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
     AlertDialog,
@@ -45,128 +44,145 @@ export default function ContentDumpPage() {
     };
 
     return (
-        <div className="container mx-auto p-4 md:p-8 max-w-6xl h-[calc(100vh-4rem)] flex flex-col">
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h1 className="text-3xl font-bold font-sans flex items-center gap-2">
-                        <Library className="w-8 h-8 text-primary" /> Content Dump
+        <div className="min-h-screen bg-background dot-grid">
+            <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="animate-fade-in">
+                    <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-3">
+                        <Library className="w-6 h-6 text-primary" />
+                        Content Dump
                     </h1>
-                    <p className="text-muted-foreground">Deep dive into your learning history.</p>
+                    <p className="text-muted-foreground mt-1">Your complete learning history</p>
                 </div>
-            </div>
 
-            <div className="grid md:grid-cols-12 gap-6 flex-1 min-h-0">
-                {/* Left Panel: Topic List */}
-                <Card className="md:col-span-4 flex flex-col h-full border-none shadow-none md:border md:shadow-sm bg-transparent md:bg-card">
-                    <div className="p-4 border-b space-y-4">
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="Filter topics..."
-                                className="pl-8"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                            />
-                        </div>
-                    </div>
-                    <ScrollArea className="flex-1">
-                        <div className="p-2 space-y-1">
-                            {filteredTopics.map((topic) => (
-                                <button
-                                    key={topic.id}
-                                    onClick={() => setSelectedTopic(topic)}
-                                    className={`w-full text-left px-4 py-3 rounded-md transition-colors flex items-center justify-between group ${selectedTopic?.id === topic.id
-                                        ? 'bg-primary/10 text-primary font-medium'
-                                        : 'hover:bg-muted'
-                                        }`}
-                                >
-                                    <span className="truncate">{topic.name}</span>
-                                    <ChevronRight className={`w-4 h-4 opacity-0 group-hover:opacity-50 transition-opacity ${selectedTopic?.id === topic.id ? 'opacity-100 text-primary' : ''}`} />
-                                </button>
-                            ))}
-                            {filteredTopics.length === 0 && (
-                                <div className="p-8 text-center text-muted-foreground text-sm">
-                                    No topics found.
-                                </div>
-                            )}
-                        </div>
-                    </ScrollArea>
-                </Card>
-
-                {/* Right Panel: Detail View */}
-                <div className="md:col-span-8 h-full overflow-y-auto">
-                    {selectedTopic ? (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="bg-card border rounded-xl p-6 shadow-sm">
-                                <div className="flex items-start justify-between mb-6">
-                                    <div>
-                                        <h2 className="text-3xl font-bold mb-2">{selectedTopic.name}</h2>
-                                        <div className="flex gap-4 text-sm text-muted-foreground">
-                                            <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> Learned {new Date(selectedTopic.lastPracticed).toLocaleDateString()}</span>
-                                            <span className="flex items-center gap-1"><BarChart3 className="w-4 h-4" /> Attempts: {selectedTopic.totalAttempts}</span>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-4xl font-bold text-primary">{selectedTopic.memoryScore}%</div>
-                                        <div className="text-xs text-muted-foreground uppercase">Retention</div>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-2">
-                                    <Button onClick={() => router.push(`/learn/${selectedTopic.id}`)}>
-                                        Take Quiz Again
-                                    </Button>
-
-                                    <AlertDialog>
-                                        <AlertDialogTrigger asChild>
-                                            <Button variant="destructive" size="icon">
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </AlertDialogTrigger>
-                                        <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                                <AlertDialogTitle>Delete Topic?</AlertDialogTitle>
-                                                <AlertDialogDescription>
-                                                    This will delete "{selectedTopic.name}" and all associated quiz history. This action cannot be undone.
-                                                </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => handleDelete(selectedTopic.id)}>
-                                                    Delete
-                                                </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                    </AlertDialog>
-                                </div>
+                <div className="grid lg:grid-cols-12 gap-6 animate-slide-up delay-100">
+                    {/* Left Panel: Topic List */}
+                    <Card className="lg:col-span-4 border">
+                        <div className="p-4 border-b">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Filter topics..."
+                                    className="pl-9 h-10"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                />
                             </div>
+                        </div>
+                        <ScrollArea className="h-[calc(100vh-300px)]">
+                            <div className="p-2 space-y-1">
+                                {filteredTopics.map((topic) => (
+                                    <button
+                                        key={topic.id}
+                                        onClick={() => setSelectedTopic(topic)}
+                                        className={`w-full text-left px-3 py-2.5 rounded-lg transition-colors flex items-center justify-between group text-sm ${selectedTopic?.id === topic.id
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'hover:bg-accent'
+                                            }`}
+                                    >
+                                        <span className="truncate">{topic.name}</span>
+                                        <ChevronRight className={`w-4 h-4 transition-opacity ${selectedTopic?.id === topic.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'
+                                            }`} />
+                                    </button>
+                                ))}
+                                {filteredTopics.length === 0 && (
+                                    <div className="p-8 text-center text-muted-foreground text-sm">
+                                        No topics found.
+                                    </div>
+                                )}
+                            </div>
+                        </ScrollArea>
+                    </Card>
 
-                            <Tabs defaultValue="concepts" className="w-full">
-                                <TabsList className="w-full justify-start h-auto p-1 bg-transparent border-b rounded-none mb-4">
-                                    <TabsTrigger value="concepts" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-2">
-                                        Concepts ({selectedTopic.concepts.length})
-                                    </TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="concepts" className="space-y-4">
-                                    {selectedTopic.concepts.map((concept) => (
-                                        <div key={concept.id} className="p-4 border rounded-lg bg-card flex items-center justify-between">
-                                            <div className="font-medium">{concept.text}</div>
-                                            {concept.status === 'strong' && <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-none">Strong</Badge>}
-                                            {concept.status === 'weak' && <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-none">Weak</Badge>}
-                                            {concept.status === 'neutral' && <Badge variant="outline">Neutral</Badge>}
+                    {/* Right Panel: Detail View */}
+                    <div className="lg:col-span-8">
+                        {selectedTopic ? (
+                            <div className="space-y-4">
+                                <Card className="border">
+                                    <CardContent className="p-6">
+                                        <div className="flex items-start justify-between mb-4">
+                                            <div>
+                                                <h2 className="text-2xl font-bold mb-2">{selectedTopic.name}</h2>
+                                                <div className="flex gap-4 text-sm text-muted-foreground">
+                                                    <span className="flex items-center gap-1">
+                                                        <Clock className="w-4 h-4" />
+                                                        {new Date(selectedTopic.lastPracticed).toLocaleDateString()}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <BarChart3 className="w-4 h-4" />
+                                                        {selectedTopic.totalAttempts} attempts
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-3xl font-bold text-primary">{selectedTopic.memoryScore}%</div>
+                                                <div className="text-xs text-muted-foreground">Retention</div>
+                                            </div>
                                         </div>
-                                    ))}
-                                </TabsContent>
-                            </Tabs>
-                        </div>
-                    ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-8 border-2 border-dashed rounded-xl bg-muted/30">
-                            <Library className="w-16 h-16 mb-4 opacity-20" />
-                            <p className="text-lg font-medium">Select a topic to view details</p>
-                            <p className="text-sm">Browse your entire learning history here.</p>
-                        </div>
-                    )}
+
+                                        <div className="flex gap-2">
+                                            <Button onClick={() => router.push(`/learn/${selectedTopic.id}`)}>
+                                                <BookOpen className="w-4 h-4 mr-2" />
+                                                Take Quiz
+                                            </Button>
+
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                    <Button variant="outline" size="icon">
+                                                        <Trash2 className="w-4 h-4 text-destructive" />
+                                                    </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Delete Topic?</AlertDialogTitle>
+                                                        <AlertDialogDescription>
+                                                            This will delete "{selectedTopic.name}" and all quiz history. This cannot be undone.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction
+                                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                                            onClick={() => handleDelete(selectedTopic.id)}
+                                                        >
+                                                            Delete
+                                                        </AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+
+                                {/* Concepts List */}
+                                <Card className="border">
+                                    <CardHeader className="pb-3">
+                                        <CardTitle className="text-base">Concepts ({selectedTopic.concepts.length})</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-2">
+                                        {selectedTopic.concepts.map((concept) => (
+                                            <div key={concept.id} className="p-3 rounded-lg bg-muted/50 flex items-center justify-between">
+                                                <span className="text-sm">{concept.text}</span>
+                                                <Badge variant="outline" className={
+                                                    concept.status === 'strong' ? 'text-green-600 border-green-300' :
+                                                        concept.status === 'weak' ? 'text-red-600 border-red-300' : ''
+                                                }>
+                                                    {concept.status}
+                                                </Badge>
+                                            </div>
+                                        ))}
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        ) : (
+                            <div className="h-[calc(100vh-200px)] flex flex-col items-center justify-center text-muted-foreground border-2 border-dashed rounded-xl">
+                                <Library className="w-12 h-12 mb-4 opacity-30" />
+                                <p className="font-medium">Select a topic to view details</p>
+                                <p className="text-sm">Browse your learning history here.</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

@@ -3,74 +3,98 @@
     "displayName": "Photosynthesis",
     "questions": [
       {
-        "id": "ps-1",
+        "id": "ps-c1-basic-1",
         "conceptId": "c-1",
+        "level": "basic",
         "type": "mcq",
         "question": "Which process occurs during light-dependent reactions?",
-        "options": ["ATP and NADPH production", "Glucose synthesis", "Carbon fixation", "Oxygen consumption"],
-        "correctAnswer": "ATP and NADPH production",
-        "explanation": "Light-dependent reactions produce ATP and NADPH."
+        "options": [
+          "ATP and NADPH production",
+          "Glucose synthesis",
+          "Carbon fixation",
+          "Oxygen consumption"
+        ],
+        "correctAnswer": "ATP and NADPH production"
       },
       {
-        "id": "ps-2",
-        "conceptId": "c-2",
+        "id": "ps-c1-advanced-1",
+        "conceptId": "c-1",
+        "level": "advanced",
         "type": "card",
-        "question": "Explain the Calvin cycle.",
-        "correctAnswer": "It fixes carbon dioxide into glucose using ATP and NADPH.",
-        "explanation": "Occurs in the stroma."
+        "question": "Why are light-dependent reactions essential for the Calvin cycle?",
+        "correctAnswer": "They produce ATP and NADPH needed for carbon fixation."
       },
       {
-        "id": "ps-3",
-        "conceptId": "c-3",
+        "id": "ps-c2-pitfall-1",
+        "conceptId": "c-2",
+        "level": "pitfall",
         "type": "mcq",
-        "question": "Where does photosynthesis mainly occur?",
-        "options": ["Chloroplasts", "Mitochondria", "Nucleus", "Cytoplasm"],
-        "correctAnswer": "Chloroplasts",
-        "explanation": "Photosynthesis occurs in the chloroplasts of plant cells."
+        "question": "Which molecule is NOT directly produced in the Calvin cycle?",
+        "options": [
+          "G3P",
+          "ATP",
+          "ADP",
+          "NADP+"
+        ],
+        "correctAnswer": "ATP"
       }
     ]
   },
-
-
   "python": {
     "displayName": "Python",
     "questions": [
       {
         "id": "py-1",
         "conceptId": "loops",
+        "level": "basic",
         "type": "mcq",
         "question": "Which loop is used when the number of iterations is unknown?",
-        "options": ["for", "while", "do-while", "foreach"],
+        "options": [
+          "for",
+          "while",
+          "do-while",
+          "foreach"
+        ],
         "correctAnswer": "while",
         "explanation": "While loops run until a condition becomes false."
       }
     ]
   },
-
-  "world-war-2": {
+  "world war 2": {
     "displayName": "World War II",
     "questions": [
       {
         "id": "ww2-1",
         "conceptId": "dates",
+        "level": "basic",
         "type": "mcq",
         "question": "In which year did World War II end?",
-        "options": ["1943", "1945", "1947", "1950"],
+        "options": [
+          "1943",
+          "1945",
+          "1947",
+          "1950"
+        ],
         "correctAnswer": "1945",
         "explanation": "WWII ended in 1945."
       }
     ]
   },
-
   "next-js": {
     "displayName": "Next.js",
     "questions": [
       {
         "id": "nx-1",
         "conceptId": "routing",
+        "level": "basic",
         "type": "mcq",
         "question": "Which directory enables App Router?",
-        "options": ["pages", "src", "app", "components"],
+        "options": [
+          "pages",
+          "src",
+          "app",
+          "components"
+        ],
         "correctAnswer": "app",
         "explanation": "Next.js App Router uses the app directory."
       }

@@ -6,106 +6,154 @@ import { storage } from '@/lib/storage';
 import { Topic } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ArrowRight, BookOpen, Brain, Clock } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowRight, BookOpen, Brain, Clock, Sparkles, Search } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
   const [topicName, setTopicName] = useState('');
   const [dueTopics, setDueTopics] = useState<Topic[]>([]);
+  const [recentTopics, setRecentTopics] = useState<Topic[]>([]);
 
   useEffect(() => {
-    // Load topics and filter for those due for review or just general recent ones for MVP
     const allTopics = storage.getTopics();
     const now = new Date();
-    // Simple filter: topics where nextReviewDate < now, or just show all for MVP visibility
     const due = allTopics.filter(t => new Date(t.nextReviewDate) <= now);
-    // If no due topics, maybe show recent ones to populate the UI?
-    // Let's rely on the explicit "Due" logic but fall back to showing everything if strictly needed.
-    // Master prompt says: "Cockpit shows all... Home is action".
-    // But spaced repetition flow says: "Cockpit shows due... click... navigates to Home".
-    // AND "Home... Student enters topic... OR Spaced Repetition Flow... Navigates to Home with pre-loaded topic".
+    const recent = allTopics
+      .sort((a, b) => new Date(b.lastPracticed).getTime() - new Date(a.lastPracticed).getTime())
+      .slice(0, 4);
 
-    // Actually, let's show "Up Next" on Home too, for easy access.
-    setDueTopics(due.length > 0 ? due : allTopics.slice(0, 3));
+    setDueTopics(due);
+    setRecentTopics(recent);
   }, []);
 
   const handleStartLearning = () => {
     if (!topicName.trim()) return;
-    // Create new topic and redirect to quiz/learning flow
     const newTopic = storage.createTopic(topicName);
     router.push(`/learn/${newTopic.id}`);
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="max-w-xl w-full space-y-8">
+    <div className="min-h-screen bg-background dot-grid">
+      <div className="p-6 lg:p-10 max-w-5xl mx-auto space-y-10">
 
         {/* Hero Section */}
-        <div className="text-center space-y-4">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <Brain className="w-10 h-10 text-primary" />
-            </div>
+        <div className="pt-8 lg:pt-16 space-y-6 animate-fade-in">
+          <div className="flex items-center gap-2 text-primary">
+            <Sparkles className="w-5 h-5" />
+            <span className="text-sm font-medium uppercase tracking-wider">Active Recall Engine</span>
           </div>
-          <h1 className="text-4xl font-bold font-sans tracking-tight text-foreground">
-            What do you want to <span className="text-primary">retain</span> today?
+          <h1 className="text-3xl lg:text-5xl font-bold text-foreground leading-tight max-w-2xl">
+            What do you want to{' '}
+            <span className="text-gradient">learn</span>{' '}
+            today?
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Stop forgetting. Start retrieving. The active recall engine for your brain.
+          <p className="text-muted-foreground text-lg max-w-lg">
+            Enter any topic. We'll quiz you to build lasting memory.
           </p>
         </div>
 
-        {/* Input Section */}
-        <Card className="border-2 shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex gap-2">
+        {/* AI Search Input */}
+        <div className="animate-slide-up delay-100">
+          <div className="ai-input flex gap-3 p-2 bg-card border rounded-xl shadow-sm">
+            <div className="flex-1 flex items-center gap-3 px-3">
+              <Search className="w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder="e.g., Photosynthesis, React Hooks, World War II..."
-                className="text-lg h-12"
+                className="border-0 shadow-none focus-visible:ring-0 text-base h-12 bg-transparent"
                 value={topicName}
                 onChange={(e) => setTopicName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleStartLearning()}
               />
-              <Button size="lg" className="h-12 px-6" onClick={handleStartLearning}>
-                Start <ArrowRight className="ml-2 w-4 h-4" />
-              </Button>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Due for Review Section */}
-        {dueTopics.length > 0 && (
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium uppercase tracking-wider">Due for Review</span>
-            </div>
-
-            <div className="grid gap-3">
-              {dueTopics.map((topic) => (
-                <Card
-                  key={topic.id}
-                  className="hover:bg-accent/50 transition-colors cursor-pointer group border-l-4 border-l-primary"
-                  onClick={() => router.push(`/learn/${topic.id}`)}
-                >
-                  <CardContent className="p-4 flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{topic.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {topic.concepts.length} concepts • Score: {topic.memoryScore}%
-                      </p>
-                    </div>
-                    <Button variant="ghost" size="icon" className="group-hover:translate-x-1 transition-transform">
-                      <BookOpen className="w-5 h-5 text-muted-foreground" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Button
+              size="lg"
+              className="h-12 px-6 text-sm font-semibold"
+              onClick={handleStartLearning}
+              disabled={!topicName.trim()}
+            >
+              Start Learning
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
           </div>
-        )}
+        </div>
+
+        {/* Quick Actions Grid */}
+        <div className="grid lg:grid-cols-2 gap-6 animate-slide-up delay-200">
+
+          {/* Due for Review */}
+          <Card className="border bg-card">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4 text-destructive" />
+                <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Due for Review</span>
+                {dueTopics.length > 0 && (
+                  <span className="ml-auto text-xs bg-destructive/10 text-destructive px-2 py-0.5 rounded-full font-medium">
+                    {dueTopics.length}
+                  </span>
+                )}
+              </div>
+
+              {dueTopics.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Brain className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">All caught up! 🎉</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {dueTopics.slice(0, 3).map((topic) => (
+                    <button
+                      key={topic.id}
+                      onClick={() => router.push(`/learn/${topic.id}`)}
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors text-left group"
+                    >
+                      <div>
+                        <p className="font-medium group-hover:text-primary transition-colors">{topic.name}</p>
+                        <p className="text-xs text-muted-foreground">{topic.concepts.length} concepts</p>
+                      </div>
+                      <BookOpen className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Topics */}
+          <Card className="border bg-card">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <Brain className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recent Topics</span>
+              </div>
+
+              {recentTopics.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Sparkles className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">Start your first topic above!</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {recentTopics.map((topic) => (
+                    <button
+                      key={topic.id}
+                      onClick={() => router.push(`/learn/${topic.id}`)}
+                      className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors text-left group"
+                    >
+                      <div>
+                        <p className="font-medium group-hover:text-primary transition-colors">{topic.name}</p>
+                        <p className="text-xs text-muted-foreground">Score: {topic.memoryScore}%</p>
+                      </div>
+                      <div className={`w-2 h-2 rounded-full ${topic.memoryScore >= 80 ? 'bg-green-500' :
+                          topic.memoryScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

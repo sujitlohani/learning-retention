@@ -17,11 +17,12 @@ export type Concept = {
 export type QuizQuestion = {
     id: string;
     conceptId: string;
+    level?: 'basic' | 'advanced' | 'pitfall';
     question: string;
     type: 'mcq' | 'card';
     options?: string[];
     correctAnswer: string;
-    explanation: string;
+    explanation?: string;
 };
 
 export type QuizResult = {

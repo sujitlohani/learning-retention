@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { storage } from '@/lib/storage';
 import { Topic } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Brain, TrendingUp, Clock, AlertCircle } from 'lucide-react';
+import { Brain, TrendingUp, Clock, AlertCircle, Target, BookOpen, ArrowRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export default function CockpitPage() {
@@ -39,133 +38,176 @@ export default function CockpitPage() {
     }, []);
 
     const getScoreColor = (score: number) => {
-        if (score >= 80) return "text-green-600";
-        if (score >= 60) return "text-yellow-600";
-        return "text-red-600";
+        if (score >= 80) return "text-green-600 dark:text-green-400";
+        if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
+        return "text-red-600 dark:text-red-400";
     };
 
     const getScoreBadge = (score: number) => {
-        if (score >= 80) return <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-none">Strong</Badge>;
-        if (score >= 60) return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-none">Average</Badge>;
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 border-none">Weak</Badge>;
+        if (score >= 80) return <Badge variant="outline" className="text-green-600 border-green-300">Strong</Badge>;
+        if (score >= 60) return <Badge variant="outline" className="text-yellow-600 border-yellow-300">Average</Badge>;
+        return <Badge variant="outline" className="text-red-600 border-red-300">Weak</Badge>;
     };
 
     return (
-        <div className="container mx-auto p-4 md:p-8 max-w-5xl space-y-8">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold font-sans flex items-center gap-2">
-                        <TrendingUp className="w-8 h-8 text-primary" /> Cockpit
+        <div className="min-h-screen bg-background dot-grid">
+            <div className="p-6 lg:p-10 max-w-6xl mx-auto space-y-8">
+                {/* Header */}
+                <div className="animate-fade-in">
+                    <h1 className="text-2xl lg:text-3xl font-bold flex items-center gap-3">
+                        <TrendingUp className="w-6 h-6 text-primary" />
+                        Cockpit
                     </h1>
-                    <p className="text-muted-foreground">Your learning retention status at a glance.</p>
-                </div>
-            </div>
-
-            {/* Top Stats Row */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">{stats.totalTopics}</div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Active Topics</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className={`text-2xl font-bold ${getScoreColor(stats.averageMemory)}`}>
-                            {stats.averageMemory}%
-                        </div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Avg. Memory</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-2xl font-bold text-primary">{stats.dueCount}</div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Due to Review</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardContent className="pt-6">
-                        <div className="text-2xl font-bold">{stats.totalAttempts}</div>
-                        <p className="text-xs text-muted-foreground uppercase tracking-wider">Quiz Sessions</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <Separator />
-
-            {/* Main Content Area */}
-            <div className="grid md:grid-cols-2 gap-8">
-
-                {/* Left Column: Alerts & Due */}
-                <div className="space-y-6">
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                        <Clock className="w-5 h-5" /> Priority Review
-                    </h2>
-
-                    {stats.dueCount === 0 ? (
-                        <Card className="bg-muted/50 border-dashed">
-                            <CardContent className="flex flex-col items-center justify-center p-8 text-center space-y-2">
-                                <Brain className="w-12 h-12 text-muted-foreground/30" />
-                                <p className="text-muted-foreground font-medium">All caught up!</p>
-                                <p className="text-sm text-muted-foreground">Great job retaining your knowledge.</p>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <div className="space-y-4">
-                            {topics
-                                .filter(t => new Date(t.nextReviewDate) <= new Date())
-                                .map(topic => (
-                                    <Card key={topic.id} className="border-l-4 border-l-primary hover:shadow-md transition-shadow">
-                                        <CardContent className="p-4 flex items-center justify-between">
-                                            <div className="space-y-1">
-                                                <div className="font-semibold text-lg">{topic.name}</div>
-                                                <div className="text-sm text-muted-foreground flex items-center gap-2">
-                                                    <AlertCircle className="w-3 h-3 text-red-500" />
-                                                    Review Due
-                                                </div>
-                                            </div>
-                                            <Button size="sm" onClick={() => router.push(`/learn/${topic.id}`)}>
-                                                Review Now
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                        </div>
-                    )}
+                    <p className="text-muted-foreground mt-1">Your learning progress at a glance</p>
                 </div>
 
-                {/* Right Column: All Topics List */}
-                <div className="space-y-6">
-                    <h2 className="text-xl font-semibold flex items-center gap-2">
-                        <Brain className="w-5 h-5" /> Knowledge Base
-                    </h2>
-                    <div className="space-y-3">
-                        {topics.length === 0 ? (
-                            <div className="text-center p-8 text-muted-foreground text-sm">
-                                No topics learned yet. Start a session on the Home page.
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up delay-100">
+                    <Card className="border">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                    <BookOpen className="w-4 h-4 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold">{stats.totalTopics}</p>
+                                    <p className="text-xs text-muted-foreground">Topics</p>
+                                </div>
                             </div>
-                        ) : (
-                            topics
-                                .sort((a, b) => b.lastPracticed.getTime() - a.lastPracticed.getTime())
-                                .map(topic => (
-                                    <div key={topic.id} className="group flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-2 h-2 rounded-full ${topic.memoryScore >= 80 ? 'bg-green-500' : topic.memoryScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'}`} />
-                                            <div>
-                                                <div className="font-medium">{topic.name}</div>
-                                                <div className="text-xs text-muted-foreground">Last practiced: {new Date(topic.lastPracticed).toLocaleDateString()}</div>
+                        </CardContent>
+                    </Card>
+                    <Card className="border">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                    <Brain className="w-4 h-4 text-primary" />
+                                </div>
+                                <div>
+                                    <p className={`text-2xl font-bold ${getScoreColor(stats.averageMemory)}`}>
+                                        {stats.averageMemory}%
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">Avg. Memory</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card className="border">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${stats.dueCount > 0 ? 'bg-destructive/10' : 'bg-primary/10'}`}>
+                                    <Clock className={`w-4 h-4 ${stats.dueCount > 0 ? 'text-destructive' : 'text-primary'}`} />
+                                </div>
+                                <div>
+                                    <p className={`text-2xl font-bold ${stats.dueCount > 0 ? 'text-destructive' : ''}`}>
+                                        {stats.dueCount}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">Due</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card className="border">
+                        <CardContent className="p-4">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/10 rounded-lg">
+                                    <Target className="w-4 h-4 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold">{stats.totalAttempts}</p>
+                                    <p className="text-xs text-muted-foreground">Sessions</p>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Main Content */}
+                <div className="grid lg:grid-cols-2 gap-6 animate-slide-up delay-200">
+                    {/* Priority Review */}
+                    <Card className="border">
+                        <CardContent className="p-5">
+                            <div className="flex items-center gap-2 mb-4">
+                                <AlertCircle className="w-4 h-4 text-destructive" />
+                                <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Priority Review</span>
+                            </div>
+
+                            {stats.dueCount === 0 ? (
+                                <div className="text-center py-10 text-muted-foreground">
+                                    <Brain className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                                    <p className="font-medium">All caught up!</p>
+                                    <p className="text-sm">Great job retaining your knowledge.</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {topics
+                                        .filter(t => new Date(t.nextReviewDate) <= new Date())
+                                        .slice(0, 5)
+                                        .map(topic => (
+                                            <div
+                                                key={topic.id}
+                                                className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors group"
+                                            >
+                                                <div>
+                                                    <p className="font-medium">{topic.name}</p>
+                                                    <p className="text-xs text-destructive">Review overdue</p>
+                                                </div>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() => router.push(`/learn/${topic.id}`)}
+                                                >
+                                                    Review
+                                                    <ArrowRight className="ml-1 w-3 h-3" />
+                                                </Button>
                                             </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            {getScoreBadge(topic.memoryScore)}
-                                            <Button variant="ghost" size="sm" onClick={() => router.push(`/learn/${topic.id}`)}>
-                                                Practice
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ))
-                        )}
-                    </div>
+                                        ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Knowledge Base */}
+                    <Card className="border">
+                        <CardContent className="p-5">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Brain className="w-4 h-4 text-primary" />
+                                <span className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Knowledge Base</span>
+                            </div>
+
+                            {topics.length === 0 ? (
+                                <div className="text-center py-10 text-muted-foreground">
+                                    <BookOpen className="w-10 h-10 mx-auto mb-2 opacity-30" />
+                                    <p className="text-sm">No topics yet. Start learning!</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {topics
+                                        .sort((a, b) => new Date(b.lastPracticed).getTime() - new Date(a.lastPracticed).getTime())
+                                        .slice(0, 5)
+                                        .map(topic => (
+                                            <div
+                                                key={topic.id}
+                                                className="flex items-center justify-between p-3 rounded-lg hover:bg-accent transition-colors group cursor-pointer"
+                                                onClick={() => router.push(`/learn/${topic.id}`)}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-2 h-2 rounded-full ${topic.memoryScore >= 80 ? 'bg-green-500' :
+                                                            topic.memoryScore >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                                        }`} />
+                                                    <div>
+                                                        <p className="font-medium">{topic.name}</p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {new Date(topic.lastPracticed).toLocaleDateString()}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                {getScoreBadge(topic.memoryScore)}
+                                            </div>
+                                        ))}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>
