@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memora Deep Dive Concept History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2f25f4",
+                        "background-light": "#f6f5f8",
+                        "background-dark": "#111022",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(47, 37, 244, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+<div class="layout-container flex h-full grow flex-col">
+<!-- TopNavBar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-6 py-3 bg-background-light dark:bg-background-dark sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">psychology</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">Memora</h2>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Dashboard</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Concepts</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary py-1" href="#">Deep Dive</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Settings</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<label class="relative flex flex-col min-w-40 h-10 max-w-64">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-xl">search</span>
+<input class="form-input flex w-full flex-1 rounded-lg border-none bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary pl-10 text-sm font-normal" placeholder="Search insights..." value=""/>
+</label>
+<div class="bg-slate-200 dark:bg-slate-800 aspect-square rounded-full size-10 flex items-center justify-center overflow-hidden border border-slate-300 dark:border-slate-700">
+<img class="w-full h-full object-cover" data-alt="User profile avatar with abstract pattern" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnMX4RTGBbuHEuBtMCOVdWangWJKSIuhELBUJqdI-0SL1O3JKrGGrHbt1nEExXL_KWTf4O3N8DNxMP2zRRqBeYsNsr9t6cMVqKsKyYwx8113HXxlkh09Teyz8c0c8_yDt8LRTAGxX8tBkFNqkHXVL9dD4b4fLgVmnf3IWz_iR9sZsNvG0uhkYu2I4asEty3a0FvpwjuonEOmWmIoptSDY6ajNPdoRWTnTz6GrUyl-KKpAn3qJNhcF-X2vJDRnB3vJk-JQaUnLq7lA"/>
+</div>
+</div>
+</header>
+<main class="flex flex-1 overflow-hidden">
+<!-- Left Column: Concept Sidebar -->
+<aside class="w-[260px] border-r border-slate-200 dark:border-slate-800 bg-background-light dark:bg-background-dark flex flex-col shrink-0">
+<div class="p-4 border-b border-slate-200 dark:border-slate-800">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 material-symbols-outlined text-lg">filter_list</span>
+<input class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-xs focus:ring-1 focus:ring-primary" placeholder="Filter concepts..."/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar p-2">
+<div class="mb-4">
+<h3 class="px-3 text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">UX Design</h3>
+<div class="space-y-1">
+<div class="group flex items-center justify-between px-3 py-2.5 rounded-lg bg-primary/10 border-l-4 border-primary cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+<span class="text-sm font-semibold text-slate-900 dark:text-white">Hick's Law</span>
+</div>
+<span class="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded font-bold">88</span>
+</div>
+<div class="group flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-lg">radio_button_unchecked</span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">Fitts's Law</span>
+</div>
+<span class="text-[10px] text-slate-400">72</span>
+</div>
+<div class="group flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-lg">radio_button_unchecked</span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">Jakob's Law</span>
+</div>
+<span class="text-[10px] text-slate-400">91</span>
+</div>
+</div>
+</div>
+<div class="mb-4">
+<h3 class="px-3 text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-2">Psychology</h3>
+<div class="space-y-1">
+<div class="group flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-lg">radio_button_unchecked</span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">Cognitive Load</span>
+</div>
+<span class="text-[10px] text-slate-400">64</span>
+</div>
+<div class="group flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 cursor-pointer transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-lg">radio_button_unchecked</span>
+<span class="text-sm font-medium text-slate-600 dark:text-slate-400">Gestalt Theory</span>
+</div>
+<span class="text-[10px] text-slate-400">82</span>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Right Column: Deep Dive Content -->
+<div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-50 dark:bg-background-dark/50">
+<div class="max-w-[1000px] mx-auto p-8 lg:p-12">
+<!-- Hero/Header Section -->
+<div class="flex items-start justify-between mb-12">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-xs font-bold uppercase tracking-widest text-primary">UX Design</span>
+<span class="text-slate-400">•</span>
+<span class="text-xs text-slate-500 font-medium">Last session: 2 days ago</span>
+</div>
+<h1 class="text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter">Hick's Law</h1>
+<p class="mt-4 text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed text-lg">
+                                Describes the time it takes for a person to make a decision as a result of the possible choices: increasing the number of choices will increase the decision time logarithmically.
+                            </p>
+</div>
+<div class="flex flex-col items-center">
+<div class="relative size-32 flex items-center justify-center">
+<svg class="size-full -rotate-90 transform" viewbox="0 0 100 100">
+<circle class="text-slate-200 dark:text-slate-800" cx="50" cy="50" fill="transparent" r="45" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="50" cy="50" fill="transparent" r="45" stroke="currentColor" stroke-dasharray="282.7" stroke-dashoffset="33.9" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<span class="absolute text-3xl font-black text-slate-900 dark:text-white">88</span>
+</div>
+<span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-2">Accuracy Score</span>
+</div>
+</div>
+<!-- Session History -->
+<div class="space-y-6">
+<div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+                                Session History
+                            </h2>
+<button class="text-sm font-semibold text-primary flex items-center gap-1 hover:underline">
+                                Export Data <span class="material-symbols-outlined text-sm">download</span>
+</button>
+</div>
+<!-- Accordion Rows -->
+<div class="space-y-4">
+<!-- Expanded Row -->
+<div class="bg-white dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+<div class="flex items-center gap-4">
+<div class="bg-emerald-500/10 text-emerald-500 size-10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">analytics</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white">Mastery Review</h4>
+<p class="text-xs text-slate-500">October 24, 2023 • 14:32</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<p class="text-xs font-bold uppercase text-slate-400">Score</p>
+<p class="font-black text-emerald-500">92%</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">expand_less</span>
+</div>
+</div>
+<div class="px-4 pb-6 pt-2 border-t border-slate-100 dark:border-slate-800/50">
+<div class="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-5 mt-2 space-y-4">
+<div>
+<span class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Question</span>
+<p class="text-slate-900 dark:text-slate-200 mt-1 font-medium">According to Hick's Law, how does decision time increase as the number of choices grows?</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-red-500/5 border border-red-500/20 p-3 rounded-lg">
+<span class="text-[10px] font-bold text-red-500 uppercase">Your Answer</span>
+<p class="text-sm text-red-600 dark:text-red-400 mt-1">Linearly</p>
+</div>
+<div class="bg-emerald-500/5 border border-emerald-500/20 p-3 rounded-lg">
+<span class="text-[10px] font-bold text-emerald-500 uppercase">Correct Answer</span>
+<p class="text-sm text-emerald-600 dark:text-emerald-400 mt-1">Logarithmically</p>
+</div>
+</div>
+<div class="pt-2">
+<span class="text-[10px] font-bold text-slate-400 uppercase">Related Tags</span>
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded font-semibold italic">#ReactionTime</span>
+<span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded font-semibold italic">#UserExperience</span>
+<span class="text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2 py-1 rounded font-semibold italic">#DecisionMaking</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Closed Row 1 -->
+<div class="bg-white dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer">
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-primary/10 text-primary size-10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">quiz</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white">Daily Recap</h4>
+<p class="text-xs text-slate-500">October 22, 2023 • 09:15</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<p class="text-xs font-bold uppercase text-slate-400">Score</p>
+<p class="font-black text-primary">84%</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Closed Row 2 -->
+<div class="bg-white dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer">
+<div class="p-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-slate-200 dark:bg-slate-800 text-slate-400 size-10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white">First Exposure</h4>
+<p class="text-xs text-slate-500">October 15, 2023 • 18:40</p>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="text-right">
+<p class="text-xs font-bold uppercase text-slate-400">Score</p>
+<p class="font-black text-slate-500">62%</p>
+</div>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Call to Action -->
+<div class="mt-16 p-8 rounded-2xl bg-gradient-to-br from-primary to-blue-700 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl shadow-primary/20">
+<div>
+<h3 class="text-2xl font-black tracking-tight">Ready to boost your score?</h3>
+<p class="text-white/80 mt-1">Custom session available based on your weak points in Hick's Law.</p>
+</div>
+<button class="bg-white text-primary px-8 py-4 rounded-xl font-black uppercase tracking-wider text-sm hover:scale-105 transition-transform">
+                            Start Deep Session
+                        </button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

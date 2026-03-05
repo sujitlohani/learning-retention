@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memora Knowledge Base Concept Browser</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6961ff",
+                        "background-light": "#f5f5f8",
+                        "background-dark": "#100f23",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #22204b;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-primary/20 bg-background-light dark:bg-background-dark px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-[-0.015em]">Memora</h2>
+</div>
+<div class="hidden md:flex items-center gap-9">
+<a class="text-primary text-sm font-semibold leading-normal border-b-2 border-primary pb-1" href="#">Knowledge Base</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Quizzes</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Insights</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium leading-normal hover:text-primary transition-colors" href="#">Community</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex gap-2">
+<button class="flex size-10 items-center justify-center rounded-lg bg-slate-200 dark:bg-primary/10 text-slate-700 dark:text-primary hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex size-10 items-center justify-center rounded-lg bg-slate-200 dark:bg-primary/10 text-slate-700 dark:text-primary hover:bg-primary/20 transition-all">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+<div class="h-10 w-10 rounded-full bg-primary/30 border border-primary/50 flex items-center justify-center overflow-hidden">
+<img alt="User profile" data-alt="User profile avatar circle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2wCeb8nvXK90zxc4bFSX5z3_a9oTKl_EKS5ObYDGt74f_Aonxlb3iY0vrDHShFgiODkeZoAGxfzsub56T_JNoZ6-eNQh2aBXAj2svjblCT3sl_HBVrMiCT-Wv1vuAaxaqaiepquMIBpy-p8RRRDHTm_41MjMkkXkL9GpNjMoohkLM1iBP_71-rSxLDqBrZ4j141XaQ9KDO711QGe81Wmw_2lXl9On8ytbmRYvEdPCvIkItTco10DtRTjgCN3drRurY3MCnooGPJ0"/>
+</div>
+</div>
+</header>
+<main class="flex flex-1 overflow-hidden">
+<!-- Left Sidebar (280px) -->
+<aside class="w-[280px] shrink-0 border-r border-slate-200 dark:border-primary/20 bg-background-light dark:bg-background-dark p-6 flex flex-col gap-8 overflow-y-auto custom-scrollbar">
+<!-- Search Section -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Search</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all dark:text-white" placeholder="Find concepts..." type="text"/>
+</div>
+</div>
+<!-- Filter by Tag -->
+<div class="flex flex-col gap-3">
+<label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Filter by Tag</label>
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-1.5 rounded-full text-xs font-semibold bg-primary text-white">All</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-200 dark:bg-primary/10 text-slate-600 dark:text-slate-300 hover:bg-primary/20">Beginner</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-200 dark:bg-primary/10 text-slate-600 dark:text-slate-300 hover:bg-primary/20">Expert</button>
+<button class="px-4 py-1.5 rounded-full text-xs font-semibold bg-slate-200 dark:bg-primary/10 text-slate-600 dark:text-slate-300 hover:bg-primary/20">Advanced</button>
+</div>
+</div>
+<!-- Filter by Topic -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Filter by Topic</label>
+<select class="w-full px-3 py-2 bg-slate-100 dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-lg text-sm dark:text-slate-300 outline-none appearance-none cursor-pointer">
+<option>All Topics</option>
+<option>Cognitive Psychology</option>
+<option>Design Patterns</option>
+<option>Neuroscience</option>
+<option>Product Strategy</option>
+</select>
+</div>
+<!-- Sort By -->
+<div class="flex flex-col gap-2">
+<label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Sort By</label>
+<div class="flex flex-col gap-1">
+<button class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium">
+<span class="material-symbols-outlined text-lg">trending_up</span>
+                            Mastery Score
+                        </button>
+<button class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-primary/5 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-lg">schedule</span>
+                            Last Reviewed
+                        </button>
+<button class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-primary/5 text-sm font-medium transition-colors">
+<span class="material-symbols-outlined text-lg">sort_by_alpha</span>
+                            Alphabetical
+                        </button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Grid of Concept Cards -->
+<div class="flex-1 p-8 overflow-y-auto custom-scrollbar">
+<div class="mb-6 flex items-center justify-between">
+<h1 class="text-2xl font-bold dark:text-white">Concept Browser</h1>
+<span class="text-sm text-slate-500">Showing 24 Concepts</span>
+</div>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<!-- Concept Card 1 -->
+<div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-5 hover:border-primary/50 transition-all flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[10px] font-bold uppercase text-primary tracking-widest px-2 py-0.5 rounded bg-primary/10">Psychology</span>
+<h3 class="text-lg font-bold dark:text-white mt-1">Hick's Law</h3>
+</div>
+<div class="text-right">
+<div class="text-2xl font-bold text-primary">84%</div>
+<div class="text-[10px] uppercase text-slate-500">Score</div>
+</div>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">The time it takes to make a decision increases with the number and complexity of choices.</p>
+<div class="flex items-center gap-4 text-xs text-slate-500">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 12 Reviews</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">event</span> 2 days ago</span>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">View Details</button>
+<button class="px-3 py-2 bg-slate-100 dark:bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20">
+<span class="material-symbols-outlined align-middle">school</span>
+</button>
+</div>
+</div>
+<!-- Concept Card 2 -->
+<div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-5 hover:border-primary/50 transition-all flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[10px] font-bold uppercase text-primary tracking-widest px-2 py-0.5 rounded bg-primary/10">Neuroscience</span>
+<h3 class="text-lg font-bold dark:text-white mt-1">The Spacing Effect</h3>
+</div>
+<div class="text-right">
+<div class="text-2xl font-bold text-primary">62%</div>
+<div class="text-[10px] uppercase text-slate-500">Score</div>
+</div>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">Learning is greater when studying is spread out over time, as opposed to cramming in a single session.</p>
+<div class="flex items-center gap-4 text-xs text-slate-500">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 8 Reviews</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">event</span> 5 days ago</span>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">View Details</button>
+<button class="px-3 py-2 bg-slate-100 dark:bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20">
+<span class="material-symbols-outlined align-middle">school</span>
+</button>
+</div>
+</div>
+<!-- Concept Card 3 -->
+<div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-5 hover:border-primary/50 transition-all flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[10px] font-bold uppercase text-primary tracking-widest px-2 py-0.5 rounded bg-primary/10">UI Design</span>
+<h3 class="text-lg font-bold dark:text-white mt-1">Fitts's Law</h3>
+</div>
+<div class="text-right">
+<div class="text-2xl font-bold text-primary">91%</div>
+<div class="text-[10px] uppercase text-slate-500">Score</div>
+</div>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">The time to acquire a target is a function of the distance to and size of the target.</p>
+<div class="flex items-center gap-4 text-xs text-slate-500">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 25 Reviews</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">event</span> 1 hour ago</span>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">View Details</button>
+<button class="px-3 py-2 bg-slate-100 dark:bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20">
+<span class="material-symbols-outlined align-middle">school</span>
+</button>
+</div>
+</div>
+<!-- Concept Card 4 -->
+<div class="bg-white dark:bg-primary/5 border border-slate-200 dark:border-primary/20 rounded-xl p-5 hover:border-primary/50 transition-all flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<span class="text-[10px] font-bold uppercase text-primary tracking-widest px-2 py-0.5 rounded bg-primary/10">Product Strategy</span>
+<h3 class="text-lg font-bold dark:text-white mt-1">Zeigarnik Effect</h3>
+</div>
+<div class="text-right">
+<div class="text-2xl font-bold text-primary">45%</div>
+<div class="text-[10px] uppercase text-slate-500">Score</div>
+</div>
+</div>
+<p class="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">People remember uncompleted or interrupted tasks better than completed tasks.</p>
+<div class="flex items-center gap-4 text-xs text-slate-500">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">visibility</span> 4 Reviews</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">event</span> 2 weeks ago</span>
+</div>
+<div class="flex gap-2 mt-2">
+<button class="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors">View Details</button>
+<button class="px-3 py-2 bg-slate-100 dark:bg-primary/10 text-primary rounded-lg text-sm font-bold hover:bg-primary/20">
+<span class="material-symbols-outlined align-middle">school</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Detail Panel (Slides in) -->
+<aside class="w-[400px] shrink-0 border-l border-slate-200 dark:border-primary/20 bg-white dark:bg-background-dark/80 backdrop-blur-md p-0 flex flex-col z-10 shadow-2xl overflow-y-auto custom-scrollbar">
+<!-- Detail Header -->
+<div class="p-6 border-b border-slate-200 dark:border-primary/20 flex items-center justify-between sticky top-0 bg-white dark:bg-background-dark/90">
+<div class="flex items-center gap-3">
+<button class="size-8 rounded-lg bg-slate-100 dark:bg-primary/10 flex items-center justify-center text-slate-600 dark:text-primary">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<h2 class="text-lg font-bold dark:text-white">Hick's Law</h2>
+</div>
+<span class="px-2 py-1 rounded bg-green-500/10 text-green-500 text-[10px] font-bold uppercase">Mastered</span>
+</div>
+<!-- Performance Stats -->
+<div class="p-6 flex flex-col gap-6">
+<div class="bg-slate-50 dark:bg-primary/5 rounded-xl p-5 border border-slate-200 dark:border-primary/10">
+<label class="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 block mb-4">Current Performance</label>
+<div class="flex gap-1 mb-2">
+<div class="h-2 flex-1 rounded-full bg-primary"></div>
+<div class="h-2 flex-1 rounded-full bg-primary"></div>
+<div class="h-2 flex-1 rounded-full bg-primary"></div>
+<div class="h-2 flex-1 rounded-full bg-primary"></div>
+<div class="h-2 flex-1 rounded-full bg-slate-200 dark:bg-primary/20"></div>
+</div>
+<div class="flex justify-between items-center mt-2">
+<span class="text-2xl font-bold dark:text-white">84%</span>
+<span class="text-xs text-slate-500 font-medium">+12% from last week</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 rounded-xl border border-slate-200 dark:border-primary/10 text-center">
+<div class="text-xs text-slate-500 mb-1">Total Reviews</div>
+<div class="text-xl font-bold dark:text-white">12</div>
+</div>
+<div class="p-4 rounded-xl border border-slate-200 dark:border-primary/10 text-center">
+<div class="text-xs text-slate-500 mb-1">Streak</div>
+<div class="text-xl font-bold dark:text-white">4d</div>
+</div>
+</div>
+<!-- AI Insight Text -->
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-lg">psychology</span>
+<label class="text-xs font-bold uppercase tracking-wider">AI Memory Insight</label>
+</div>
+<div class="p-4 bg-primary/5 rounded-xl border-l-4 border-primary italic text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                                "You tend to struggle with this concept when applied to navigation menus. Re-studying the 'Mega Menu' sub-topic could improve your retention score by 15%."
+                            </div>
+</div>
+<!-- Details Section -->
+<div class="flex flex-col gap-4 pt-4 border-t border-slate-200 dark:border-primary/10">
+<h4 class="text-sm font-bold dark:text-white">Key takeaways</h4>
+<ul class="space-y-3">
+<li class="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-primary text-base">check_circle</span>
+                                    Minimize choices during critical decision points.
+                                </li>
+<li class="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-primary text-base">check_circle</span>
+                                    Breaking down complex tasks into smaller steps.
+                                </li>
+<li class="flex items-start gap-3 text-sm text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-primary text-base">check_circle</span>
+                                    Use progressive disclosure to avoid cognitive overload.
+                                </li>
+</ul>
+</div>
+<!-- CTA Button -->
+<div class="mt-4">
+<button class="w-full flex items-center justify-center gap-3 py-4 bg-primary text-white rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all">
+<span class="material-symbols-outlined">quiz</span>
+                                Quiz This Concept
+                            </button>
+<button class="w-full mt-3 py-3 border border-slate-200 dark:border-primary/20 text-slate-600 dark:text-slate-300 rounded-xl text-sm font-bold hover:bg-slate-50 dark:hover:bg-primary/5 transition-all">
+                                Deep Dive Article
+                            </button>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</body></html>

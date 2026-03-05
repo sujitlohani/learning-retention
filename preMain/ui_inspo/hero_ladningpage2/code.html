@@ -1,0 +1,243 @@
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6961ff",
+                        "background-light": "#f5f5f8",
+                        "background-dark": "#0E0E16",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 selection:bg-primary/30">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 px-6 py-4 lg:px-20">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-8 rounded bg-primary text-white">
+<span class="material-symbols-outlined text-xl">layers</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Memora</h2>
+</div>
+<div class="flex flex-1 justify-end gap-10 items-center">
+<nav class="hidden md:flex items-center gap-10">
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Product</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Features</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-medium hover:text-primary transition-colors" href="#">About</a>
+</nav>
+<div class="flex gap-3">
+<button class="hidden sm:flex min-w-[100px] cursor-pointer items-center justify-center rounded-lg h-10 px-5 bg-primary/10 text-primary text-sm font-bold border border-primary/20 hover:bg-primary/20 transition-all">
+                        Sign In
+                    </button>
+<button class="flex min-w-[120px] cursor-pointer items-center justify-center rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all">
+                        Get Started
+                    </button>
+</div>
+</div>
+</header>
+<!-- Hero Section -->
+<main class="flex-1 flex flex-col justify-center items-center px-6 lg:px-20 py-12 @container relative">
+<!-- Background Abstract Knowledge Elements (Floating Symbolic Layering) -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden opacity-50">
+<!-- Mathematical Formula -->
+<div class="absolute top-1/4 right-[10%] text-primary/40 blur-[1px] select-none text-2xl font-mono rotate-12">
+                    E = mc²
+                </div>
+<div class="absolute bottom-1/4 left-[5%] text-primary/20 blur-[3px] select-none text-4xl font-mono -rotate-6">
+                    ∫(x²)dx
+                </div>
+<!-- Floating Lightbulb Outline -->
+<div class="absolute top-[15%] left-[15%] text-primary/10 blur-[5px] select-none scale-[3]">
+<span class="material-symbols-outlined text-9xl">lightbulb</span>
+</div>
+<!-- Elegant Serif Marks -->
+<div class="absolute top-1/3 right-[30%] text-primary/20 blur-[2px] select-none text-7xl font-serif italic">?</div>
+<div class="absolute bottom-1/3 left-[40%] text-primary/30 blur-[1px] select-none text-8xl font-serif italic">?</div>
+<!-- Abstract Gradient Glow -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]"></div>
+</div>
+<div class="relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20 max-w-[1280px] w-full">
+<!-- Content -->
+<div class="flex flex-col gap-8 flex-1 text-center lg:text-left">
+<div class="flex flex-col gap-4">
+<div class="inline-flex items-center gap-2 self-center lg:self-start bg-primary/10 border border-primary/20 px-3 py-1 rounded-full text-primary text-xs font-bold uppercase tracking-wider">
+<span class="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                            Variant 01: Abstract Layering
+                        </div>
+<h1 class="text-slate-900 dark:text-white text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight">
+                            Knowledge that <span class="text-primary italic">sticks.</span>
+</h1>
+<p class="text-slate-600 dark:text-slate-400 text-lg md:text-xl font-normal leading-relaxed max-w-[600px]">
+                            Experience a premium, editorial approach to learning with abstract symbolic layering and intuitive knowledge management systems designed for depth.
+                        </p>
+</div>
+<div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+<button class="flex min-w-[180px] cursor-pointer items-center justify-center rounded-xl h-14 px-8 bg-primary text-white text-base font-bold shadow-xl shadow-primary/30 hover:scale-[1.02] transition-all">
+                            Start Learning
+                        </button>
+<button class="flex min-w-[180px] cursor-pointer items-center justify-center rounded-xl h-14 px-8 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white text-base font-bold hover:bg-slate-300 dark:hover:bg-slate-700 transition-all border border-slate-300 dark:border-slate-700">
+                            View Demo
+                        </button>
+</div>
+<div class="flex items-center gap-6 justify-center lg:justify-start pt-4">
+<div class="flex -space-x-3">
+<img class="size-10 rounded-full border-2 border-background-dark object-cover" data-alt="Portrait of a professional learner" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAImf29ymbPTPQm0bJLYxmqSbF0OtD6IN78IigdgaSba1jWwHpVnAu30QjcyaIwuru5uckfGwaCvjOliznqlRRE7o1DwN_AX2BhhPsKRiUeBd-umEmZ8TQqFXztz_yE21MOwopmWe8opcJjLVD8M8cHOJcs5Xd0Ou2rnFCmn_AUixvRr_qRc4NSVPf7LbnZWqdqWmq-EBguuXiet8gtjnEZGKDbZncUJz0AvkOAhRFel11-DdkhM2nJT2D6BwxMK4cej6F_i4-Cx2g"/>
+<img class="size-10 rounded-full border-2 border-background-dark object-cover" data-alt="Portrait of a creative educator" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSQcWlD6lxXpkVnhhQux5Vj9kn_MeasJXJueUrUQauo5RE5KPJqLPYH7EoYi8G-R6Zco1dK82mPEPKda_LRpEQrOepsPDGHY5ZMB4Hf6BGJY_sOgevKOAgD-F3scEMoFRf-XZmwAiWycsc5UzR5d29wuXG6rgO-7zSgZsHCEDNdBoLhlXm7iTOiPS2CmvDe59PVVwFVaUXWGlphHwXJp3Jt6qKs9M_R4k9CWuuH6_OrjLu_z2NrIitykv6CT530qxPJv5LfTDq8Dc"/>
+<img class="size-10 rounded-full border-2 border-background-dark object-cover" data-alt="Portrait of a digital student" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_v9WvUmifh17xlT6mkABppi2TDqaRQNyT0jW5Xnj31Xj20acsAjDRuFaxdsTjtRtvAuFvne44xZtDLGyWe4-19XAoVyCriiAGi3aRhqMqiy4lKshLjixLWZpx9a01eCGalrxQ-2Dky171zDoD_R5Pe7WolKPMQMCcTz_XORVt03fFingyaqCS5bWrHX0RRWdxGjBpoXIauDltngICGBgkehGGzglzg2f8iHEZMJCsefnt8XQ2Oq7ju2oxOkCe3t4-lvo67a5ILuE"/>
+<div class="flex size-10 items-center justify-center rounded-full border-2 border-background-dark bg-slate-800 text-[10px] font-bold text-white uppercase">
+                                +2k
+                            </div>
+</div>
+<div class="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            Trusted by <span class="text-slate-900 dark:text-white font-bold">2,400+</span> lifelong learners
+                        </div>
+</div>
+</div>
+<!-- Visual Element -->
+<div class="flex-1 w-full max-w-[600px] aspect-square relative group">
+<!-- Glassmorphism Container for Symbols -->
+<div class="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent rounded-3xl border border-white/5 backdrop-blur-sm overflow-hidden flex items-center justify-center">
+<div class="relative w-full h-full">
+<!-- Floating Card 1 -->
+<div class="absolute top-[10%] left-[10%] w-48 p-4 rounded-2xl bg-slate-900/40 border border-white/10 backdrop-blur-md shadow-2xl z-30">
+<div class="flex items-center gap-3 mb-2">
+<div class="size-8 rounded-lg bg-emerald-500/20 text-emerald-500 flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+</div>
+<div class="h-2 w-20 bg-slate-700 rounded-full"></div>
+</div>
+<div class="space-y-2">
+<div class="h-1.5 w-full bg-slate-800 rounded-full"></div>
+<div class="h-1.5 w-3/4 bg-slate-800 rounded-full"></div>
+</div>
+</div>
+<!-- Abstract Central Visual -->
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="size-64 bg-primary/20 rounded-full blur-[80px]"></div>
+<span class="material-symbols-outlined text-9xl text-primary/40 scale-150">neurology</span>
+<!-- Thin Lightbulb and Symbols Layering -->
+<div class="absolute inset-0 flex items-center justify-center p-12">
+<div class="w-full h-full border-[0.5px] border-primary/30 rounded-full border-dashed animate-spin-slow"></div>
+<div class="absolute size-80 border-[0.5px] border-primary/20 rounded-full rotate-45"></div>
+<div class="absolute size-40 border border-primary/40 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-primary font-light">auto_awesome</span>
+</div>
+</div>
+</div>
+<!-- Floating Card 2 -->
+<div class="absolute bottom-[15%] right-[10%] w-56 p-4 rounded-2xl bg-slate-900/60 border border-white/10 backdrop-blur-md shadow-2xl z-40 transform translate-y-4">
+<div class="flex gap-2 items-center mb-3">
+<span class="material-symbols-outlined text-primary">analytics</span>
+<div class="text-xs font-bold uppercase tracking-widest text-slate-400">Retention Score</div>
+</div>
+<div class="flex items-end gap-1 h-12">
+<div class="flex-1 bg-slate-800 rounded-t h-[40%]"></div>
+<div class="flex-1 bg-slate-800 rounded-t h-[60%]"></div>
+<div class="flex-1 bg-primary rounded-t h-[100%]"></div>
+<div class="flex-1 bg-slate-800 rounded-t h-[70%]"></div>
+<div class="flex-1 bg-slate-800 rounded-t h-[50%]"></div>
+</div>
+</div>
+<!-- Deep Floating Elements -->
+<div class="absolute top-[15%] right-[20%] text-slate-100/10 text-9xl font-serif italic blur-[8px] select-none">?</div>
+<div class="absolute bottom-[20%] left-[20%] text-primary/20 text-6xl font-mono blur-[2px] select-none font-light">Σn</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Features Grid -->
+<section class="px-6 lg:px-20 py-24 bg-slate-100 dark:bg-slate-900/50">
+<div class="max-w-[1280px] mx-auto flex flex-col gap-16">
+<div class="flex flex-col gap-4 text-center items-center">
+<h2 class="text-slate-900 dark:text-white text-4xl font-bold tracking-tight">Deep Learning Redefined</h2>
+<p class="text-slate-600 dark:text-slate-400 text-lg max-w-[700px]">Our platform uses symbolic layering to help you visualize complex information through an editorial lens.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Feature 1 -->
+<div class="group flex flex-col gap-6 p-8 rounded-2xl border border-primary/10 bg-white dark:bg-background-dark hover:border-primary/40 transition-all hover:shadow-2xl hover:shadow-primary/5">
+<div class="flex items-center justify-center size-14 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined text-3xl">model_training</span>
+</div>
+<div class="flex flex-col gap-3">
+<h3 class="text-slate-900 dark:text-white text-xl font-bold">Abstract Visualization</h3>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed">Mathematical formulas and symbolic logic mapped in three-dimensional space for intuitive grasp.</p>
+</div>
+</div>
+<!-- Feature 2 -->
+<div class="group flex flex-col gap-6 p-8 rounded-2xl border border-primary/10 bg-white dark:bg-background-dark hover:border-primary/40 transition-all hover:shadow-2xl hover:shadow-primary/5">
+<div class="flex items-center justify-center size-14 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined text-3xl">auto_stories</span>
+</div>
+<div class="flex flex-col gap-3">
+<h3 class="text-slate-900 dark:text-white text-xl font-bold">Editorial Design</h3>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed">Premium typography and layout inspired by high-end scientific journals and luxury periodicals.</p>
+</div>
+</div>
+<!-- Feature 3 -->
+<div class="group flex flex-col gap-6 p-8 rounded-2xl border border-primary/10 bg-white dark:bg-background-dark hover:border-primary/40 transition-all hover:shadow-2xl hover:shadow-primary/5">
+<div class="flex items-center justify-center size-14 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-all">
+<span class="material-symbols-outlined text-3xl">stacked_line_chart</span>
+</div>
+<div class="flex flex-col gap-3">
+<h3 class="text-slate-900 dark:text-white text-xl font-bold">Three-Dimensional Depth</h3>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed">Multi-layered interface hierarchy designed to maximize cognitive retention and information flow.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer -->
+<footer class="flex flex-col gap-10 px-6 lg:px-20 py-16 text-center border-t border-primary/10 bg-background-light dark:bg-background-dark">
+<div class="flex flex-col md:flex-row items-center justify-between gap-8 max-w-[1280px] mx-auto w-full">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center size-6 rounded bg-primary/20 text-primary">
+<span class="material-symbols-outlined text-base">layers</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-lg font-bold">Memora</h2>
+</div>
+<div class="flex flex-wrap items-center justify-center gap-8">
+<a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="text-slate-500 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Contact</a>
+</div>
+<div class="flex items-center gap-4">
+<a class="size-10 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors border border-transparent hover:border-primary/20" href="#">
+<span class="material-symbols-outlined text-xl">share</span>
+</a>
+<a class="size-10 flex items-center justify-center rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-primary transition-colors border border-transparent hover:border-primary/20" href="#">
+<span class="material-symbols-outlined text-xl">account_circle</span>
+</a>
+</div>
+</div>
+<p class="text-slate-500 dark:text-slate-500 text-sm">© 2024 Memora Learning Systems. Designed for intellectual depth.</p>
+</footer>
+</div>
+</div>
+<style>
+    @keyframes spin-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+        animation: spin-slow 20s linear infinite;
+    }
+</style>
+</body></html>

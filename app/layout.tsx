@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
-import { AuthProvider } from "@/components/auth-provider";
-import { Sidebar } from "@/components/sidebar";
-import { ThemeProvider } from "@/components/theme-provider";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import { ThemeProvider } from "@/src/components/theme/ThemeProvider";
+import { AuthProvider } from "@/src/features/auth/hooks/useAuth";
+import { Sidebar } from "@/src/components/sidebar/Sidebar";
+import { TooltipProvider } from "@/src/components/ui/tooltip";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Memora",
-  description: "A student learning platform for durable memory.",
+  title: "Memora — AI-Powered Spaced Repetition",
+  description: "Retain what you learn with AI-powered spaced repetition quizzes and personalized study schedules.",
 };
 
 export default function RootLayout({
@@ -23,13 +24,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${outfit.variable} font-sans antialiased bg-background`} suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+      <body className={`${plusJakarta.variable} font-sans antialiased`} style={{ background: 'var(--bg-base)' }} suppressHydrationWarning>
+        <ThemeProvider>
           <AuthProvider>
             <TooltipProvider>
               <div className="flex min-h-screen">

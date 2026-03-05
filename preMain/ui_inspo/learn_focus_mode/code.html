@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memora Learn Focus Mode Quiz</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#6161ff",
+                        "background-light": "#f5f5f8",
+                        "background-dark": "#0e0e16",
+                        "success": "#22c55e",
+                        "error": "#ef4444",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Lexend', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-display">
+<!-- Top Navigation Bar -->
+<header class="w-full border-b border-slate-200 dark:border-white/10 bg-background-light dark:bg-background-dark sticky top-0 z-50">
+<div class="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="text-primary material-symbols-outlined text-2xl">school</span>
+<h2 class="text-sm md:text-base font-medium text-slate-500 dark:text-slate-400">
+                    [UX Design] · <span class="text-slate-900 dark:text-slate-100">Hick's Law</span>
+</h2>
+</div>
+<div class="absolute left-1/2 -translate-x-1/2">
+<span class="text-sm font-semibold tracking-wider uppercase opacity-80">Q3 of 10</span>
+</div>
+<button class="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded transition-colors text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1 bg-slate-200 dark:bg-white/5">
+<div class="h-full bg-primary" style="width: 30%;"></div>
+</div>
+</header>
+<!-- Quiz Content -->
+<main class="flex-1 flex flex-col items-center justify-start pt-12 md:pt-20 px-6 pb-24">
+<div class="w-full max-w-[640px] flex flex-col gap-10">
+<!-- Question -->
+<div class="space-y-4">
+<h1 class="text-2xl md:text-3xl font-semibold leading-tight text-center md:text-left">
+                    What happens to reaction time as the number of stimuli increases?
+                </h1>
+</div>
+<!-- Answer Options -->
+<div class="grid grid-cols-1 gap-3">
+<!-- Option: Incorrect Selection -->
+<button class="group relative flex items-center justify-between p-5 rounded-lg border-2 border-error bg-error/10 text-slate-900 dark:text-slate-100 transition-all text-left">
+<span class="text-base font-medium">It decreases linearly</span>
+<span class="material-symbols-outlined text-error">cancel</span>
+</button>
+<button class="group relative flex items-center justify-between p-5 rounded-lg border border-slate-200 dark:border-white/10 bg-white/5 dark:bg-white/5 hover:border-primary/50 text-slate-900 dark:text-slate-100 transition-all text-left">
+<span class="text-base font-medium">It stays constant</span>
+</button>
+<!-- Option: Correct Answer (Highlighted because it was the right choice) -->
+<button class="group relative flex items-center justify-between p-5 rounded-lg border-2 border-success bg-success/10 text-slate-900 dark:text-slate-100 transition-all text-left">
+<span class="text-base font-medium">It increases logarithmically</span>
+<span class="material-symbols-outlined text-success">check_circle</span>
+</button>
+<button class="group relative flex items-center justify-between p-5 rounded-lg border border-slate-200 dark:border-white/10 bg-white/5 dark:bg-white/5 hover:border-primary/50 text-slate-900 dark:text-slate-100 transition-all text-left">
+<span class="text-base font-medium">It increases exponentially</span>
+</button>
+</div>
+<!-- Inline Feedback -->
+<div class="mt-4 p-6 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-xl">lightbulb</span>
+<h3 class="text-sm font-bold uppercase tracking-widest text-primary">Why?</h3>
+</div>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed text-base">
+                    Hick's Law states that the time it takes for a person to make a decision is a result of the possible choices he or she has: increasing the number of choices will increase the decision time logarithmically. This is why simplifying interfaces for users often leads to better conversion and faster task completion.
+                </p>
+</div>
+</div>
+</main>
+<!-- Footer Action -->
+<footer class="fixed bottom-0 left-0 right-0 p-6 bg-background-light dark:bg-background-dark border-t border-slate-200 dark:border-white/10 flex justify-center">
+<div class="w-full max-w-[640px] flex justify-end">
+<button class="flex items-center justify-center gap-2 px-8 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition-all shadow-lg shadow-primary/20">
+                Next Question
+                <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</footer>
+</body></html>

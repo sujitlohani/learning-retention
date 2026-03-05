@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { StudySchedule, ScheduleSession } from '@/types/ai';
-import { calculateSessionIntervals, getSessionType } from '@/lib/utils/spaced-repetition';
-import { calculateQuestionsPerSession, calculateSessionsPerConcept, formatDate, addDays } from '@/lib/utils/schedule-calculator';
+import { StudySchedule, ScheduleSession } from '@/src/types/ai';
+import { calculateSessionIntervals, getSessionType } from '@/src/lib/spaced-repetition';
+import { calculateQuestionsPerSession, calculateSessionsPerConcept, formatDate, addDays } from '@/src/lib/schedule-calculator';
 
 export async function POST(request: NextRequest) {
     try {
