@@ -363,7 +363,7 @@ export function AddTopicPage() {
                 return (
                     <div className="flex flex-col items-center text-center space-y-12 max-w-xl mx-auto">
                         <div className="space-y-6">
-                            <div className="mx-auto w-24 h-24 rounded-full flex items-center justify-center shadow-lg" style={{ background: 'var(--accent-light)' }}>
+                            <div className="mx-auto w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'var(--accent-light)' }}>
                                 <div className="animate-spin" style={{ animationDuration: '3s' }}>
                                     <MemoraMark size={48} />
                                 </div>
@@ -372,7 +372,7 @@ export function AddTopicPage() {
                             <p className="text-lg text-muted-foreground font-light">{w.generationStatus}</p>
                         </div>
                         <div className="w-full max-w-md space-y-3">
-                            <div className="h-3 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
+                            <div className="h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
                                 <motion.div
                                     className="h-full rounded-full"
                                     style={{ background: 'var(--accent)' }}

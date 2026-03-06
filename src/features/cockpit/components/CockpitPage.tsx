@@ -146,7 +146,8 @@ export function CockpitPage() {
                                 style={{
                                     background: 'var(--bg-surface)',
                                     border: '1px solid var(--border)',
-                                    borderRadius: 'var(--radius-md)'
+                                    borderRadius: 'var(--radius-md)',
+                                    boxShadow: 'var(--shadow-resting)',
                                 }}
                             >
                                 <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
@@ -155,7 +156,7 @@ export function CockpitPage() {
                                 <div className="flex justify-between items-end">
                                     <div
                                         className="text-3xl font-bold leading-none"
-                                        style={stat.isScore ? { color: getScoreColor(avgMemory) } : {}}
+                                        style={stat.isScore ? { color: getScoreColor(avgMemory) } : stat.label === 'Due Today' ? { color: 'var(--warning)' } : {}}
                                     >
                                         {stat.value}
                                     </div>
@@ -173,23 +174,31 @@ export function CockpitPage() {
                             transition={{ delay: 0.15 }}
                             className="p-6 flex items-center justify-between"
                             style={{
-                                background: 'var(--warning)',
-                                color: '#000',
+                                background: 'color-mix(in srgb, var(--warning) 8%, var(--bg-surface))',
+                                borderLeft: '3px solid var(--warning)',
                                 borderRadius: 'var(--radius-md)',
+                                border: '1px solid color-mix(in srgb, var(--warning) 20%, var(--border))',
+                                borderLeftWidth: '3px',
+                                borderLeftColor: 'var(--warning)',
                             }}
                         >
                             <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-black/10 rounded-full flex items-center justify-center">
-                                    <AlertTriangle className="w-5 h-5" />
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'color-mix(in srgb, var(--warning) 15%, transparent)' }}>
+                                    <AlertTriangle className="w-5 h-5" style={{ color: 'var(--warning)' }} />
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg">Priority Review</h3>
-                                    <p className="text-sm font-medium opacity-80">You have {dueTodayCount} topic{dueTodayCount !== 1 ? 's' : ''} requiring immediate attention to prevent memory decay.</p>
+                                    <p className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>You have {dueTodayCount} topic{dueTodayCount !== 1 ? 's' : ''} requiring immediate attention to prevent memory decay.</p>
                                 </div>
                             </div>
                             <Link
                                 href="/"
-                                className="px-5 py-2.5 bg-black text-white text-sm font-bold rounded-md hover:bg-black/80 transition-colors"
+                                className="px-5 py-2.5 text-sm font-bold transition-ui"
+                                style={{
+                                    background: 'var(--accent)',
+                                    color: '#fff',
+                                    borderRadius: '9999px',
+                                }}
                             >
                                 Go to Dashboard
                             </Link>
@@ -226,8 +235,9 @@ export function CockpitPage() {
                                         style={{
                                             background: selectedTopic?.id === topic.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
                                             border: '1px solid',
-                                            borderColor: selectedTopic?.id === topic.id ? 'var(--border)' : 'var(--border)',
-                                            borderRadius: 'var(--radius-lg)'
+                                            borderColor: 'var(--border)',
+                                            borderRadius: 'var(--radius-md)',
+                                            boxShadow: 'var(--shadow-resting)',
                                         }}
                                     >
                                         <div className="flex items-start justify-between w-full mb-4">
@@ -249,7 +259,7 @@ export function CockpitPage() {
                                         </div>
 
                                         {/* Progress bar */}
-                                        <div className="w-full h-1.5 rounded-full overflow-hidden mb-4" style={{ background: 'var(--bg-raised)' }}>
+                                        <div className="w-full h-[3px] rounded-full overflow-hidden mb-4" style={{ background: 'var(--bg-raised)' }}>
                                             <div
                                                 className="h-full rounded-full"
                                                 style={{
@@ -287,10 +297,11 @@ export function CockpitPage() {
                         animate={{ x: 0 }}
                         exit={{ x: 420 }}
                         transition={{ type: 'tween', duration: 0.2, ease: 'easeOut' }}
-                        className="fixed right-0 top-0 h-screen w-full sm:w-[420px] shadow-2xl z-40 flex flex-col"
+                        className="fixed right-0 top-0 h-screen w-full sm:w-[420px] z-40 flex flex-col"
                         style={{
-                            background: 'var(--bg-surface)', // Use surface for the panel
-                            borderLeft: '1px solid var(--border)'
+                            background: 'var(--bg-surface)',
+                            borderLeft: '1px solid var(--border)',
+                            boxShadow: 'var(--shadow-raised)',
                         }}
                     >
                         {/* Detail Header */}
@@ -329,7 +340,7 @@ export function CockpitPage() {
                                     {panelTab === tab && (
                                         <motion.div
                                             layoutId="cockpit-tab"
-                                            className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
+                                            className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full"
                                             style={{ background: 'var(--accent)' }}
                                         />
                                     )}
@@ -534,8 +545,8 @@ export function CockpitPage() {
                         <div className="p-6 border-t mt-auto" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
                             <Link
                                 href={`/learn/${selectedTopic.id}`}
-                                className="w-full flex items-center justify-center gap-3 py-3.5 text-white rounded-xl font-bold transition-all"
-                                style={{ background: 'var(--accent)' }}
+                                className="w-full flex items-center justify-center gap-3 py-3.5 text-white font-bold transition-ui"
+                                style={{ background: 'var(--accent)', borderRadius: '9999px' }}
                             >
                                 <Brain className="w-4 h-4" />
                                 Start Review Session
@@ -543,13 +554,14 @@ export function CockpitPage() {
                             <div className="flex gap-3 mt-3">
                                 <Link
                                     href={`/deep-dive?concept=${selectedTopic.concepts[0]?.id || ''}`}
-                                    className="flex-1 py-3 border text-center rounded-xl text-sm font-bold transition-all"
-                                    style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                    className="flex-1 py-3 border text-center text-sm font-bold transition-ui"
+                                    style={{ borderColor: 'var(--border)', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}
                                 >
                                     Deep Dive
                                 </Link>
                                 <button
-                                    className="px-4 py-3 border rounded-xl flex items-center justify-center transition-all bg-red-500/5 hover:bg-red-500/10 border-red-500/20"
+                                    className="px-4 py-3 border flex items-center justify-center transition-ui bg-red-500/5 hover:bg-red-500/10 border-red-500/20"
+                                    style={{ borderRadius: 'var(--radius-md)' }}
                                     onClick={() => {
                                         if (confirm(`Delete "${selectedTopic.name}" and all its data?`)) {
                                             handleDeleteTopic(selectedTopic.id);

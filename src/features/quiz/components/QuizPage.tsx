@@ -30,8 +30,8 @@ export function QuizPage() {
                 <p className="font-medium" style={{ color: 'var(--text-muted)' }}>No questions available for this topic.</p>
                 <button
                     onClick={q.goHome}
-                    className="px-6 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all hover:opacity-90 mt-2"
-                    style={{ background: 'var(--accent)', color: '#fff' }}
+                    className="px-6 py-2.5 font-bold flex items-center gap-2 transition-ui hover:opacity-90 mt-2"
+                    style={{ background: 'var(--accent)', color: '#fff', borderRadius: '9999px' }}
                 >
                     <X className="w-4 h-4" /> Exit Quiz
                 </button>
@@ -67,13 +67,14 @@ export function QuizPage() {
                     >
                         {/* Icon */}
                         <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                            className="mx-auto w-24 h-24 rounded-[2rem] flex items-center justify-center shadow-2xl"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="mx-auto w-24 h-24 flex items-center justify-center"
                             style={{
                                 background: isExcellent ? 'var(--accent)' : 'var(--bg-raised)',
-                                color: isExcellent ? '#fff' : 'var(--text-muted)'
+                                color: isExcellent ? '#fff' : 'var(--text-muted)',
+                                borderRadius: 'var(--radius-md)',
                             }}
                         >
                             {isExcellent
@@ -94,11 +95,11 @@ export function QuizPage() {
 
                         {/* Score cards */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="p-6 rounded-2xl border flex flex-col items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                            <div className="p-6 border flex flex-col items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', borderRadius: 'var(--radius-md)' }}>
                                 <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Quiz Score</div>
                                 <div className="text-4xl font-black" style={{ color: 'var(--accent)' }}>{q.finalPercentage}%</div>
                             </div>
-                            <div className="p-6 rounded-2xl border flex flex-col items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                            <div className="p-6 border flex flex-col items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', borderRadius: 'var(--radius-md)' }}>
                                 <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Topic Memory</div>
                                 <div className="text-4xl font-black">{q.topic?.memoryScore ?? 0}%</div>
                             </div>
@@ -107,8 +108,8 @@ export function QuizPage() {
                         {/* Actions */}
                         <div className="flex flex-col gap-3 pt-4">
                             <button
-                                className="w-full h-14 rounded-xl font-bold flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]"
-                                style={{ background: 'var(--accent)', color: '#fff' }}
+                                className="w-full h-14 font-bold flex items-center justify-center gap-3 transition-ui"
+                                style={{ background: 'var(--accent)', color: '#fff', borderRadius: '9999px' }}
                                 onClick={q.handleRegenerate}
                                 disabled={q.isRegenerating}
                             >
@@ -116,8 +117,8 @@ export function QuizPage() {
                                 {q.isRegenerating ? 'Generating New Set...' : 'Review Again (New Questions)'}
                             </button>
                             <button
-                                className="w-full h-14 rounded-xl font-bold border-2 transition-colors flex items-center justify-center gap-3 hover:bg-bg-raised"
-                                style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                className="w-full h-14 font-bold border-2 transition-ui flex items-center justify-center gap-3 hover:bg-bg-raised"
+                                style={{ borderColor: 'var(--border)', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}
                                 onClick={q.goHome}
                             >
                                 <LogOut className="w-5 h-5" /> Back to Dashboard
@@ -341,8 +342,8 @@ export function QuizPage() {
                             <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mt-8 p-6 rounded-2xl border flex flex-col gap-3"
-                                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
+                                className="mt-8 p-6 border flex flex-col gap-3"
+                                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', borderRadius: 'var(--radius-md)' }}
                             >
                                 <div className="flex items-center gap-2">
                                     <Lightbulb className="w-5 h-5" style={{ color: 'var(--accent)' }} />
@@ -362,8 +363,8 @@ export function QuizPage() {
                 <footer className="fixed bottom-0 left-0 right-0 p-6 border-t flex justify-center z-40 bg-background/90 backdrop-blur" style={{ borderColor: 'var(--border)' }}>
                     <div className="w-full max-w-[640px] flex justify-end">
                         <button
-                            className="flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-bold text-white transition-all transform hover:scale-[1.02] shadow-xl"
-                            style={{ background: 'var(--accent)' }}
+                            className="flex items-center justify-center gap-3 px-8 py-4 font-bold text-white transition-ui"
+                            style={{ background: 'var(--accent)', borderRadius: '9999px' }}
                             onClick={q.nextQuestion}
                         >
                             {q.currentQuestionIndex < q.quizQuestions.length - 1 ? 'Next Question' : 'View Results'}

@@ -23,10 +23,10 @@ function getStatusColor(status: string): string {
     return 'var(--warning)';
 }
 
-function getStatusBg(status: string): string {
-    if (status === 'strong') return 'bg-green-500/10 text-green-500';
-    if (status === 'weak') return 'bg-red-500/10 text-red-500';
-    return 'bg-amber-500/10 text-amber-500';
+function getStatusBg(status: string): { background: string; color: string } {
+    if (status === 'strong') return { background: 'var(--badge-strong)', color: 'var(--success)' };
+    if (status === 'weak') return { background: 'var(--badge-weak)', color: 'var(--danger)' };
+    return { background: 'var(--badge-neutral)', color: 'var(--text-muted)' };
 }
 
 function getScoreColor(score: number): string {
@@ -231,10 +231,12 @@ export function KnowledgeBasePage() {
                             filteredConcepts.map((concept) => (
                                 <div
                                     key={`${concept.topicId}-${concept.id}`}
-                                    className="p-6 rounded-xl border transition-all flex flex-col gap-4 group"
+                                    className="p-6 border transition-ui flex flex-col gap-4 group"
                                     style={{
                                         background: selectedConcept?.id === concept.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
                                         borderColor: selectedConcept?.id === concept.id ? 'var(--accent)' : 'var(--border)',
+                                        borderRadius: 'var(--radius-md)',
+                                        boxShadow: 'var(--shadow-resting)',
                                     }}
                                 >
                                     <div className="flex justify-between items-start gap-4">
@@ -251,7 +253,7 @@ export function KnowledgeBasePage() {
                                         <div className="text-right shrink-0">
                                             <div
                                                 className="text-sm font-bold px-2 py-1 rounded capitalize"
-                                                style={{ background: getStatusBg(concept.status).split(' ')[0], color: getStatusColor(concept.status) }}
+                                                style={{ background: getStatusBg(concept.status).background, color: getStatusBg(concept.status).color }}
                                             >
                                                 {concept.status}
                                             </div>
@@ -262,8 +264,8 @@ export function KnowledgeBasePage() {
                                     <div className="flex gap-3 mt-auto pt-2">
                                         <button
                                             onClick={() => openConceptDetail(concept)}
-                                            className="flex-1 py-2 rounded-lg text-sm font-bold text-white transition-all transform hover:scale-[1.01]"
-                                            style={{ background: 'var(--accent)' }}
+                                            className="flex-1 py-2 text-sm font-bold text-white transition-ui"
+                                            style={{ background: 'var(--accent)', borderRadius: '9999px' }}
                                         >
                                             View Details
                                         </button>
@@ -290,8 +292,8 @@ export function KnowledgeBasePage() {
                         animate={{ x: 0 }}
                         exit={{ x: 420 }}
                         transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-                        className="fixed right-0 top-0 h-screen w-full sm:w-[420px] shadow-2xl z-40 flex flex-col"
-                        style={{ background: 'var(--bg-survey)', backgroundColor: 'var(--bg-surface)', borderLeft: '1px solid var(--border)' }}
+                        className="fixed right-0 top-0 h-screen w-full sm:w-[420px] z-40 flex flex-col"
+                        style={{ backgroundColor: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', boxShadow: 'var(--shadow-raised)' }}
                     >
                         {/* Detail Header */}
                         <div className="p-6 border-b flex items-start justify-between sticky top-0 z-10" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
@@ -325,7 +327,7 @@ export function KnowledgeBasePage() {
                                     {panelTab === tab && (
                                         <motion.div
                                             layoutId="kb-tab"
-                                            className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t-full"
+                                            className="absolute bottom-0 left-0 right-0 h-[2px] rounded-t-full"
                                             style={{ background: 'var(--accent)' }}
                                         />
                                     )}
@@ -369,8 +371,8 @@ export function KnowledgeBasePage() {
                                     <div className="mt-8 flex gap-3">
                                         <Link
                                             href={`/learn/${selectedConcept.topicId}?conceptId=${selectedConcept.id}`}
-                                            className="flex-1 flex items-center justify-center gap-2 py-4 text-white rounded-xl font-bold hover:shadow-lg transition-all"
-                                            style={{ background: 'var(--accent)' }}
+                                            className="flex-1 flex items-center justify-center gap-2 py-4 text-white font-bold transition-ui"
+                                            style={{ background: 'var(--accent)', borderRadius: '9999px' }}
                                             title="Quiz this concept (Standard)"
                                         >
                                             <Brain className="w-5 h-5 shrink-0" />

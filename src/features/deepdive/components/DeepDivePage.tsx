@@ -75,7 +75,7 @@ export function DeepDivePage() {
             {/* Left Column: Concept Sidebar */}
             <aside
                 className="w-[260px] shrink-0 border-r flex flex-col hidden md:flex"
-                style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}
+                style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)', boxShadow: 'var(--shadow-raised)' }}
             >
                 <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
                     <div className="relative">
@@ -202,12 +202,14 @@ export function DeepDivePage() {
                                     <div
                                         key={attempt.id}
                                         className={cn(
-                                            "rounded-xl border overflow-hidden transition-all",
-                                            !isExpanded && "hover:border-foreground/20 cursor-pointer shadow-sm"
+                                            "border overflow-hidden transition-ui",
+                                            !isExpanded && "cursor-pointer"
                                         )}
                                         style={{
                                             background: isExpanded ? 'var(--bg-surface)' : 'color-mix(in srgb, var(--bg-surface) 40%, transparent)',
-                                            borderColor: 'var(--border)'
+                                            borderColor: 'var(--border)',
+                                            borderRadius: 'var(--radius-md)',
+                                            boxShadow: 'var(--shadow-resting)',
                                         }}
                                         onClick={() => setExpandedRow(isExpanded ? '' : attempt.id)}
                                     >
@@ -280,12 +282,12 @@ export function DeepDivePage() {
                     </div>
 
                     {/* Footer Call to Action */}
-                    <div className="mt-16 p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--accent) 0%, color-mix(in srgb, var(--accent) 60%, black) 100%)', color: '#fff' }}>
+                    <div className="mt-16 p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden" style={{ background: 'var(--accent)', color: '#fff', borderRadius: 'var(--radius-md)' }}>
                         <div className="relative z-10">
                             <h3 className="text-2xl md:text-3xl font-black tracking-tight mb-2">Ready to boost your score?</h3>
                             <p className="font-medium opacity-90 text-sm md:text-base">Custom session available based on your weak points in Hick's Law.</p>
                         </div>
-                        <button className="relative z-10 bg-white px-8 py-4 rounded-xl font-black uppercase tracking-wider text-sm transition-transform hover:scale-105 shadow-lg flex items-center gap-2" style={{ color: 'var(--accent)' }}>
+                        <button className="relative z-10 bg-white px-8 py-4 font-black uppercase tracking-wider text-sm transition-ui flex items-center gap-2" style={{ color: 'var(--accent)', borderRadius: '9999px' }}>
                             Start Deep Session <ArrowRight className="w-4 h-4" />
                         </button>
                     </div>

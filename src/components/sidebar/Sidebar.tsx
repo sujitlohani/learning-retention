@@ -125,7 +125,7 @@ export function Sidebar() {
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-[var(--radius-sm)] backdrop-blur border shadow-sm"
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-[var(--radius-sm)] backdrop-blur border"
                 style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
             >
                 {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -147,6 +147,7 @@ export function Sidebar() {
             )} style={{
                 background: 'var(--bg-surface)',
                 borderColor: 'var(--border)',
+                boxShadow: 'var(--shadow-raised)',
                 transitionDuration: 'var(--duration-answer)',
                 transitionTimingFunction: 'ease-out',
             }}>
@@ -159,6 +160,7 @@ export function Sidebar() {
                 style={{
                     background: 'var(--bg-surface)',
                     borderColor: 'var(--border)',
+                    boxShadow: 'var(--shadow-raised)',
                     width: '60px',
                     transition: 'width var(--duration-answer) ease-out',
                 }}

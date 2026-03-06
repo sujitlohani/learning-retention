@@ -76,11 +76,7 @@ export function LandingPage() {
                     {/* Question marks */}
                     <div className="absolute top-1/3 right-[30%] blur-[2px] select-none text-7xl font-serif italic" style={{ color: 'var(--accent)', opacity: 0.2 }}>?</div>
                     <div className="absolute bottom-1/3 left-[40%] blur-[1px] select-none text-8xl font-serif italic" style={{ color: 'var(--accent)', opacity: 0.3 }}>?</div>
-                    {/* Central glow */}
-                    <div
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[120px]"
-                        style={{ background: 'var(--accent)', opacity: 0.05 }}
-                    />
+                    {/* Central glow removed per refinement brief — no glow effects */}
                 </div>
 
                 <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20 max-w-[1280px] w-full">
@@ -120,7 +116,7 @@ export function LandingPage() {
                                 className="flex min-w-[180px] cursor-pointer items-center justify-center h-14 px-8 text-base font-bold text-white transition-all"
                                 style={{
                                     background: 'var(--accent)',
-                                    borderRadius: 'var(--radius-md)',
+                                    borderRadius: '9999px',
                                     transitionDuration: 'var(--duration-instant)',
                                 }}
                             >
@@ -183,12 +179,13 @@ export function LandingPage() {
                             <div className="relative w-full h-full">
                                 {/* Floating Card 1 — success card */}
                                 <div
-                                    className="absolute top-[10%] left-[10%] w-48 p-4 backdrop-blur-md shadow-2xl z-30"
+                                    className="absolute top-[10%] left-[10%] w-48 p-4 backdrop-blur-md z-30"
                                     style={{
                                         background: 'var(--bg-surface)',
                                         opacity: 0.9,
-                                        borderRadius: 'var(--radius-lg)',
+                                        borderRadius: 'var(--radius-md)',
                                         border: '1px solid var(--border)',
+                                        boxShadow: 'var(--shadow-raised)',
                                     }}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
@@ -205,7 +202,7 @@ export function LandingPage() {
 
                                 {/* Central glow + neural icon */}
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-64 h-64 rounded-full blur-[80px]" style={{ background: 'var(--accent)', opacity: 0.15 }} />
+                                    <div className="w-64 h-64 rounded-full" style={{ background: 'var(--accent)', opacity: 0.06 }} />
                                     {/* Concentric circles */}
                                     <div className="absolute inset-0 flex items-center justify-center p-12">
                                         <div className="w-full h-full rounded-full border-dashed" style={{ borderWidth: '0.5px', borderColor: 'var(--accent)', opacity: 0.3, animation: 'spin 20s linear infinite' }} />
@@ -218,12 +215,13 @@ export function LandingPage() {
 
                                 {/* Floating Card 2 — retention score */}
                                 <div
-                                    className="absolute bottom-[15%] right-[10%] w-56 p-4 backdrop-blur-md shadow-2xl z-40"
+                                    className="absolute bottom-[15%] right-[10%] w-56 p-4 backdrop-blur-md z-40"
                                     style={{
                                         background: 'var(--bg-surface)',
                                         opacity: 0.9,
-                                        borderRadius: 'var(--radius-lg)',
+                                        borderRadius: 'var(--radius-md)',
                                         border: '1px solid var(--border)',
+                                        boxShadow: 'var(--shadow-raised)',
                                     }}
                                 >
                                     <div className="flex gap-2 items-center mb-3">
@@ -271,9 +269,10 @@ export function LandingPage() {
                                 key={item.step}
                                 className="flex flex-col gap-6 p-8 transition-all"
                                 style={{
-                                    borderRadius: 'var(--radius-lg)',
+                                    borderRadius: 'var(--radius-md)',
                                     border: '1px solid var(--border)',
                                     background: 'var(--bg-base)',
+                                    boxShadow: 'var(--shadow-resting)',
                                 }}
                             >
                                 <div
@@ -334,6 +333,7 @@ export function LandingPage() {
                                     background: 'var(--bg-surface)',
                                     border: '1px solid var(--border)',
                                     borderRadius: 'var(--radius-md)',
+                                    boxShadow: 'var(--shadow-resting)',
                                 }}
                             >
                                 <div className="text-2xl" style={{ color: 'var(--accent)' }}>{f.icon}</div>

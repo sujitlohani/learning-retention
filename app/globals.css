@@ -18,8 +18,8 @@
   --text-primary: #111020;
   --text-muted: #6B6A85;
 
-  /* Accent */
-  --accent: #5650E8;
+  /* Accent — desaturated indigo-violet */
+  --accent: #514DD9;
   --accent-light: #EAE9FF;
 
   /* Status */
@@ -27,10 +27,21 @@
   --warning: #CA8A04;
   --danger: #DC2626;
 
-  /* Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 20px;
+  /* Radius — tight, professional */
+  --radius-sm: 6px;   /* badges, tags, pills */
+  --radius-md: 8px;   /* cards, inputs, dropdowns, secondary buttons */
+  --radius-lg: 10px;  /* modals & drawers ONLY — never cards */
+
+  /* Shadows — light mode (secondary) */
+  --shadow-resting: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-raised: 0 4px 12px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.06);
+
+  /* Badge tints */
+  --badge-weak: color-mix(in srgb, var(--danger) 12%, transparent);
+  --badge-strong: color-mix(in srgb, var(--success) 12%, transparent);
+  --badge-neutral: var(--bg-raised);
+  --badge-intermediate: color-mix(in srgb, var(--accent) 12%, transparent);
+  --badge-expert: color-mix(in srgb, var(--accent) 12%, transparent);
 
   /* Motion durations */
   --duration-instant: 80ms;
@@ -40,7 +51,7 @@
   --duration-progress: 350ms;
 
   /* shadcn compatibility tokens */
-  --radius: 12px;
+  --radius: 8px;
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-surface);
@@ -76,11 +87,22 @@
   --border: #28283A;
   --text-primary: #EEEDF8;
   --text-muted: #72728A;
-  --accent: #6C63FF;
+  --accent: #6860F0;
   --accent-light: #1C1B33;
   --success: #4ADE80;
   --warning: #FACC15;
   --danger: #F87171;
+
+  /* Shadows — dark mode (primary experience) */
+  --shadow-resting: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.25);
+  --shadow-raised: 0 4px 16px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
+
+  /* Badge tints (dark mode) */
+  --badge-weak: color-mix(in srgb, var(--danger) 12%, transparent);
+  --badge-strong: color-mix(in srgb, var(--success) 12%, transparent);
+  --badge-neutral: var(--bg-raised);
+  --badge-intermediate: color-mix(in srgb, var(--accent) 12%, transparent);
+  --badge-expert: color-mix(in srgb, var(--accent) 12%, transparent);
 
   --background: var(--bg-base);
   --foreground: var(--text-primary);
@@ -124,17 +146,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== Dot Grid Background ===== */
+/* ===== Transition Utility ===== */
 
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-  background-size: 24px 24px;
-  opacity: 0.4;
-  pointer-events: none;
+.transition-ui {
+  transition-property: background-color, color, border-color, opacity;
+  transition-duration: var(--duration-base);
+  transition-timing-function: ease;
 }
 
 /* ===== Scrollbar ===== */

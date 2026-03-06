@@ -35,15 +35,13 @@ function DueSessionCard({ dueSession }: { dueSession: DueSession }) {
     return (
         <Link href={`/learn/${topic.id}?session=${session.id}`}>
             <motion.div
-                className="group flex flex-col gap-4 p-6 transition-all cursor-pointer"
+                className="group flex flex-col gap-4 p-6 transition-ui cursor-pointer"
                 style={{
                     background: 'var(--bg-surface)',
                     border: '1px solid var(--border)',
                     borderRadius: 'var(--radius-md)',
-                    transitionDuration: 'var(--duration-fast)',
+                    boxShadow: 'var(--shadow-resting)',
                 }}
-                whileHover={{ y: -2 }}
-                transition={{ duration: 0.15 }}
             >
                 {/* Top row — topic name + score */}
                 <div className="flex items-start justify-between gap-4">
@@ -105,11 +103,10 @@ function DueSessionCard({ dueSession }: { dueSession: DueSession }) {
                         </span>
                     </div>
                     <button
-                        className="flex items-center gap-2 h-10 px-5 text-sm font-bold text-white transition-all"
+                        className="flex items-center gap-2 h-10 px-5 text-sm font-bold text-white transition-ui"
                         style={{
                             background: 'var(--accent)',
-                            borderRadius: 'var(--radius-md)',
-                            transitionDuration: 'var(--duration-instant)',
+                            borderRadius: '9999px',
                         }}
                     >
                         Start Session
@@ -182,7 +179,7 @@ export function HomeDashboard() {
                                 AI will generate concepts, schedule, and quiz questions
                             </div>
                         </div>
-                        <ArrowRight className="w-5 h-5 ml-auto group-hover:translate-x-1 transition-transform" style={{ color: 'var(--text-muted)' }} />
+                        <ArrowRight className="w-5 h-5 ml-auto transition-ui" style={{ color: 'var(--text-muted)' }} />
                     </div>
                 </Link>
             </motion.div>
@@ -279,12 +276,12 @@ export function HomeDashboard() {
                         {topics.map((topic) => (
                             <Link key={topic.id} href={`/cockpit?topic=${topic.id}`}>
                                 <div
-                                    className="group p-5 transition-all cursor-pointer"
+                                    className="group p-5 transition-ui cursor-pointer"
                                     style={{
                                         background: 'var(--bg-surface)',
                                         border: '1px solid var(--border)',
                                         borderRadius: 'var(--radius-md)',
-                                        transitionDuration: 'var(--duration-fast)',
+                                        boxShadow: 'var(--shadow-resting)',
                                     }}
                                 >
                                     <div className="flex items-start justify-between">
@@ -302,7 +299,7 @@ export function HomeDashboard() {
                                         </div>
                                     </div>
                                     {/* Score bar */}
-                                    <div className="mt-3 w-full h-1 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
+                                    <div className="mt-3 w-full h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
                                         <div
                                             className="h-full rounded-full"
                                             style={{

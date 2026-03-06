@@ -18,9 +18,9 @@ export function LoginPage() {
             >
                 <div className="space-y-6">
                     <motion.div
-                        initial={{ scale: 0.9 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
                         className="flex justify-center"
                     >
                         <MemoraLogo size={40} />
