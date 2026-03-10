@@ -6,6 +6,7 @@ import { topicsService } from '@/src/features/topics/services/topics.service';
 import { scheduleService } from '@/src/features/schedule/services/schedule.service';
 import { questionsService } from '@/src/features/quiz/services/questions.service';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
+import { masteryService } from '@/src/features/scoring/services/mastery.service';
 import { retentionCalculator } from '@/src/lib/retention-calculator';
 import { Topic, QuizQuestion, QuizResult } from '@/src/types';
 import { AIGeneratedQuestion, QuizAttempt } from '@/src/types/ai';
@@ -188,6 +189,9 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 conceptStats[q.conceptId].total += 1;
                 if (isCorrect) conceptStats[q.conceptId].correct += 1;
 
+                // Update concept mastery
+                masteryService.applyQuizDelta(q.conceptId, isCorrect, finalScore === 100);
+
                 return {
                     questionId: q.id,
                     conceptId: q.conceptId,
@@ -252,12 +256,10 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 }
             }
 
-            setPhase('result');
-            const storedTopics = topicsService.getTopics();
-            const updatedTopic = storedTopics.find(t => t.id === topicId);
-            if (updatedTopic) setTopic(updatedTopic);
+            // Redirect to the new quiz completion page
+            router.push(`/quiz/complete?attemptId=${historyAttempt.id}`);
         }
-    }, [currentQuestionIndex, quizQuestions, topic, correctCount, answers, weakConcepts, quizStartTime, sessionId, conceptId, topicId]);
+    }, [currentQuestionIndex, quizQuestions, topic, correctCount, answers, weakConcepts, quizStartTime, sessionId, conceptId, topicId, router]);
 
     const handleRegenerate = useCallback(async () => {
         if (!topic) return;

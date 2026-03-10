@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callWithRetry } from '@/src/services/ai/huggingface-client';
-import { buildQuizPrompt } from '@/src/services/ai/prompts/quiz-prompts';
-import { parseQuizResponse } from '@/src/services/ai/parsers/quiz-parser';
-import { validateAndFilterQuestions } from '@/src/services/ai/validators/quality-scorer';
+import { callWithRetry } from '@/src/shared/services/ai/huggingface-client';
+import { buildQuizPrompt } from '@/src/shared/services/ai/prompts/quiz-prompts';
+import { parseQuizResponse } from '@/src/shared/services/ai/parsers/quiz-parser';
+import { validateAndFilterQuestions } from '@/src/shared/services/ai/validators/quality-scorer';
 
 export async function POST(request: NextRequest) {
     try {

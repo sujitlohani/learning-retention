@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memora | Deep Dive</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1111d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .active-nav { position: relative; color: #1111d4; }
+        .active-nav::after { content: ''; position: absolute; bottom: -1.25rem; left: 0; width: 100%; height: 2px; background-color: #1111d4; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<nav class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex justify-between h-16 items-center">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 group cursor-pointer">
+<div class="p-1.5 bg-primary rounded-lg text-white">
+<span class="material-symbols-outlined block">auto_awesome_motion</span>
+</div>
+<span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Memora</span>
+</div>
+<div class="hidden md:flex items-center gap-6">
+<a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Cockpit</a>
+<a class="text-sm font-medium active-nav" href="#">Deep Dive</a>
+<a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Knowledge Base</a>
+<a class="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors" href="#">Quiz</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-64 pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-full text-sm focus:ring-2 focus:ring-primary/50 transition-all" placeholder="Search concepts or topics" type="text"/>
+</div>
+<button class="p-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary border border-primary/20 cursor-pointer">
+<span class="material-symbols-outlined text-xl">person</span>
+</div>
+</div>
+</div>
+</div>
+</nav>
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<header class="mb-12">
+<div class="flex items-center gap-2 text-primary mb-2">
+<span class="material-symbols-outlined text-sm">explore</span>
+<span class="text-xs font-bold uppercase tracking-widest">Discovery Engine</span>
+</div>
+<h1 class="text-4xl font-extrabold tracking-tight mb-3">Deep Dive</h1>
+<p class="text-slate-600 dark:text-slate-400 text-lg">Discover new concepts and expand your knowledge with our adaptive exploration engine.</p>
+</header>
+<section class="mb-16">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-2xl font-bold flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">auto_graph</span>
+                    Recommended Concepts
+                </h2>
+<button class="text-sm font-semibold text-primary hover:underline">View All</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+<!-- Concept Card 1 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-shadow group">
+<div class="h-32 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-20 bg-gradient-to-br from-primary to-transparent" data-alt="Abstract geometric nodes representing binary trees"></div>
+<span class="material-symbols-outlined text-4xl text-slate-400 group-hover:scale-110 transition-transform">account_tree</span>
+</div>
+<div class="p-5">
+<div class="flex gap-2 mb-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">Intermediate</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase">Data Structures</span>
+</div>
+<h3 class="text-lg font-bold mb-2">Binary Trees</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">Master the fundamentals of hierarchical data structures and traversal algorithms.</p>
+<button class="w-full py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-sm font-bold transition-all">Explore Concept</button>
+</div>
+</div>
+<!-- Concept Card 2 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-shadow group">
+<div class="h-32 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-20 bg-gradient-to-tr from-primary to-transparent" data-alt="Abstract python code pattern and curly braces"></div>
+<span class="material-symbols-outlined text-4xl text-slate-400 group-hover:scale-110 transition-transform">code</span>
+</div>
+<div class="p-5">
+<div class="flex gap-2 mb-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 uppercase">Intermediate</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase">Python</span>
+</div>
+<h3 class="text-lg font-bold mb-2">Decorators in Python</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">Learn how to extend the behavior of functions or classes dynamically.</p>
+<button class="w-full py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-sm font-bold transition-all">Explore Concept</button>
+</div>
+</div>
+<!-- Concept Card 3 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-shadow group">
+<div class="h-32 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-20 bg-gradient-to-bl from-primary to-transparent" data-alt="Forest of connected decision tree nodes"></div>
+<span class="material-symbols-outlined text-4xl text-slate-400 group-hover:scale-110 transition-transform">schema</span>
+</div>
+<div class="p-5">
+<div class="flex gap-2 mb-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 uppercase">Advanced</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase">ML</span>
+</div>
+<h3 class="text-lg font-bold mb-2">Random Forest</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">Understand ensemble learning methods for robust classification and regression.</p>
+<button class="w-full py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-sm font-bold transition-all">Explore Concept</button>
+</div>
+</div>
+<!-- Concept Card 4 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden hover:shadow-md transition-shadow group">
+<div class="h-32 w-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-20 bg-gradient-to-r from-primary to-transparent" data-alt="Infinite recursive pattern of mirrors or loops"></div>
+<span class="material-symbols-outlined text-4xl text-slate-400 group-hover:scale-110 transition-transform">all_inclusive</span>
+</div>
+<div class="p-5">
+<div class="flex gap-2 mb-3">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 uppercase">Beginner</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 uppercase">CS Fundamentals</span>
+</div>
+<h3 class="text-lg font-bold mb-2">Recursion</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4">Master the art of solving complex problems by breaking them into simpler sub-problems.</p>
+<button class="w-full py-2.5 bg-primary/10 hover:bg-primary text-primary hover:text-white rounded-lg text-sm font-bold transition-all">Explore Concept</button>
+</div>
+</div>
+</div>
+</section>
+<section class="mb-16">
+<h2 class="text-2xl font-bold flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary">route</span>
+                Guided Concept Paths
+            </h2>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<!-- Path 1 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-6 hover:border-primary/50 transition-all">
+<div class="sm:w-32 h-32 rounded-lg bg-primary/5 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-5xl text-primary">layers</span>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<h3 class="text-xl font-bold mb-1">Data Structures Foundations</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">A complete map from arrays to complex graph theory.</p>
+<div class="flex items-center gap-4 mb-4">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-base">format_list_bulleted</span> 12 Concepts
+                                </span>
+<div class="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[45%]"></div>
+</div>
+<span class="text-xs font-bold text-primary">45%</span>
+</div>
+</div>
+<button class="px-6 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:shadow-lg hover:shadow-primary/30 transition-all self-start">Continue Path</button>
+</div>
+</div>
+<!-- Path 2 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-6 hover:border-primary/50 transition-all">
+<div class="sm:w-32 h-32 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-5xl text-slate-400">terminal</span>
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<h3 class="text-xl font-bold mb-1">Advanced Python Techniques</h3>
+<p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Deep dive into metaclasses, concurrency, and async architectures.</p>
+<div class="flex items-center gap-4 mb-4">
+<span class="text-xs font-medium text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-base">format_list_bulleted</span> 8 Concepts
+                                </span>
+<div class="flex-1 bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[0%]"></div>
+</div>
+<span class="text-xs font-bold text-slate-400">0%</span>
+</div>
+</div>
+<button class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all self-start">Start Path</button>
+</div>
+</div>
+</div>
+</section>
+<section class="mb-16">
+<h2 class="text-2xl font-bold flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary">trending_up</span>
+                Trending Concepts
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Trending 1 -->
+<div class="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400">hub</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold">Graph Algorithms</h4>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-[10px] font-bold text-primary uppercase">Algorithms</span>
+<span class="text-xs text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">group</span> 1.2k+
+                            </span>
+</div>
+</div>
+<button class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-primary transition-all">
+<span class="material-symbols-outlined">lock_open</span>
+</button>
+</div>
+<!-- Trending 2 -->
+<div class="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+<span class="material-symbols-outlined text-purple-600 dark:text-purple-400">api</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold">REST APIs</h4>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-[10px] font-bold text-primary uppercase">Web</span>
+<span class="text-xs text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">group</span> 850+
+                            </span>
+</div>
+</div>
+<button class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-primary transition-all">
+<span class="material-symbols-outlined">lock_open</span>
+</button>
+</div>
+<!-- Trending 3 -->
+<div class="bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="p-3 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
+<span class="material-symbols-outlined text-rose-600 dark:text-rose-400">psychology</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold">Neural Networks</h4>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-[10px] font-bold text-primary uppercase">AI</span>
+<span class="text-xs text-slate-400 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">group</span> 3.4k+
+                            </span>
+</div>
+</div>
+<button class="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-primary transition-all">
+<span class="material-symbols-outlined">lock_open</span>
+</button>
+</div>
+</div>
+</section>
+<section class="mb-16">
+<h2 class="text-2xl font-bold flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-primary">category</span>
+                Explore by Topic
+            </h2>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 text-center hover:border-primary cursor-pointer transition-all">
+<span class="material-symbols-outlined text-3xl text-slate-400 mb-2">code_off</span>
+<h5 class="font-bold text-sm">Python</h5>
+<p class="text-xs text-slate-400 mt-1">42 Concepts</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 text-center hover:border-primary cursor-pointer transition-all">
+<span class="material-symbols-outlined text-3xl text-slate-400 mb-2">database</span>
+<h5 class="font-bold text-sm">Databases</h5>
+<p class="text-xs text-slate-400 mt-1">28 Concepts</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 text-center hover:border-primary cursor-pointer transition-all">
+<span class="material-symbols-outlined text-3xl text-slate-400 mb-2">settings_ethernet</span>
+<h5 class="font-bold text-sm">System Design</h5>
+<p class="text-xs text-slate-400 mt-1">15 Concepts</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 text-center hover:border-primary cursor-pointer transition-all">
+<span class="material-symbols-outlined text-3xl text-slate-400 mb-2">javascript</span>
+<h5 class="font-bold text-sm">JavaScript</h5>
+<p class="text-xs text-slate-400 mt-1">36 Concepts</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 text-center hover:border-primary cursor-pointer transition-all">
+<span class="material-symbols-outlined text-3xl text-slate-400 mb-2">security</span>
+<h5 class="font-bold text-sm">Security</h5>
+<p class="text-xs text-slate-400 mt-1">21 Concepts</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 text-center hover:border-primary cursor-pointer transition-all">
+<span class="material-symbols-outlined text-3xl text-slate-400 mb-2">cloud_queue</span>
+<h5 class="font-bold text-sm">Cloud Ops</h5>
+<p class="text-xs text-slate-400 mt-1">19 Concepts</p>
+</div>
+</div>
+</section>
+</main>
+<footer class="bg-white dark:bg-background-dark border-t border-slate-200 dark:border-slate-800 py-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col md:flex-row justify-between items-center gap-8">
+<div class="flex items-center gap-2">
+<div class="p-1 bg-primary/20 rounded-md text-primary">
+<span class="material-symbols-outlined block text-sm">auto_awesome_motion</span>
+</div>
+<span class="text-lg font-bold tracking-tight">Memora</span>
+</div>
+<div class="flex gap-8">
+<a class="text-sm text-slate-500 hover:text-primary" href="#">About</a>
+<a class="text-sm text-slate-500 hover:text-primary" href="#">Guidelines</a>
+<a class="text-sm text-slate-500 hover:text-primary" href="#">Privacy</a>
+<a class="text-sm text-slate-500 hover:text-primary" href="#">Support</a>
+</div>
+<p class="text-sm text-slate-400">© 2024 Memora Discovery Engine.</p>
+</div>
+</div>
+</footer>
+</body></html>

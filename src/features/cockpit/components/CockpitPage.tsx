@@ -4,13 +4,15 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { X, Brain, Calendar, ChevronRight, BarChart3, ArrowRight, Clock, Plus, Trash2, ChevronDown, ChevronUp, CheckCircle, XCircle, AlertTriangle, BookOpen } from 'lucide-react';
+import { X, Brain, Calendar, ChevronRight, BarChart3, ArrowRight, Clock, Plus, Trash2, ChevronDown, ChevronUp, CheckCircle, XCircle, AlertTriangle, BookOpen, Dices } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { scheduleService } from '@/src/features/schedule/services/schedule.service';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
 import { Topic, Concept } from '@/src/types';
 import { QuizAttempt, StudySchedule } from '@/src/types/ai';
+import { useXP } from '@/src/features/scoring/hooks/useXP';
+import { useTopicProgress } from '@/src/features/scoring/hooks/useTopicProgress';
 
 function getScoreColor(score: number): string {
     if (score >= 80) return 'var(--success)';
@@ -30,6 +32,68 @@ function getScoreBgClass(score: number): string {
     return 'bg-red-500/10 text-red-500';
 }
 
+function CockpitTopicCard({ topic, selectedTopicId, openDetail }: { topic: Topic, selectedTopicId?: string, openDetail: (t: Topic) => void }) {
+    const { percentage: totalPercent } = useTopicProgress(topic.id);
+
+    return (
+        <button
+            onClick={() => openDetail(topic)}
+            className={cn(
+                "w-full text-left flex flex-col p-6 transition-all group",
+            )}
+            style={{
+                background: selectedTopicId === topic.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
+                border: '1px solid',
+                borderColor: 'var(--border)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--shadow-resting)',
+            }}
+        >
+            <div className="flex items-start justify-between w-full mb-4">
+                <div>
+                    <span
+                        className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                        style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
+                    >
+                        {topic.level}
+                    </span>
+                    <h3 className="text-lg font-bold mt-2">{topic.name}</h3>
+                </div>
+                <div className="text-right">
+                    <div className="text-3xl font-bold leading-none" style={{ color: getScoreColor(totalPercent) }}>
+                        {totalPercent}%
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider mt-1 font-bold" style={{ color: 'var(--text-muted)' }}>Topic Mastery</div>
+                </div>
+            </div>
+
+            {/* Progress bar */}
+            <div className="w-full h-[3px] rounded-full overflow-hidden mb-4" style={{ background: 'var(--bg-raised)' }}>
+                <div
+                    className="h-full rounded-full"
+                    style={{
+                        width: `${totalPercent}%`,
+                        background: getScoreColor(totalPercent),
+                    }}
+                />
+            </div>
+
+            <div className="flex items-center gap-2 mt-auto">
+                <span className="text-xs font-medium px-2.5 py-1 rounded-sm" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>
+                    {topic.concepts.length} Concept{topic.concepts.length !== 1 ? 's' : ''}
+                </span>
+                <span className="flex-1"></span>
+                <span
+                    className="text-xs font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ color: 'var(--accent)' }}
+                >
+                    Details <ChevronRight className="w-3.5 h-3.5" />
+                </span>
+            </div>
+        </button>
+    );
+}
+
 export function CockpitPage() {
     const searchParams = useSearchParams();
     const selectedTopicId = searchParams.get('topic');
@@ -40,6 +104,8 @@ export function CockpitPage() {
     const [history, setHistory] = useState<QuizAttempt[]>([]);
     const [panelTab, setPanelTab] = useState<'overview' | 'history' | 'insights'>('overview');
     const [expandedAttempt, setExpandedAttempt] = useState<string | null>(null);
+
+    const { balance } = useXP();
 
     useEffect(() => {
         const t = topicsService.getTopics();
@@ -101,6 +167,9 @@ export function CockpitPage() {
                             <p className="text-base" style={{ color: 'var(--text-muted)' }}>Performance overview and actionability.</p>
                         </motion.div>
                         <div className="flex gap-3">
+                            <div className="flex items-center gap-1.5 px-3 rounded-lg text-sm font-bold border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--success)', color: 'var(--success)' }}>
+                                <span>⚡</span> {balance} XP
+                            </div>
                             <Link
                                 href="/knowledge-base"
                                 className="hidden sm:flex items-center justify-center h-10 px-5 text-sm font-bold transition-all"
@@ -113,6 +182,7 @@ export function CockpitPage() {
                             >
                                 Filters
                             </Link>
+
                             <Link
                                 href="/add-topic"
                                 className="flex items-center justify-center h-10 px-5 text-sm font-bold text-white transition-all"
@@ -226,62 +296,7 @@ export function CockpitPage() {
                         ) : (
                             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                                 {topics.map((topic) => (
-                                    <button
-                                        key={topic.id}
-                                        onClick={() => openDetail(topic)}
-                                        className={cn(
-                                            "w-full text-left flex flex-col p-6 transition-all group",
-                                        )}
-                                        style={{
-                                            background: selectedTopic?.id === topic.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
-                                            border: '1px solid',
-                                            borderColor: 'var(--border)',
-                                            borderRadius: 'var(--radius-md)',
-                                            boxShadow: 'var(--shadow-resting)',
-                                        }}
-                                    >
-                                        <div className="flex items-start justify-between w-full mb-4">
-                                            <div>
-                                                <span
-                                                    className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
-                                                    style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
-                                                >
-                                                    {topic.level}
-                                                </span>
-                                                <h3 className="text-lg font-bold mt-2">{topic.name}</h3>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="text-3xl font-bold leading-none" style={{ color: getScoreColor(topic.memoryScore || 0) }}>
-                                                    {topic.memoryScore || 0}
-                                                </div>
-                                                <div className="text-[10px] uppercase tracking-wider mt-1" style={{ color: 'var(--text-muted)' }}>Score</div>
-                                            </div>
-                                        </div>
-
-                                        {/* Progress bar */}
-                                        <div className="w-full h-[3px] rounded-full overflow-hidden mb-4" style={{ background: 'var(--bg-raised)' }}>
-                                            <div
-                                                className="h-full rounded-full"
-                                                style={{
-                                                    width: `${topic.memoryScore}%`,
-                                                    background: getScoreColor(topic.memoryScore),
-                                                }}
-                                            />
-                                        </div>
-
-                                        <div className="flex items-center gap-2 mt-auto">
-                                            <span className="text-xs font-medium px-2.5 py-1 rounded-sm" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>
-                                                {topic.concepts.length} Concept{topic.concepts.length !== 1 ? 's' : ''}
-                                            </span>
-                                            <span className="flex-1"></span>
-                                            <span
-                                                className="text-xs font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                                style={{ color: 'var(--accent)' }}
-                                            >
-                                                Details <ChevronRight className="w-3.5 h-3.5" />
-                                            </span>
-                                        </div>
-                                    </button>
+                                    <CockpitTopicCard key={topic.id} topic={topic} selectedTopicId={selectedTopic?.id} openDetail={openDetail} />
                                 ))}
                             </div>
                         )}
@@ -417,7 +432,7 @@ export function CockpitPage() {
                                             <p className="text-sm font-medium">No session history.</p>
                                         </div>
                                     ) : (
-                                        history.slice().reverse().map((attempt) => {
+                                        history.map((attempt) => {
                                             const isExpanded = expandedAttempt === attempt.id;
 
                                             // Provide dummy data for UI display if missing from real data model
@@ -543,14 +558,25 @@ export function CockpitPage() {
 
                         {/* Pinned Action Buttons */}
                         <div className="p-6 border-t mt-auto" style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}>
-                            <Link
-                                href={`/learn/${selectedTopic.id}`}
-                                className="w-full flex items-center justify-center gap-3 py-3.5 text-white font-bold transition-ui"
-                                style={{ background: 'var(--accent)', borderRadius: '9999px' }}
-                            >
-                                <Brain className="w-4 h-4" />
-                                Start Review Session
-                            </Link>
+                            <div className="flex gap-3">
+                                <Link
+                                    href={`/learn/${selectedTopic.id}`}
+                                    className="flex-1 flex items-center justify-center gap-2 py-3.5 text-white font-bold transition-ui"
+                                    style={{ background: 'var(--accent)', borderRadius: '9999px' }}
+                                >
+                                    <Brain className="w-4 h-4" />
+                                    Start Review Session
+                                </Link>
+                                <Link
+                                    href={`/learn/${selectedTopic.id}?generate=true`}
+                                    className="px-5 flex items-center justify-center gap-2 rounded-xl font-bold border transition-all hover:bg-bg-raised text-sm"
+                                    style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                                    title="Generate completely new questions"
+                                >
+                                    <Dices className="w-5 h-5 shrink-0 text-amber-500" />
+                                    Generate New
+                                </Link>
+                            </div>
                             <div className="flex gap-3 mt-3">
                                 <Link
                                     href={`/deep-dive?concept=${selectedTopic.concepts[0]?.id || ''}`}

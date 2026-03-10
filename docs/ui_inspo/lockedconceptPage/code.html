@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1111d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>Memora | Random Forest</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark px-6 py-3 lg:px-10 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-2 text-primary">
+<span class="material-symbols-outlined text-3xl font-bold">account_tree</span>
+<h2 class="text-slate-900 dark:text-white text-xl font-black leading-tight tracking-tight">Memora</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-300 text-sm font-semibold hover:text-primary transition-colors" href="#">Cockpit</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary pb-1" href="#">Deep Dive</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-semibold hover:text-primary transition-colors" href="#">Knowledge Base</a>
+<a class="text-slate-600 dark:text-slate-300 text-sm font-semibold hover:text-primary transition-colors" href="#">Quiz</a>
+</nav>
+</div>
+<div class="flex flex-1 justify-end gap-4 items-center">
+<label class="hidden sm:flex flex-col min-w-40 h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-xl h-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+<div class="text-slate-400 flex items-center justify-center pl-3">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-transparent focus:ring-0 text-slate-900 dark:text-white placeholder:text-slate-400 px-3 text-sm font-medium" placeholder="Search concepts..." value=""/>
+</div>
+</label>
+<div class="size-10 rounded-full border-2 border-primary/20 p-0.5">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-full" data-alt="User profile avatar portrait" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCzpM7M9Cl7KavNCW3nR5QOTEJ_4NyCkbdNI_Hur8EMDxjiCZYrQPu9jZV8ErtuAztmourydGinxyn2bTIiBMkb212xYbGYrIXOItTHF_1hDNFCGR69fTfqcQbvdoxpL7xVd53WDBKKVRUI8WyYJwwfV_l0jsQVswB7IQP82BdBd9PkjRzfrwSex9tiaUF25RDB8vGYMATGBdgHt4TMgFVcm7uUspJ1ljMrkanjCaBx4HSFbMjW2lN3A_4XOwqFV8APhA2g8Lno1kc");'></div>
+</div>
+</div>
+</header>
+<main class="flex-1 max-w-5xl mx-auto w-full px-4 py-8 lg:py-12">
+<!-- Header Section -->
+<div class="mb-8">
+<div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+<h1 class="text-slate-900 dark:text-white text-4xl lg:text-5xl font-black tracking-tight">Random Forest</h1>
+<div class="flex gap-2">
+<button class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-primary transition-all">
+<span class="material-symbols-outlined">bookmark</span>
+</button>
+<button class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-primary transition-all">
+<span class="material-symbols-outlined">share</span>
+</button>
+</div>
+</div>
+<div class="flex flex-wrap gap-3">
+<div class="flex h-9 items-center justify-center gap-2 rounded-xl bg-primary/10 px-4 text-primary">
+<span class="material-symbols-outlined text-lg">category</span>
+<p class="text-sm font-bold">Machine Learning</p>
+</div>
+<div class="flex h-9 items-center justify-center gap-2 rounded-xl bg-amber-100 dark:bg-amber-900/30 px-4 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800">
+<span class="material-symbols-outlined text-lg">signal_cellular_alt</span>
+<p class="text-sm font-bold">Intermediate</p>
+</div>
+<div class="flex h-9 items-center justify-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 px-4 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-lg">timer</span>
+<p class="text-sm font-bold">10 min</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Main Content -->
+<div class="lg:col-span-2 flex flex-col gap-8">
+<!-- 1. Concept Overview -->
+<section>
+<h2 class="text-slate-900 dark:text-white text-xl font-extrabold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">info</span>
+                            Concept Overview
+                        </h2>
+<div class="group relative overflow-hidden rounded-xl bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition-all duration-300">
+<div class="aspect-video w-full bg-slate-100 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-indigo-500/20 mix-blend-multiply"></div>
+<div class="w-full h-full bg-center bg-cover" data-alt="Abstract 3D visualization of decision trees forming a forest" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDLnem3NXlvKrxGz-UXwfBnHmnGFHlWF2hoMCCKqsBweN9eR1_1IndCzPanZHrLEWY38XVd0r2LvSK4wj8VfMVm4z981F8q5l-ymBbTGzljTzKDF0SEuOnMQ6pX6RCRY54KmV6szmFn-ChRc29cqKHo1-f7GsmVkf42HzTzUh1o_Em5hFASlhipzRGUL5Vpmno4SjMgMZ2Hj2GU3shbRURQMrta3gn8i5cqPiuUBRKXAvW0Ng9qq0ZTZ3f8jdnhNjq3Fr2HTw95DRQ');"></div>
+</div>
+<div class="p-6">
+<h3 class="text-slate-900 dark:text-white text-lg font-bold mb-2">Understanding Random Forest</h3>
+<p class="text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    A Random Forest is an ensemble learning method that operates by constructing a multitude of decision trees at training time. It outputs the class that is the mode of the classes (classification) or mean prediction (regression) of the individual trees, effectively reducing overfitting.
+                                </p>
+</div>
+</div>
+</section>
+<!-- 2. Why It Matters -->
+<section>
+<h2 class="text-slate-900 dark:text-white text-xl font-extrabold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">stars</span>
+                            Why It Matters
+                        </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark">
+<div class="flex items-start gap-3">
+<div class="size-8 rounded-lg bg-green-100 dark:bg-green-900/30 text-green-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+</div>
+<p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Exceptional accuracy across diverse datasets without complex tuning.</p>
+</div>
+</div>
+<div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark">
+<div class="flex items-start gap-3">
+<div class="size-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-sm">query_stats</span>
+</div>
+<p class="text-sm text-slate-700 dark:text-slate-300 font-medium">Naturally handles missing values and maintains accuracy for large data volumes.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. Related Concepts -->
+<section>
+<h2 class="text-slate-900 dark:text-white text-xl font-extrabold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">hub</span>
+                            Related Concepts
+                        </h2>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+<div class="p-4 rounded-xl bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer group">
+<p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">Technique</p>
+<h4 class="text-slate-900 dark:text-white font-bold mb-1">Gradient Boosting</h4>
+<p class="text-xs text-slate-500 line-clamp-2">Sequential ensemble method focused on error correction.</p>
+</div>
+<div class="p-4 rounded-xl bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer group">
+<p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">Strategy</p>
+<h4 class="text-slate-900 dark:text-white font-bold mb-1">Bagging</h4>
+<p class="text-xs text-slate-500 line-clamp-2">Bootstrap Aggregating for variance reduction.</p>
+</div>
+<div class="p-4 rounded-xl bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 hover:border-primary/50 transition-all cursor-pointer group">
+<p class="text-xs font-bold text-primary uppercase tracking-wider mb-2">Analytics</p>
+<h4 class="text-slate-900 dark:text-white font-bold mb-1">Feature Importance</h4>
+<p class="text-xs text-slate-500 line-clamp-2">Quantifying the impact of input variables.</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Content -->
+<div class="flex flex-col gap-8">
+<!-- 3. Prerequisites -->
+<section class="p-6 rounded-xl bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800">
+<h2 class="text-slate-900 dark:text-white text-lg font-extrabold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">playlist_add_check</span>
+                            Prerequisites
+                        </h2>
+<div class="space-y-4">
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="size-6 rounded-full bg-green-500 text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-sm font-bold">check</span>
+</div>
+<span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Decision Trees</span>
+</div>
+<span class="text-[10px] font-black uppercase text-green-500 bg-green-50 px-2 py-0.5 rounded">Done</span>
+</div>
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="size-6 rounded-full bg-green-500 text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-sm font-bold">check</span>
+</div>
+<span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Overfitting</span>
+</div>
+<span class="text-[10px] font-black uppercase text-green-500 bg-green-50 px-2 py-0.5 rounded">Done</span>
+</div>
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-3">
+<div class="size-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+<div class="size-2 rounded-full bg-slate-400"></div>
+</div>
+<span class="text-sm font-semibold text-slate-400">Ensemble Learning</span>
+</div>
+<span class="text-[10px] font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">Locked</span>
+</div>
+</div>
+</section>
+<!-- 5. Unlock Section -->
+<section class="p-6 rounded-xl bg-primary text-white shadow-xl shadow-primary/20 relative overflow-hidden group">
+<!-- Abstract Pattern Overlay -->
+<div class="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
+<div class="relative z-10">
+<div class="size-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-3xl">lock_open</span>
+</div>
+<h2 class="text-xl font-black mb-2 tracking-tight">Unlock Concept</h2>
+<p class="text-white/80 text-sm mb-6 leading-relaxed">Complete the final prerequisite and earn 200 concept points to master Random Forest.</p>
+<div class="space-y-3 mb-8">
+<div class="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-white/60">
+<span>Prerequisites</span>
+<span>2/3</span>
+</div>
+<div class="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+<div class="h-full bg-white w-2/3"></div>
+</div>
+<div class="flex items-center gap-2 text-xs font-bold bg-white/10 px-3 py-2 rounded-lg border border-white/10">
+<span class="material-symbols-outlined text-sm">toll</span>
+<span>Points: 120 / 200 XP</span>
+</div>
+</div>
+<div class="flex flex-col gap-3">
+<button class="w-full bg-white text-primary font-black py-3 rounded-xl hover:scale-[1.02] transition-transform shadow-lg">
+                                    Unlock Concept
+                                </button>
+<button class="w-full bg-primary/20 hover:bg-primary/30 text-white border border-white/20 font-bold py-3 rounded-xl transition-all">
+                                    Save for Later
+                                </button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<footer class="mt-auto py-10 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark">
+<div class="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex items-center gap-2 text-slate-400">
+<span class="material-symbols-outlined font-bold">account_tree</span>
+<p class="text-sm font-bold tracking-tight">Memora Platform © 2024</p>
+</div>
+<div class="flex gap-8">
+<a class="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-primary transition-colors" href="#">Documentation</a>
+<a class="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-primary transition-colors" href="#">Help Center</a>
+</div>
+</div>
+</footer>
+</div>
+</div>
+</body></html>

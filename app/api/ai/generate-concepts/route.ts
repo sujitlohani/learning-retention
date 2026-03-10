@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { callWithRetry } from '@/src/services/ai/huggingface-client';
-import { buildConceptPrompt, getFallbackConcepts } from '@/src/services/ai/prompts/concept-prompts';
-import { parseConceptResponse } from '@/src/services/ai/parsers/concept-parser';
+import { callWithRetry } from '@/src/shared/services/ai/huggingface-client';
+import { buildConceptPrompt, getFallbackConcepts } from '@/src/shared/services/ai/prompts/concept-prompts';
+import { parseConceptResponse } from '@/src/shared/services/ai/parsers/concept-parser';
 
 export async function POST(request: NextRequest) {
     try {

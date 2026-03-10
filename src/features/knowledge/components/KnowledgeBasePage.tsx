@@ -3,12 +3,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { X, Brain, Search, ChevronRight, Filter, TrendingUp, Clock, SortAsc, BookOpen, CheckCircle, AlertCircle, Dices, ChevronDown } from 'lucide-react';
+import { X, Brain, Search, ChevronRight, Filter, TrendingUp, Clock, SortAsc, BookOpen, CheckCircle, AlertCircle, Dices, ChevronDown, Maximize2 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
 import { Topic, Concept } from '@/src/types';
 import { QuizAttempt } from '@/src/types/ai';
+import { useMastery } from '@/src/features/scoring/hooks/useMastery';
 
 interface ConceptWithTopic extends Concept {
     topicId: string;
@@ -33,6 +34,78 @@ function getScoreColor(score: number): string {
     if (score >= 80) return 'var(--success)';
     if (score >= 60) return 'var(--warning)';
     return 'var(--danger)';
+}
+
+function getMasteryColor(state: string) {
+    if (state === 'mastered' || state === 'almost_mastered') return 'var(--success)';
+    if (state === 'strong') return 'var(--warning)';
+    if (state === 'weak') return 'var(--danger)';
+    if (state === 'learning') return 'var(--accent)';
+    return 'var(--text-muted)';
+}
+
+function KnowledgeBaseConceptCard({ concept, selectedConceptId, openConceptDetail }: { concept: ConceptWithTopic, selectedConceptId?: string, openConceptDetail: (c: ConceptWithTopic) => void }) {
+    const { record } = useMastery(concept.id);
+
+    return (
+        <div
+            className="p-6 border transition-ui flex flex-col gap-4 group"
+            style={{
+                background: selectedConceptId === concept.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
+                borderColor: selectedConceptId === concept.id ? 'var(--accent)' : 'var(--border)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--shadow-resting)',
+            }}
+        >
+            <div className="flex justify-between items-start gap-4">
+                <div className="flex-1 w-full relative">
+                    <span
+                        className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                        style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
+                    >
+                        {concept.topicName}
+                    </span>
+                    <h3 className="text-lg font-bold mt-2 leading-tight pr-12">{concept.text}</h3>
+
+                    {/* Mastery Progress Bar */}
+                    <div className="mt-5 flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: getMasteryColor(record.state) }}>
+                                {record.state.replace('_', ' ')}
+                            </span>
+                            <span className="text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>
+                                {record.percentage}%
+                            </span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
+                            <div
+                                className="h-full rounded-full transition-all duration-300"
+                                style={{ width: `${record.percentage}%`, background: getMasteryColor(record.state) }}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-auto pt-2">
+                <button
+                    onClick={() => openConceptDetail(concept)}
+                    className="flex-1 py-2 text-sm font-bold transition-ui"
+                    style={{ background: 'var(--bg-raised)', color: 'var(--text-primary)', borderRadius: '9999px' }}
+                >
+                    View Details
+                </button>
+                <Link
+                    href={`/deep-dive?concept=${concept.id}`}
+                    className="px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border"
+                    style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
+                >
+                    <BookOpen className="w-4 h-4" />
+                </Link>
+            </div>
+        </div>
+    );
 }
 
 export function KnowledgeBasePage() {
@@ -229,55 +302,7 @@ export function KnowledgeBasePage() {
                             </div>
                         ) : (
                             filteredConcepts.map((concept) => (
-                                <div
-                                    key={`${concept.topicId}-${concept.id}`}
-                                    className="p-6 border transition-ui flex flex-col gap-4 group"
-                                    style={{
-                                        background: selectedConcept?.id === concept.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
-                                        borderColor: selectedConcept?.id === concept.id ? 'var(--accent)' : 'var(--border)',
-                                        borderRadius: 'var(--radius-md)',
-                                        boxShadow: 'var(--shadow-resting)',
-                                    }}
-                                >
-                                    <div className="flex justify-between items-start gap-4">
-                                        <div>
-                                            <span
-                                                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
-                                                style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
-                                            >
-                                                {concept.topicName}
-                                            </span>
-                                            <h3 className="text-lg font-bold mt-2">{concept.text}</h3>
-                                        </div>
-                                        {/* Since actual concept score is not a top-level field, we derive from topic score for the UI demo or use status */}
-                                        <div className="text-right shrink-0">
-                                            <div
-                                                className="text-sm font-bold px-2 py-1 rounded capitalize"
-                                                style={{ background: getStatusBg(concept.status).background, color: getStatusBg(concept.status).color }}
-                                            >
-                                                {concept.status}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Action Buttons */}
-                                    <div className="flex gap-3 mt-auto pt-2">
-                                        <button
-                                            onClick={() => openConceptDetail(concept)}
-                                            className="flex-1 py-2 text-sm font-bold text-white transition-ui"
-                                            style={{ background: 'var(--accent)', borderRadius: '9999px' }}
-                                        >
-                                            View Details
-                                        </button>
-                                        <Link
-                                            href={`/deep-dive?concept=${concept.id}`}
-                                            className="px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border"
-                                            style={{ background: 'var(--bg-raised)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
-                                        >
-                                            <BookOpen className="w-4 h-4" />
-                                        </Link>
-                                    </div>
-                                </div>
+                                <KnowledgeBaseConceptCard key={`${concept.topicId}-${concept.id}`} concept={concept} selectedConceptId={selectedConcept?.id} openConceptDetail={openConceptDetail} />
                             ))
                         )}
                     </div>
@@ -310,6 +335,14 @@ export function KnowledgeBasePage() {
                                     <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{selectedConcept.topicName}</div>
                                 </div>
                             </div>
+                            <Link
+                                href={`/concepts/${selectedConcept.id}`}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors border shrink-0 hover:bg-black/5 dark:hover:bg-white/5"
+                                style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                                title="Open as page"
+                            >
+                                Open <Maximize2 className="w-3.5 h-3.5 ml-1 inline-block" />
+                            </Link>
                         </div>
 
                         {/* Tabs */}
@@ -400,7 +433,7 @@ export function KnowledgeBasePage() {
                                             <p className="text-sm font-medium">No quiz attempts yet.</p>
                                         </div>
                                     ) : (
-                                        conceptHistory.slice().reverse().map((attempt) => {
+                                        conceptHistory.map((attempt) => {
                                             const questionsAboutConcept = attempt.questions.filter(q => q.conceptId === selectedConcept.id);
 
                                             // Provide dummy questions array if the attempt doesn't have the detailed questions array

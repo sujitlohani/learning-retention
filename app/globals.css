@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@variant dark (&:is(.dark *));
 
 /* ===== Memora Design Tokens ===== */
 
@@ -28,13 +28,16 @@
   --danger: #DC2626;
 
   /* Radius — tight, professional */
-  --radius-sm: 6px;   /* badges, tags, pills */
-  --radius-md: 8px;   /* cards, inputs, dropdowns, secondary buttons */
-  --radius-lg: 10px;  /* modals & drawers ONLY — never cards */
+  --radius-sm: 6px;
+  /* badges, tags, pills */
+  --radius-md: 8px;
+  /* cards, inputs, dropdowns, secondary buttons */
+  --radius-lg: 10px;
+  /* modals & drawers ONLY — never cards */
 
   /* Shadows — light mode (secondary) */
-  --shadow-resting: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
-  --shadow-raised: 0 4px 12px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.06);
+  --shadow-resting: 0 1px 3px rgba(0, 0, 0, .08), 0 1px 2px rgba(0, 0, 0, .04);
+  --shadow-raised: 0 4px 12px rgba(0, 0, 0, .12), 0 1px 3px rgba(0, 0, 0, .06);
 
   /* Badge tints */
   --badge-weak: color-mix(in srgb, var(--danger) 12%, transparent);
@@ -94,8 +97,8 @@
   --danger: #F87171;
 
   /* Shadows — dark mode (primary experience) */
-  --shadow-resting: 0 1px 3px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.25);
-  --shadow-raised: 0 4px 16px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.3);
+  --shadow-resting: 0 1px 3px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .25);
+  --shadow-raised: 0 4px 16px rgba(0, 0, 0, .5), 0 2px 4px rgba(0, 0, 0, .3);
 
   /* Badge tints (dark mode) */
   --badge-weak: color-mix(in srgb, var(--danger) 12%, transparent);

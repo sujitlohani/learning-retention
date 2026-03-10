@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1111d4",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>Memora - Quiz Completed</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-6 md:px-10 py-3 bg-white dark:bg-slate-900">
+<div class="flex items-center gap-4">
+<div class="size-8 text-primary">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6_543)">
+<path d="M42.1739 20.1739L27.8261 5.82609C29.1366 7.13663 28.3989 10.1876 26.2002 13.7654C24.8538 15.9564 22.9595 18.3449 20.6522 20.6522C18.3449 22.9595 15.9564 24.8538 13.7654 26.2002C10.1876 28.3989 7.13663 29.1366 5.82609 27.8261L20.1739 42.1739C21.4845 43.4845 24.5355 42.7467 28.1133 40.548C30.3042 39.2016 32.6927 37.3073 35 35C37.3073 32.6927 39.2016 30.3042 40.548 28.1133C42.7467 24.5355 43.4845 21.4845 42.1739 20.1739Z" fill="currentColor"></path>
+</g>
+<defs>
+<clippath id="clip0_6_543"><rect fill="white" height="48" width="48"></rect></clippath>
+</defs>
+</svg>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">Memora</h2>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<main class="flex flex-1 justify-center py-8 px-4 md:px-10">
+<div class="layout-content-container flex flex-col max-w-[800px] flex-1 gap-8">
+<!-- Header Section -->
+<div class="text-center space-y-2 relative">
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+<!-- Subtle decorative elements -->
+<div class="w-full h-full bg-[radial-gradient(circle,rgba(17,17,212,0.1)_0%,transparent_70%)]"></div>
+</div>
+<h1 class="text-slate-900 dark:text-white text-4xl md:text-5xl font-black leading-tight tracking-tight">Quiz Completed! 🎉</h1>
+<p class="text-slate-500 dark:text-slate-400 text-lg">Great job! You're making steady progress.</p>
+</div>
+<!-- Result Summary Card -->
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-200 dark:border-slate-800 p-8 flex flex-col md:flex-row items-center gap-10">
+<!-- Circular Progress Bar -->
+<div class="relative w-40 h-40 shrink-0">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle class="text-slate-100 dark:text-slate-800 stroke-current" cx="50" cy="50" fill="transparent" r="42" stroke-width="8"></circle>
+<circle class="text-primary stroke-current" cx="50" cy="50" fill="transparent" r="42" stroke-dasharray="263.89" stroke-dashoffset="52.78" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-3xl font-black text-slate-900 dark:text-white">80%</span>
+<span class="text-xs font-semibold text-slate-500 uppercase tracking-widest">Accuracy</span>
+</div>
+</div>
+<!-- Stats -->
+<div class="flex flex-col gap-6 flex-1 text-center md:text-left">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+<p class="text-sm font-medium text-slate-500 dark:text-slate-400">Correct Answers</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-white">8 <span class="text-slate-400 text-lg font-normal">/ 10</span></p>
+</div>
+<div class="p-4 rounded-lg bg-primary/5 border border-primary/10">
+<p class="text-sm font-medium text-primary">XP Earned</p>
+<p class="text-2xl font-bold text-primary">+45 XP</p>
+</div>
+</div>
+<div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 justify-center md:justify-start">
+<span class="material-symbols-outlined text-green-500 text-base">verified</span>
+<span>You ranked in the top 15% for this quiz!</span>
+</div>
+</div>
+</div>
+<!-- Concept Impact Section -->
+<div class="space-y-4">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-bold text-slate-900 dark:text-white">Concept Mastery Impact</h2>
+<span class="text-xs font-medium text-slate-400 uppercase tracking-widest">Growth Tracking</span>
+</div>
+<div class="grid gap-4">
+<!-- Card 1 -->
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Binary Trees</h3>
+<p class="text-xs text-green-600 font-semibold bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full inline-block mt-1">+6 Mastery Points</p>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">64%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 64%;"></div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Hash Tables</h3>
+<p class="text-xs text-green-600 font-semibold bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full inline-block mt-1">+4 Mastery Points</p>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">72%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 72%;"></div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="font-bold text-slate-900 dark:text-white">Python Generators</h3>
+<p class="text-xs text-green-600 font-semibold bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded-full inline-block mt-1">+3 Mastery Points</p>
+</div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">58%</span>
+</div>
+<div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 58%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Weak Concepts Section -->
+<div class="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-xl p-6 space-y-4">
+<div class="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+<span class="material-symbols-outlined">warning</span>
+<h2 class="text-lg font-bold">Needs Review</h2>
+</div>
+<p class="text-sm text-orange-600 dark:text-orange-300">We noticed you struggled a bit with these concepts. Focus your next session here to boost your score.</p>
+<div class="space-y-3 pt-2">
+<div class="flex items-center justify-between bg-white/60 dark:bg-slate-900/40 p-3 rounded-lg border border-orange-200/50 dark:border-orange-900/20">
+<span class="font-semibold text-slate-800 dark:text-slate-200">Binary Trees</span>
+<button class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                    Review Concept <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<div class="flex items-center justify-between bg-white/60 dark:bg-slate-900/40 p-3 rounded-lg border border-orange-200/50 dark:border-orange-900/20">
+<span class="font-semibold text-slate-800 dark:text-slate-200">Hash Tables</span>
+<button class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+                                    Review Concept <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Action Buttons -->
+<div class="flex flex-col gap-4 pt-4">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 text-lg">
+<span>Continue Learning</span>
+<span class="material-symbols-outlined">keyboard_double_arrow_right</span>
+</button>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<button class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">history_edu</span>
+                                Review Weak Concepts
+                            </button>
+<button class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">refresh</span>
+                                Start Another Quiz
+                            </button>
+</div>
+</div>
+<!-- Footer -->
+<footer class="py-10 text-center">
+<p class="text-slate-400 text-sm">Keep up the momentum! 12 day streak active.</p>
+<div class="flex justify-center gap-1 mt-2">
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-primary"></div>
+<div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+<div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+</div>
+</footer>
+</div>
+</main>
+</div>
+</div>
+</body></html>
