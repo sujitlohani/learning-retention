@@ -7,10 +7,10 @@ import { X, Brain, Search, ChevronRight, Filter, TrendingUp, Clock, SortAsc, Boo
 import { cn } from '@/src/lib/utils';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
-import { Topic, Concept } from '@/src/types';
+import { Topic, Unit } from '@/src/types';
 import { QuizAttempt } from '@/src/types/ai';
 
-interface ConceptWithTopic extends Concept {
+interface UnitWithTopic extends Unit {
     topicId: string;
     topicName: string;
     topicLevel: string;
@@ -41,8 +41,8 @@ export function KnowledgeBasePage() {
     const [filterLevel, setFilterLevel] = useState<string | null>(null);
     const [filterTopicId, setFilterTopicId] = useState<string>('all');
     const [sortBy, setSortBy] = useState<'mastery' | 'recent' | 'alpha'>('mastery');
-    const [selectedConcept, setSelectedConcept] = useState<ConceptWithTopic | null>(null);
-    const [conceptHistory, setConceptHistory] = useState<QuizAttempt[]>([]);
+    const [selectedUnit, setSelectedUnit] = useState<UnitWithTopic | null>(null);
+    const [unitHistory, setUnitHistory] = useState<QuizAttempt[]>([]);
     const [panelTab, setPanelTab] = useState<'overview' | 'history'>('overview');
     const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
 
@@ -50,9 +50,9 @@ export function KnowledgeBasePage() {
         setTopics(topicsService.getTopics());
     }, []);
 
-    const allConcepts: ConceptWithTopic[] = useMemo(() => {
+    const allUnits: UnitWithTopic[] = useMemo(() => {
         return topics.flatMap(t =>
-            t.concepts.map(c => ({
+            t.units.map(c => ({
                 ...c,
                 topicId: t.id,
                 topicName: t.name,
@@ -62,8 +62,8 @@ export function KnowledgeBasePage() {
         );
     }, [topics]);
 
-    const filteredConcepts = useMemo(() => {
-        let result = allConcepts;
+    const filteredUnits = useMemo(() => {
+        let result = allUnits;
 
         if (filterTopicId !== 'all') {
             result = result.filter(c => c.topicId === filterTopicId);
@@ -88,14 +88,14 @@ export function KnowledgeBasePage() {
         }
 
         return result;
-    }, [allConcepts, filterTopicId, filterLevel, searchQuery, sortBy]);
+    }, [allUnits, filterTopicId, filterLevel, searchQuery, sortBy]);
 
-    const openConceptDetail = (concept: ConceptWithTopic) => {
-        setSelectedConcept(concept);
+    const openUnitDetail = (unit: UnitWithTopic) => {
+        setSelectedUnit(unit);
         setPanelTab('overview');
-        setConceptHistory(
-            quizHistoryService.getHistoryForTopic(concept.topicId)
-                .filter(a => a.questions?.some(q => q.conceptId === concept.id))
+        setUnitHistory(
+            quizHistoryService.getHistoryForTopic(unit.topicId)
+                .filter(a => a.questions?.some(q => q.unitId === unit.id))
         );
     };
 
@@ -117,7 +117,7 @@ export function KnowledgeBasePage() {
                         <input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Find concepts..."
+                            placeholder="Find units..."
                             className="w-full h-11 pl-10 pr-4 rounded-lg border bg-transparent focus:outline-none focus:ring-2 transition-all text-sm"
                             style={{
                                 borderColor: 'var(--border)',
@@ -208,33 +208,33 @@ export function KnowledgeBasePage() {
             {/* Main Content Area */}
             <div
                 className="flex-1 overflow-y-auto p-6 lg:p-10 transition-all duration-200"
-                style={{ marginRight: selectedConcept ? '420px' : '0' }}
+                style={{ marginRight: selectedUnit ? '420px' : '0' }}
             >
                 <div className="max-w-[1000px] mx-auto space-y-8">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                        <h1 className="text-3xl font-bold tracking-tight">Concept Browser</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Unit Browser</h1>
                         <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-                            Showing {filteredConcepts.length} Concept{filteredConcepts.length !== 1 ? 's' : ''}
+                            Showing {filteredUnits.length} Unit{filteredUnits.length !== 1 ? 's' : ''}
                         </span>
                     </div>
 
-                    {/* Grid of Concept Cards */}
+                    {/* Grid of Unit Cards */}
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                        {filteredConcepts.length === 0 ? (
+                        {filteredUnits.length === 0 ? (
                             <div className="col-span-1 xl:col-span-2 text-center py-16 border rounded-xl border-dashed" style={{ borderColor: 'var(--border)' }}>
                                 <Brain className="w-10 h-10 mx-auto mb-3 opacity-20" />
-                                <p className="text-base font-medium mb-1">No concepts found.</p>
+                                <p className="text-base font-medium mb-1">No units found.</p>
                                 <p className="text-sm opacity-80" style={{ color: 'var(--text-muted)' }}>Try adjusting your filters or search query.</p>
                             </div>
                         ) : (
-                            filteredConcepts.map((concept) => (
+                            filteredUnits.map((unit) => (
                                 <div
-                                    key={`${concept.topicId}-${concept.id}`}
+                                    key={`${unit.topicId}-${unit.id}`}
                                     className="p-6 border transition-ui flex flex-col gap-4 group"
                                     style={{
-                                        background: selectedConcept?.id === concept.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
-                                        borderColor: selectedConcept?.id === concept.id ? 'var(--accent)' : 'var(--border)',
+                                        background: selectedUnit?.id === unit.id ? 'var(--bg-raised)' : 'var(--bg-surface)',
+                                        borderColor: selectedUnit?.id === unit.id ? 'var(--accent)' : 'var(--border)',
                                         borderRadius: 'var(--radius-md)',
                                         boxShadow: 'var(--shadow-resting)',
                                     }}
@@ -245,17 +245,17 @@ export function KnowledgeBasePage() {
                                                 className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
                                                 style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}
                                             >
-                                                {concept.topicName}
+                                                {unit.topicName}
                                             </span>
-                                            <h3 className="text-lg font-bold mt-2">{concept.text}</h3>
+                                            <h3 className="text-lg font-bold mt-2">{unit.text}</h3>
                                         </div>
-                                        {/* Since actual concept score is not a top-level field, we derive from topic score for the UI demo or use status */}
+                                        {/* Since actual unit score is not a top-level field, we derive from topic score for the UI demo or use status */}
                                         <div className="text-right shrink-0">
                                             <div
                                                 className="text-sm font-bold px-2 py-1 rounded capitalize"
-                                                style={{ background: getStatusBg(concept.status).background, color: getStatusBg(concept.status).color }}
+                                                style={{ background: getStatusBg(unit.status).background, color: getStatusBg(unit.status).color }}
                                             >
-                                                {concept.status}
+                                                {unit.status}
                                             </div>
                                         </div>
                                     </div>
@@ -263,14 +263,14 @@ export function KnowledgeBasePage() {
                                     {/* Action Buttons */}
                                     <div className="flex gap-3 mt-auto pt-2">
                                         <button
-                                            onClick={() => openConceptDetail(concept)}
+                                            onClick={() => openUnitDetail(unit)}
                                             className="flex-1 py-2 text-sm font-bold text-white transition-ui"
                                             style={{ background: 'var(--accent)', borderRadius: '9999px' }}
                                         >
                                             View Details
                                         </button>
                                         <Link
-                                            href={`/deep-dive?concept=${concept.id}`}
+                                            href={`/deep-dive?unit=${unit.id}`}
                                             className="px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center justify-center border"
                                             style={{ background: 'var(--bg-raised)', color: 'var(--text-primary)', borderColor: 'var(--border)' }}
                                         >
@@ -286,7 +286,7 @@ export function KnowledgeBasePage() {
 
             {/* Right Detail Panel (Slides in) */}
             <AnimatePresence>
-                {selectedConcept && (
+                {selectedUnit && (
                     <motion.aside
                         initial={{ x: 420 }}
                         animate={{ x: 0 }}
@@ -301,13 +301,13 @@ export function KnowledgeBasePage() {
                                 <button
                                     className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center transition-colors"
                                     style={{ background: 'var(--bg-raised)', color: 'var(--text-primary)' }}
-                                    onClick={() => setSelectedConcept(null)}
+                                    onClick={() => setSelectedUnit(null)}
                                 >
                                     <ChevronRight className="w-5 h-5" />
                                 </button>
                                 <div>
-                                    <h2 className="text-lg font-bold leading-tight">{selectedConcept.text}</h2>
-                                    <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{selectedConcept.topicName}</div>
+                                    <h2 className="text-lg font-bold leading-tight">{selectedUnit.text}</h2>
+                                    <div className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>{selectedUnit.topicName}</div>
                                 </div>
                             </div>
                         </div>
@@ -342,15 +342,15 @@ export function KnowledgeBasePage() {
                                     <div className="p-5 rounded-xl border flex items-center justify-between" style={{ background: 'var(--bg-raised)', borderColor: 'var(--border)' }}>
                                         <div>
                                             <div className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>State</div>
-                                            <div className="font-bold flex items-center gap-2 capitalize" style={{ color: getStatusColor(selectedConcept.status) }}>
-                                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: getStatusColor(selectedConcept.status) }} />
-                                                {selectedConcept.status === 'weak' ? 'Needs Work' : selectedConcept.status}
+                                            <div className="font-bold flex items-center gap-2 capitalize" style={{ color: getStatusColor(selectedUnit.status) }}>
+                                                <div className="w-2.5 h-2.5 rounded-full" style={{ background: getStatusColor(selectedUnit.status) }} />
+                                                {selectedUnit.status === 'weak' ? 'Needs Work' : selectedUnit.status}
                                             </div>
                                         </div>
                                         <div className="text-right">
                                             <div className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>From Topic</div>
-                                            <div className="font-bold" style={{ color: getScoreColor(selectedConcept.topicScore) }}>
-                                                {selectedConcept.topicScore}% Score
+                                            <div className="font-bold" style={{ color: getScoreColor(selectedUnit.topicScore) }}>
+                                                {selectedUnit.topicScore}% Score
                                             </div>
                                         </div>
                                     </div>
@@ -359,31 +359,31 @@ export function KnowledgeBasePage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="p-4 rounded-xl text-center border" style={{ borderColor: 'var(--border)' }}>
                                             <div className="text-xs mb-1 font-semibold" style={{ color: 'var(--text-muted)' }}>Quizzed</div>
-                                            <div className="text-xl font-bold">{conceptHistory.length} times</div>
+                                            <div className="text-xl font-bold">{unitHistory.length} times</div>
                                         </div>
                                         <div className="p-4 rounded-xl text-center border" style={{ borderColor: 'var(--border)' }}>
                                             <div className="text-xs mb-1 font-semibold" style={{ color: 'var(--text-muted)' }}>Origin</div>
-                                            <div className="text-sm font-bold mt-1 uppercase tracking-wider">{selectedConcept.aiGenerated ? 'AI Generated' : 'Manual'}</div>
+                                            <div className="text-sm font-bold mt-1 uppercase tracking-wider">{selectedUnit.aiGenerated ? 'AI Generated' : 'Manual'}</div>
                                         </div>
                                     </div>
 
                                     {/* Actions */}
                                     <div className="mt-8 flex gap-3">
                                         <Link
-                                            href={`/learn/${selectedConcept.topicId}?conceptId=${selectedConcept.id}`}
+                                            href={`/learn/${selectedUnit.topicId}?unitId=${selectedUnit.id}`}
                                             className="flex-1 flex items-center justify-center gap-2 py-4 text-white font-bold transition-ui"
                                             style={{ background: 'var(--accent)', borderRadius: '9999px' }}
-                                            title="Quiz this concept (Standard)"
+                                            title="Quiz this unit (Standard)"
                                         >
                                             <Brain className="w-5 h-5 shrink-0" />
-                                            Quiz This Concept
+                                            Quiz This Unit
                                         </Link>
 
                                         <Link
-                                            href={`/learn/${selectedConcept.topicId}?conceptId=${selectedConcept.id}&generate=true`}
+                                            href={`/learn/${selectedUnit.topicId}?unitId=${selectedUnit.id}&generate=true`}
                                             className="px-5 flex items-center justify-center gap-2 rounded-xl font-bold border transition-all hover:bg-bg-raised text-sm"
                                             style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}
-                                            title="Roll the dice to generate completely new questions for this concept!"
+                                            title="Roll the dice to generate completely new questions for this unit!"
                                         >
                                             <Dices className="w-5 h-5 shrink-0 text-amber-500" />
                                             Generate New
@@ -394,18 +394,18 @@ export function KnowledgeBasePage() {
 
                             {panelTab === 'history' && (
                                 <div className="space-y-4 pt-2">
-                                    {conceptHistory.length === 0 ? (
+                                    {unitHistory.length === 0 ? (
                                         <div className="text-center py-10 border border-dashed rounded-xl" style={{ borderColor: 'var(--border)' }}>
                                             <Clock className="w-8 h-8 mx-auto mb-3 opacity-20" />
                                             <p className="text-sm font-medium">No quiz attempts yet.</p>
                                         </div>
                                     ) : (
-                                        conceptHistory.slice().reverse().map((attempt) => {
-                                            const questionsAboutConcept = attempt.questions.filter(q => q.conceptId === selectedConcept.id);
+                                        unitHistory.slice().reverse().map((attempt) => {
+                                            const questionsAboutUnit = attempt.questions.filter(q => q.unitId === selectedUnit.id);
 
                                             // Provide dummy questions array if the attempt doesn't have the detailed questions array
-                                            const questions = questionsAboutConcept.length > 0 ? questionsAboutConcept : [
-                                                { questionId: '1', conceptId: selectedConcept.id, isCorrect: attempt.score >= 50, userAnswer: '...', correctAnswer: '...', timeSpentSeconds: 12, questionText: 'Question text unavailable', explanation: '' }
+                                            const questions = questionsAboutUnit.length > 0 ? questionsAboutUnit : [
+                                                { questionId: '1', unitId: selectedUnit.id, isCorrect: attempt.score >= 50, userAnswer: '...', correctAnswer: '...', timeSpentSeconds: 12, questionText: 'Question text unavailable', explanation: '' }
                                             ];
 
                                             return (

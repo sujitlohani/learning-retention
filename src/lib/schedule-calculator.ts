@@ -18,17 +18,17 @@ export function calculateQuestionsPerSession(dailyMinutes: number): number {
 }
 
 /**
- * Calculate how many review sessions each concept should have
- * based on timeframe and number of concepts.
+ * Calculate how many review sessions each unit should have
+ * based on timeframe and number of units.
  */
-export function calculateSessionsPerConcept(
+export function calculateSessionsPerUnit(
     timeframeDays: number,
-    conceptCount: number,
+    unitCount: number,
     dailyMinutes: number
 ): number {
     const totalSessions = timeframeDays;
-    const sessionsPerConcept = Math.floor(totalSessions / conceptCount);
-    return Math.min(7, Math.max(3, sessionsPerConcept));
+    const sessionsPerUnit = Math.floor(totalSessions / unitCount);
+    return Math.min(7, Math.max(3, sessionsPerUnit));
 }
 
 /**

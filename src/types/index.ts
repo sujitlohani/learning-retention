@@ -3,19 +3,23 @@ import { StudyPlan } from './ai';
 export type Topic = {
     id: string;
     name: string;
-    concepts: Concept[];
+    units: Unit[];
     level: 'beginner' | 'intermediate' | 'expert';
     memoryScore: number;
     lastPracticed: Date;
     nextReviewDate: Date;
     totalAttempts: number;
+    subLevel?: number;
+    knowledgeGaps?: string[];
     studyPlan?: StudyPlan;
     scheduleId?: string;
 };
 
-export type Concept = {
+export type Unit = {
     id: string;
     text: string;
+    description?: string;
+    order?: number;
     status: 'strong' | 'weak' | 'neutral';
     familiar?: boolean;
     aiGenerated?: boolean;
@@ -23,8 +27,8 @@ export type Concept = {
 
 export type QuizQuestion = {
     id: string;
-    conceptId: string;
-    conceptName?: string;
+    unitId: string;
+    unitName?: string;
     level?: 'basic' | 'advanced' | 'pitfall';
     question: string;
     type: 'mcq' | 'card' | 'short-answer';
@@ -40,5 +44,5 @@ export type QuizResult = {
     score: number;
     correctCount: number;
     totalCount: number;
-    weakConcepts: string[];
+    weakUnits: string[];
 };

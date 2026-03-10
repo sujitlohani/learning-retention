@@ -3,9 +3,11 @@
 
 export function buildQuizPrompt(
     topic: string,
-    concept: string,
+    unit: string,
     level: 'beginner' | 'intermediate' | 'expert',
-    count: number = 10
+    count: number = 10,
+    subLevel?: number,
+    knowledgeGaps?: string[]
 ): string {
     const levelGuidelines = {
         beginner: {
@@ -16,7 +18,7 @@ export function buildQuizPrompt(
             avoidPatterns: 'Avoid trick questions, double negatives, or "all/none of the above"',
         },
         intermediate: {
-            focus: 'Test practical application and conceptual relationships',
+            focus: 'Test practical application and unit relationships',
             questionStyle: 'Scenario-based questions requiring analysis',
             vocabulary: 'Standard technical terminology - assume basic knowledge',
             example: '"How would you X?" "What\'s the difference between Y and Z?" "When should you use X?"',
@@ -33,7 +35,7 @@ export function buildQuizPrompt(
 
     const guide = levelGuidelines[level];
 
-    return `You are an expert programming educator creating multiple-choice quiz questions to test "${concept}" in ${topic} at ${level} level.
+    return `You are an expert programming educator creating multiple-choice quiz questions to test "${unit}" in ${topic} at ${level} level.
 
 LEVEL: ${level.toUpperCase()}
 Focus: ${guide.focus}
@@ -41,6 +43,9 @@ Style: ${guide.questionStyle}
 Vocabulary: ${guide.vocabulary}
 Examples: ${guide.example}
 Avoid: ${guide.avoidPatterns}
+
+${subLevel ? `SUB-LEVEL CALIBRATION (1-5):\nThe user's familiarity sub-level within the ${level} tier is ${subLevel}/5. Adjust the nuance and difficulty of the questions accordingly.` : ''}
+${knowledgeGaps && knowledgeGaps.length > 0 ? `\nKNOWN KNOWLEDGE GAPS:\nThe user specifically needs help with these areas. Please ensure several questions target these concepts:\n- ${knowledgeGaps.join('\n- ')}` : ''}
 
 GENERATE EXACTLY ${count} MCQ QUESTIONS
 
@@ -121,7 +126,7 @@ CRITICAL MCQ REQUIREMENTS:
 ✓ Distractors should represent REAL misconceptions students have
 ✓ NO "All of the above" or "None of the above" options
 ✓ NO "Both A and B" or "Either A or C" options
-✓ Question must test "${concept}" specifically, not other concepts
+✓ Question must test "${unit}" specifically, not other units
 ✓ Options should be similar length (avoid pattern where longest = correct)
 ✓ Explanation must teach WHY (not just restate correctness)
 ✓ Include 3-5 relevant keywords students should know
@@ -148,7 +153,7 @@ NO markdown code blocks, NO explanations, NO extra text.
 
 Format: [question_object_1, question_object_2, ..., question_object_${count}]
 
-Generate ${count} curriculum-aligned MCQ questions about "${concept}" in ${topic} at ${level} level:`;
+Generate ${count} curriculum-aligned MCQ questions about "${unit}" in ${topic} at ${level} level:`;
 }
 
 // Validate quiz response structure
@@ -195,10 +200,10 @@ export function validateQuizResponse(response: string): any[] | null {
             }
 
             // Check if correctAnswer matches one option exactly
-            const answerMatches = q.options.some((opt: string) => 
+            const answerMatches = q.options.some((opt: string) =>
                 opt.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase()
             );
-            
+
             if (!answerMatches) {
                 console.warn('Correct answer does not match any option:', q.correctAnswer);
                 return false;
@@ -261,10 +266,10 @@ export function calculateQuestionQuality(question: any): number {
     // Penalize if options are very different lengths (suggests answer giveaway)
     const optionLengths = question.options.map((opt: string) => opt.length);
     const avgLength = optionLengths.reduce((a: number, b: number) => a + b, 0) / optionLengths.length;
-    const lengthVariance = optionLengths.reduce((sum: number, len: number) => 
+    const lengthVariance = optionLengths.reduce((sum: number, len: number) =>
         sum + Math.abs(len - avgLength), 0
     ) / optionLengths.length;
-    
+
     if (lengthVariance > 20) score -= 10; // High length variance = potential giveaway
 
     // Reward longer, more detailed explanations
@@ -272,21 +277,21 @@ export function calculateQuestionQuality(question: any): number {
     if (question.explanation.length < 50) score -= 10;
 
     // Check for problematic patterns in options
-    const hasAllOfAbove = question.options.some((opt: string) => 
-        opt.toLowerCase().includes('all of the above') || 
+    const hasAllOfAbove = question.options.some((opt: string) =>
+        opt.toLowerCase().includes('all of the above') ||
         opt.toLowerCase().includes('all of these')
     );
-    const hasNoneOfAbove = question.options.some((opt: string) => 
-        opt.toLowerCase().includes('none of the above') || 
+    const hasNoneOfAbove = question.options.some((opt: string) =>
+        opt.toLowerCase().includes('none of the above') ||
         opt.toLowerCase().includes('none of these')
     );
-    
+
     if (hasAllOfAbove || hasNoneOfAbove) score -= 20;
 
     // Check if question has code in it (good for programming)
-    const hasCode = question.question.includes('(') || 
-                    question.question.includes('{') || 
-                    question.question.includes('`');
+    const hasCode = question.question.includes('(') ||
+        question.question.includes('{') ||
+        question.question.includes('`');
     if (hasCode) score += 5;
 
     // Penalize very short questions (likely too vague)

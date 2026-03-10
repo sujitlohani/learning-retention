@@ -18,24 +18,24 @@ const LEVEL_CONFIGS: Record<string, DecayConfig> = {
 
 export const retentionCalculator = {
     /**
-     * Calculates the time-decayed score for a specific concept based on its history.
+     * Calculates the time-decayed score for a specific unit based on its history.
      */
-    calculateConceptScore: (conceptId: string, history: QuizAttempt[], topicLevel: string = 'beginner'): number => {
+    calculateUnitScore: (unitId: string, history: QuizAttempt[], topicLevel: string = 'beginner'): number => {
         const config = LEVEL_CONFIGS[topicLevel] || LEVEL_CONFIGS.beginner;
         const now = new Date().getTime();
 
-        const conceptAttempts = history.filter(h =>
-            h.conceptBreakdown.some(cb => cb.conceptId === conceptId)
+        const unitAttempts = history.filter(h =>
+            h.unitBreakdown.some(cb => cb.unitId === unitId)
         );
 
-        if (conceptAttempts.length === 0) return 0;
+        if (unitAttempts.length === 0) return 0;
 
         let totalWeightedScore = 0;
         let totalWeight = 0;
 
-        conceptAttempts.forEach(attempt => {
-            const conceptData = attempt.conceptBreakdown.find(cb => cb.conceptId === conceptId);
-            if (!conceptData) return;
+        unitAttempts.forEach(attempt => {
+            const unitData = attempt.unitBreakdown.find(cb => cb.unitId === unitId);
+            if (!unitData) return;
 
             const attemptDate = new Date(attempt.completedAt).getTime();
             const daysElapsed = (now - attemptDate) / (1000 * 60 * 60 * 24);
@@ -43,7 +43,7 @@ export const retentionCalculator = {
             const lambda = Math.LN2 / config.halfLifeDays;
             const weight = Math.exp(-lambda * daysElapsed);
 
-            totalWeightedScore += conceptData.score * weight;
+            totalWeightedScore += unitData.score * weight;
             totalWeight += weight;
         });
 
@@ -56,22 +56,22 @@ export const retentionCalculator = {
      * Calculates the overall time-decayed score for a Topic.
      */
     calculateTopicScore: (topic: Topic, history: QuizAttempt[]): number => {
-        if (topic.concepts.length === 0 || history.length === 0) return 0;
+        if (topic.units.length === 0 || history.length === 0) return 0;
 
         let totalScore = 0;
-        let conceptsWithScore = 0;
+        let unitsWithScore = 0;
 
-        topic.concepts.forEach(concept => {
-            const conceptScore = retentionCalculator.calculateConceptScore(concept.id, history, topic.level);
-            const hasHistory = history.some(h => h.conceptBreakdown.some(cb => cb.conceptId === concept.id));
+        topic.units.forEach(unit => {
+            const unitScore = retentionCalculator.calculateUnitScore(unit.id, history, topic.level);
+            const hasHistory = history.some(h => h.unitBreakdown.some(cb => cb.unitId === unit.id));
             if (hasHistory) {
-                totalScore += conceptScore;
-                conceptsWithScore++;
+                totalScore += unitScore;
+                unitsWithScore++;
             }
         });
 
-        if (conceptsWithScore === 0) return 0;
+        if (unitsWithScore === 0) return 0;
 
-        return Math.round(totalScore / conceptsWithScore);
+        return Math.round(totalScore / unitsWithScore);
     }
 };

@@ -25,11 +25,11 @@ export const quizHistoryService = {
             .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
     },
 
-    getHistoryForConcept: (topicId: string, conceptId: string): QuizAttempt[] => {
+    getHistoryForUnit: (topicId: string, unitId: string): QuizAttempt[] => {
         const topicHistory = quizHistoryService.getHistoryForTopic(topicId);
         return topicHistory.filter(h =>
-            h.targetConceptId === conceptId ||
-            h.conceptBreakdown.some(b => b.conceptId === conceptId)
+            h.targetUnitId === unitId ||
+            h.unitBreakdown.some(b => b.unitId === unitId)
         );
     },
 

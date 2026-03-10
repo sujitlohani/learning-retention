@@ -15,8 +15,8 @@ export type QuizPhase = 'quiz' | 'result';
 function aiQToQuizQ(q: AIGeneratedQuestion): QuizQuestion {
     return {
         id: q.id,
-        conceptId: q.conceptId,
-        conceptName: q.conceptName,
+        unitId: q.unitId,
+        unitName: q.unitName,
         level: q.difficulty === 'beginner' ? 'basic' : q.difficulty === 'expert' ? 'pitfall' : 'advanced',
         question: q.question,
         type: q.type === 'short-answer' ? 'short-answer' : 'mcq',
@@ -51,7 +51,7 @@ function evaluateShortAnswer(answer: string, question: QuizQuestion): boolean {
     return matchCount >= Math.ceil(correctWords.length * 0.4);
 }
 
-export function useQuizSession(topicId: string, sessionId?: string | null, conceptId?: string | null) {
+export function useQuizSession(topicId: string, sessionId?: string | null, unitId?: string | null) {
     const router = useRouter();
 
     const [topic, setTopic] = useState<Topic | null>(null);
@@ -62,7 +62,7 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
     const [answers, setAnswers] = useState<Record<string, string>>({});
     const [showFeedback, setShowFeedback] = useState(false);
     const [correctCount, setCorrectCount] = useState(0);
-    const [weakConcepts, setWeakConcepts] = useState<Set<string>>(new Set());
+    const [weakUnits, setWeakUnits] = useState<Set<string>>(new Set());
     const [shortAnswer, setShortAnswer] = useState('');
     const [isRegenerating, setIsRegenerating] = useState(false);
     const [quizStartTime, setQuizStartTime] = useState<number>(0);
@@ -88,7 +88,7 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 if (session) {
                     const aiQuestions = questionsService.getQuestionsForSession(
                         foundTopic.id,
-                        session.conceptIds,
+                        session.unitIds,
                         session.questionCount
                     );
                     if (aiQuestions.length > 0) {
@@ -99,8 +99,8 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
         }
 
         if (loadedQuestions.length === 0) {
-            const aiQuestions = conceptId
-                ? questionsService.getQuestionsForConcept(foundTopic.id, conceptId)
+            const aiQuestions = unitId
+                ? questionsService.getQuestionsForUnit(foundTopic.id, unitId)
                 : questionsService.getQuestionsForTopic(foundTopic.id);
 
             if (aiQuestions.length > 0) {
@@ -115,12 +115,12 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
         setAnswers({});
         setShowFeedback(false);
         setCorrectCount(0);
-        setWeakConcepts(new Set());
+        setWeakUnits(new Set());
         setShortAnswer('');
         setPhase('quiz');
         setQuizStartTime(Date.now());
         setIsLoading(false);
-    }, [topicId, sessionId, conceptId, router]);
+    }, [topicId, sessionId, unitId, router]);
 
     const currentQuestion = quizQuestions[currentQuestionIndex] || null;
 
@@ -141,9 +141,9 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
             setScore(prev => prev + 10);
             setCorrectCount(prev => prev + 1);
         } else {
-            setWeakConcepts(prev => {
+            setWeakUnits(prev => {
                 const next = new Set(prev);
-                next.add(question.conceptId);
+                next.add(question.unitId);
                 return next;
             });
         }
@@ -173,7 +173,7 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
 
             const finalScore = Math.round((correctCount / quizQuestions.length) * 100);
 
-            const conceptStats: Record<string, { correct: number; total: number; name?: string }> = {};
+            const unitStats: Record<string, { correct: number; total: number; name?: string }> = {};
 
             const detailedQuestions = quizQuestions.map((q) => {
                 let isCorrect = false;
@@ -182,16 +182,16 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 else if (q.type === 'short-answer') isCorrect = ans === '__correct__';
                 else if (q.type === 'card') isCorrect = ans === 'correct';
 
-                if (!conceptStats[q.conceptId]) {
-                    conceptStats[q.conceptId] = { correct: 0, total: 0, name: q.conceptName || topic.concepts.find(c => c.id === q.conceptId)?.text };
+                if (!unitStats[q.unitId]) {
+                    unitStats[q.unitId] = { correct: 0, total: 0, name: q.unitName || topic.units.find(u => u.id === q.unitId)?.text };
                 }
-                conceptStats[q.conceptId].total += 1;
-                if (isCorrect) conceptStats[q.conceptId].correct += 1;
+                unitStats[q.unitId].total += 1;
+                if (isCorrect) unitStats[q.unitId].correct += 1;
 
                 return {
                     questionId: q.id,
-                    conceptId: q.conceptId,
-                    conceptName: q.conceptName,
+                    unitId: q.unitId,
+                    unitName: q.unitName,
                     questionText: q.question,
                     explanation: q.explanation,
                     isCorrect,
@@ -200,12 +200,12 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 };
             });
 
-            const conceptBreakdown = Object.keys(conceptStats).map(cId => ({
-                conceptId: cId,
-                conceptName: conceptStats[cId].name,
-                totalCount: conceptStats[cId].total,
-                correctCount: conceptStats[cId].correct,
-                score: Math.round((conceptStats[cId].correct / conceptStats[cId].total) * 100),
+            const unitBreakdown = Object.keys(unitStats).map(uId => ({
+                unitId: uId,
+                unitName: unitStats[uId].name,
+                totalCount: unitStats[uId].total,
+                correctCount: unitStats[uId].correct,
+                score: Math.round((unitStats[uId].correct / unitStats[uId].total) * 100),
             }));
 
             const attemptDurationSeconds = Math.round((Date.now() - quizStartTime) / 1000);
@@ -214,15 +214,15 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 id: `attempt-${Date.now()}`,
                 topicId: topic.id,
                 sessionId: sessionId || undefined,
-                type: conceptId ? 'concept' : 'topic',
-                targetConceptId: conceptId || undefined,
+                type: unitId ? 'unit' : 'topic',
+                targetUnitId: unitId || undefined,
                 score: finalScore,
                 correctCount,
                 totalCount: quizQuestions.length,
                 completedAt: new Date().toISOString(),
                 durationSeconds: attemptDurationSeconds,
                 questions: detailedQuestions,
-                conceptBreakdown,
+                unitBreakdown,
             };
 
             quizHistoryService.saveAttempt(historyAttempt);
@@ -235,7 +235,7 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 score: finalScore,
                 correctCount,
                 totalCount: quizQuestions.length,
-                weakConcepts: Array.from(weakConcepts),
+                weakUnits: Array.from(weakUnits),
             };
 
             topicsService.updateTopicAfterQuiz(topic.id, result);
@@ -257,26 +257,28 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
             const updatedTopic = storedTopics.find(t => t.id === topicId);
             if (updatedTopic) setTopic(updatedTopic);
         }
-    }, [currentQuestionIndex, quizQuestions, topic, correctCount, answers, weakConcepts, quizStartTime, sessionId, conceptId, topicId]);
+    }, [currentQuestionIndex, quizQuestions, topic, correctCount, answers, weakUnits, quizStartTime, sessionId, unitId, topicId]);
 
     const handleRegenerate = useCallback(async () => {
         if (!topic) return;
         setIsRegenerating(true);
         try {
-            const conceptsToGen = conceptId
-                ? topic.concepts.filter(c => c.id === conceptId)
-                : topic.concepts;
+            const unitsToGen = unitId
+                ? topic.units.filter(u => u.id === unitId)
+                : topic.units;
 
-            for (const concept of conceptsToGen) {
+            for (const unit of unitsToGen) {
                 const response = await fetch('/api/ai/generate-quiz', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         topic: topic.name,
                         topicId: topic.id,
-                        concept: concept.text,
-                        conceptId: concept.id,
+                        unit: unit.text,
+                        unitId: unit.id,
                         level: topic.level,
+                        subLevel: topic.subLevel,
+                        knowledgeGaps: topic.knowledgeGaps,
                         count: 5,
                     }),
                 });
@@ -289,13 +291,28 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
                 }
             }
 
-            window.location.reload();
+            // Reload questions from storage and reset quiz state in-memory
+            // (avoid window.location.reload() which wipes in-memory auth state)
+            const aiQuestions = unitId
+                ? questionsService.getQuestionsForUnit(topic.id, unitId)
+                : questionsService.getQuestionsForTopic(topic.id);
+            const shuffled = [...aiQuestions].sort(() => Math.random() - 0.5);
+            setQuizQuestions(shuffled.slice(0, 10).map(aiQToQuizQ));
+            setCurrentQuestionIndex(0);
+            setScore(0);
+            setAnswers({});
+            setShowFeedback(false);
+            setCorrectCount(0);
+            setWeakUnits(new Set());
+            setShortAnswer('');
+            setPhase('quiz');
+            setQuizStartTime(Date.now());
         } catch (error) {
             console.error('Failed to regenerate questions:', error);
         } finally {
             setIsRegenerating(false);
         }
-    }, [topic, conceptId]);
+    }, [topic, unitId]);
 
     const resetQuiz = useCallback(() => {
         setCurrentQuestionIndex(0);
@@ -303,7 +320,7 @@ export function useQuizSession(topicId: string, sessionId?: string | null, conce
         setAnswers({});
         setShowFeedback(false);
         setCorrectCount(0);
-        setWeakConcepts(new Set());
+        setWeakUnits(new Set());
         setShortAnswer('');
         setPhase('quiz');
         setQuizStartTime(Date.now());

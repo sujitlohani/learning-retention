@@ -26,9 +26,9 @@ function DueSessionCard({ dueSession }: { dueSession: DueSession }) {
     if (!topic) return null;
 
     const scoreColor = getScoreColor(topic.memoryScore);
-    // Get concept names from ids
-    const conceptNames = session.conceptIds
-        .map(id => topic.concepts.find(c => c.id === id)?.text)
+    // Get unit names from ids
+    const unitNames = session.unitIds
+        .map(id => topic.units.find(c => c.id === id)?.text)
         .filter(Boolean)
         .slice(0, 4);
 
@@ -47,9 +47,9 @@ function DueSessionCard({ dueSession }: { dueSession: DueSession }) {
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg">{topic.name}</h3>
-                        {/* Concept pills */}
+                        {/* Unit pills */}
                         <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                            {conceptNames.map((name) => (
+                            {unitNames.map((name) => (
                                 <span
                                     key={name}
                                     className="text-xs font-medium px-2.5 py-1"
@@ -62,7 +62,7 @@ function DueSessionCard({ dueSession }: { dueSession: DueSession }) {
                                     {name}
                                 </span>
                             ))}
-                            {session.conceptIds.length > 4 && (
+                            {session.unitIds.length > 4 && (
                                 <span
                                     className="text-xs font-medium px-2.5 py-1"
                                     style={{
@@ -71,7 +71,7 @@ function DueSessionCard({ dueSession }: { dueSession: DueSession }) {
                                         borderRadius: 'var(--radius-sm)',
                                     }}
                                 >
-                                    +{session.conceptIds.length - 4}
+                                    +{session.unitIds.length - 4}
                                 </span>
                             )}
                         </div>
@@ -176,7 +176,7 @@ export function HomeDashboard() {
                         <div>
                             <div className="font-semibold">Add a new topic</div>
                             <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                                AI will generate concepts, schedule, and quiz questions
+                                AI will generate units, schedule, and quiz questions
                             </div>
                         </div>
                         <ArrowRight className="w-5 h-5 ml-auto transition-ui" style={{ color: 'var(--text-muted)' }} />
@@ -288,7 +288,7 @@ export function HomeDashboard() {
                                         <div>
                                             <h3 className="font-semibold text-[15px]">{topic.name}</h3>
                                             <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                                                {topic.concepts.length} concepts · {topic.level}
+                                                {topic.units.length} units · {topic.level}
                                             </p>
                                         </div>
                                         <div

@@ -9,7 +9,7 @@ import { cn } from '@/src/lib/utils';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { scheduleService } from '@/src/features/schedule/services/schedule.service';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
-import { Topic, Concept } from '@/src/types';
+import { Topic, Unit } from '@/src/types';
 import { QuizAttempt, StudySchedule } from '@/src/types/ai';
 
 function getScoreColor(score: number): string {
@@ -271,7 +271,7 @@ export function CockpitPage() {
 
                                         <div className="flex items-center gap-2 mt-auto">
                                             <span className="text-xs font-medium px-2.5 py-1 rounded-sm" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>
-                                                {topic.concepts.length} Concept{topic.concepts.length !== 1 ? 's' : ''}
+                                                {topic.units.length} Unit{topic.units.length !== 1 ? 's' : ''}
                                             </span>
                                             <span className="flex-1"></span>
                                             <span
@@ -382,16 +382,16 @@ export function CockpitPage() {
                                             <div className="text-xl font-bold">{history.length}</div>
                                         </div>
                                         <div className="p-4 rounded-xl text-center" style={{ border: '1px solid var(--border)' }}>
-                                            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Concepts</div>
-                                            <div className="text-xl font-bold">{selectedTopic.concepts.length}</div>
+                                            <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Units</div>
+                                            <div className="text-xl font-bold">{selectedTopic.units.length}</div>
                                         </div>
                                     </div>
 
-                                    {/* Key Concepts list */}
+                                    {/* Key Units list */}
                                     <div className="space-y-3 pt-2">
-                                        <h4 className="text-sm font-bold">Concept Status</h4>
+                                        <h4 className="text-sm font-bold">Unit Status</h4>
                                         <div className="space-y-2">
-                                            {selectedTopic.concepts.slice(0, 5).map(c => (
+                                            {selectedTopic.units.slice(0, 5).map(c => (
                                                 <div key={c.id} className="flex flex-col gap-1 p-3 rounded-lg" style={{ background: 'var(--bg-raised)' }}>
                                                     <div className="flex justify-between items-start">
                                                         <span className="text-sm font-medium">{c.text}</span>
@@ -399,9 +399,9 @@ export function CockpitPage() {
                                                     </div>
                                                 </div>
                                             ))}
-                                            {selectedTopic.concepts.length > 5 && (
+                                            {selectedTopic.units.length > 5 && (
                                                 <div className="text-center text-xs font-semibold py-2" style={{ color: 'var(--text-muted)' }}>
-                                                    + {selectedTopic.concepts.length - 5} more concepts
+                                                    + {selectedTopic.units.length - 5} more units
                                                 </div>
                                             )}
                                         </div>
@@ -480,13 +480,13 @@ export function CockpitPage() {
                                                                         <span className="font-semibold">{attempt.correctCount} / {attempt.totalCount} correct</span>
                                                                     </div>
                                                                     {(() => {
-                                                                        const weakConcepts = attempt.conceptBreakdown?.filter(cb => cb.score < 60).map(cb => cb.conceptName || cb.conceptId) || [];
-                                                                        if (weakConcepts.length === 0) return null;
+                                                                        const weakUnits = attempt.unitBreakdown?.filter(cb => cb.score < 60).map(cb => cb.unitName || cb.unitId) || [];
+                                                                        if (weakUnits.length === 0) return null;
                                                                         return (
                                                                             <div className="pt-2">
-                                                                                <span className="text-[10px] font-bold uppercase tracking-wider mb-2 block" style={{ color: 'var(--text-muted)' }}>Weak Concepts</span>
+                                                                                <span className="text-[10px] font-bold uppercase tracking-wider mb-2 block" style={{ color: 'var(--text-muted)' }}>Weak Units</span>
                                                                                 <div className="flex flex-wrap gap-1.5">
-                                                                                    {weakConcepts.map(wc => (
+                                                                                    {weakUnits.map(wc => (
                                                                                         <span key={wc} className="text-[10px] px-2 py-1 rounded-sm bg-red-500/10 text-red-500 font-semibold truncate max-w-full">
                                                                                             {wc}
                                                                                         </span>
@@ -513,10 +513,10 @@ export function CockpitPage() {
                                         <p className="text-sm font-semibold">Derived from quiz history</p>
                                     </div>
 
-                                    {/* Categorize concepts based on status */}
+                                    {/* Categorize units based on status */}
                                     {['weak', 'neutral', 'strong'].map(status => {
-                                        const concepts = selectedTopic.concepts.filter(c => c.status === status);
-                                        if (concepts.length === 0) return null;
+                                        const units = selectedTopic.units.filter(c => c.status === status);
+                                        if (units.length === 0) return null;
 
                                         const title = status === 'weak' ? 'Requires Attention' : status === 'strong' ? 'Mastered' : 'Developing';
                                         const colorClass = status === 'weak' ? 'text-red-500 bg-red-500/10' : status === 'strong' ? 'text-green-500 bg-green-500/10' : 'text-amber-500 bg-amber-500/10';
@@ -524,7 +524,7 @@ export function CockpitPage() {
                                         return (
                                             <div key={status} className="space-y-2">
                                                 <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{title}</h4>
-                                                {concepts.map(c => (
+                                                {units.map(c => (
                                                     <div key={c.id} className="p-3 rounded-lg border" style={{ background: 'var(--bg-raised)', borderColor: 'var(--border)' }}>
                                                         <div className="flex gap-2">
                                                             <div className={cn("px-1.5 py-0.5 rounded text-[10px] font-bold uppercase self-start", colorClass)}>
@@ -553,7 +553,7 @@ export function CockpitPage() {
                             </Link>
                             <div className="flex gap-3 mt-3">
                                 <Link
-                                    href={`/deep-dive?concept=${selectedTopic.concepts[0]?.id || ''}`}
+                                    href={`/deep-dive?unit=${selectedTopic.units[0]?.id || ''}`}
                                     className="flex-1 py-3 border text-center text-sm font-bold transition-ui"
                                     style={{ borderColor: 'var(--border)', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}
                                 >

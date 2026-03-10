@@ -6,10 +6,10 @@
  */
 export function calculateSessionIntervals(
     timeframeDays: number,
-    sessionsPerConcept: number
+    sessionsPerUnit: number
 ): number[] {
     const baseIntervals = [0, 1, 3, 7, 14, 21, 30];
-    const sessionCount = Math.min(sessionsPerConcept, baseIntervals.length);
+    const sessionCount = Math.min(sessionsPerUnit, baseIntervals.length);
     const scaleFactor = timeframeDays / 30;
 
     const intervals = baseIntervals

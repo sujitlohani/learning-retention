@@ -3,15 +3,14 @@
 import { cn } from '@/src/lib/utils';
 
 /**
- * Memora Logo Mark — "Abstract Spark" (#07)
- * A scattered dot pattern that resembles the Material Symbols `blur_on` icon.
+ * Memora Logo Mark — Graph/Node Triangle
+ * Three nodes connected in a triangle formation.
  * Uses currentColor so it inherits color from context.
  * 
- * Specs from logo guide:
+ * Specs:
  * - Wordmark: Plus Jakarta Sans Bold
  * - Lockup gap: 12px fixed
- * - Alignment: center baseline cap
- * - Icon style: optical weight 400
+ * - All strokes/fills use currentColor for theme adaptability
  * - Dark mode: white mark + white wordmark on --bg-base
  * - Light mode: dark mark + dark wordmark on light background
  * - Hover state: mark shifts to --accent color
@@ -22,52 +21,29 @@ interface MemoraMarkProps {
     className?: string;
 }
 
-/** The mark only — Abstract Spark dot pattern */
+/** The mark only — graph/node triangle */
 export function MemoraMark({ size = 24, className }: MemoraMarkProps) {
     return (
         <svg
             width={size}
             height={size}
-            viewBox="0 0 24 24"
-            fill="currentColor"
+            viewBox="0 0 32 32"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className={className}
             aria-hidden="true"
         >
-            {/* Center cluster — dense dots */}
-            <circle cx="12" cy="12" r="1.8" />
-            <circle cx="9" cy="12" r="1.4" />
-            <circle cx="15" cy="12" r="1.4" />
-            <circle cx="12" cy="9" r="1.4" />
-            <circle cx="12" cy="15" r="1.4" />
-
-            {/* Mid ring — medium dots */}
-            <circle cx="9" cy="9" r="1.1" />
-            <circle cx="15" cy="9" r="1.1" />
-            <circle cx="9" cy="15" r="1.1" />
-            <circle cx="15" cy="15" r="1.1" />
-
-            {/* Outer ring — smaller dots */}
-            <circle cx="6" cy="12" r="0.9" />
-            <circle cx="18" cy="12" r="0.9" />
-            <circle cx="12" cy="6" r="0.9" />
-            <circle cx="12" cy="18" r="0.9" />
-
-            {/* Far outer — scattered small dots */}
-            <circle cx="6.5" cy="8.5" r="0.7" />
-            <circle cx="17.5" cy="8.5" r="0.7" />
-            <circle cx="6.5" cy="15.5" r="0.7" />
-            <circle cx="17.5" cy="15.5" r="0.7" />
-
-            {/* Corner accents — tiny dots */}
-            <circle cx="4.5" cy="10" r="0.5" />
-            <circle cx="19.5" cy="10" r="0.5" />
-            <circle cx="4.5" cy="14" r="0.5" />
-            <circle cx="19.5" cy="14" r="0.5" />
-            <circle cx="10" cy="4.5" r="0.5" />
-            <circle cx="14" cy="4.5" r="0.5" />
-            <circle cx="10" cy="19.5" r="0.5" />
-            <circle cx="14" cy="19.5" r="0.5" />
+            {/* Edges */}
+            <line x1="16" y1="9" x2="8" y2="23" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.45" strokeLinecap="round" />
+            <line x1="16" y1="9" x2="24" y2="23" stroke="currentColor" strokeWidth="1.5" strokeOpacity="0.45" strokeLinecap="round" />
+            <line x1="8" y1="23" x2="24" y2="23" stroke="currentColor" strokeWidth="1.2" strokeOpacity="0.3" strokeLinecap="round" />
+            {/* Outer glow ring on top node */}
+            <circle cx="16" cy="9" r="6.5" stroke="currentColor" strokeOpacity="0.15" strokeWidth="1" />
+            {/* Bottom nodes */}
+            <circle cx="8" cy="23" r="3" fill="currentColor" fillOpacity="0.55" />
+            <circle cx="24" cy="23" r="3" fill="currentColor" fillOpacity="0.55" />
+            {/* Top node (primary) */}
+            <circle cx="16" cy="9" r="4.5" fill="currentColor" />
         </svg>
     );
 }

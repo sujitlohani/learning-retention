@@ -261,7 +261,7 @@ export function LandingPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
-                            { step: '01', icon: '📝', title: 'Log', desc: 'Capture concepts, thoughts, and complex data naturally. Our editor understands intent and context.' },
+                            { step: '01', icon: '📝', title: 'Log', desc: 'Capture units, thoughts, and complex data naturally. Our editor understands intent and context.' },
                             { step: '02', icon: '✨', title: 'AI Plan', desc: 'Memora analyzes your logs to generate personalized review schedules based on your personal forgetting curve.' },
                             { step: '03', icon: '🔄', title: 'Review', desc: 'Engage in active recall through dynamic quizzes and interactive sessions designed for retention.' },
                         ].map((item) => (
@@ -323,7 +323,7 @@ export function LandingPage() {
                         {[
                             { icon: '🔁', title: 'Spaced Repetition', desc: 'Intelligent intervals that hit the sweet spot of memory consolidation.' },
                             { icon: '✨', title: 'AI Quizzes', desc: 'Dynamic testing generated from your notes to verify true understanding.' },
-                            { icon: '🗺️', title: 'Concept Tracking', desc: 'Visualize the neural map of your knowledge and how topics interconnect.' },
+                            { icon: '🗺️', title: 'Unit Tracking', desc: 'Visualize the neural map of your knowledge and how topics interconnect.' },
                             { icon: '📊', title: 'Topic Score', desc: 'Quantify your mastery level for every single subject in your library.' },
                         ].map((f) => (
                             <div

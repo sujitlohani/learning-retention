@@ -11,9 +11,9 @@ export function QuizPage() {
     const searchParams = useSearchParams();
     const topicId = params.topicId as string;
     const sessionId = searchParams.get('session');
-    const conceptId = searchParams.get('conceptId');
+    const unitId = searchParams.get('unitId');
 
-    const q = useQuizSession(topicId, sessionId, conceptId);
+    const q = useQuizSession(topicId, sessionId, unitId);
 
     if (q.isLoading) {
         return (
@@ -147,7 +147,7 @@ export function QuizPage() {
                         <BookOpen className="w-5 h-5 shrink-0 hidden md:block" style={{ color: 'var(--accent)' }} />
                         <h2 className="text-sm md:text-base font-bold truncate">
                             <span className="opacity-60 hidden md:inline">[{q.topic?.name}] · </span>
-                            <span>{question.conceptName || 'General'}</span>
+                            <span>{question.unitName || 'General'}</span>
                         </h2>
                     </div>
 

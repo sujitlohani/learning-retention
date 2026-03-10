@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callWithRetry } from '@/src/services/ai/huggingface-client';
-import { buildConceptPrompt, getFallbackConcepts } from '@/src/services/ai/prompts/concept-prompts';
-import { parseConceptResponse } from '@/src/services/ai/parsers/concept-parser';
+import { buildUnitPrompt, getFallbackUnits } from '@/src/services/ai/prompts/unit-prompts';
+import { parseUnitResponse } from '@/src/services/ai/parsers/unit-parser';
 
 export async function POST(request: NextRequest) {
     try {
@@ -10,48 +10,48 @@ export async function POST(request: NextRequest) {
 
         if (!topic || !level) {
             return NextResponse.json(
-                { concepts: [], success: false, error: 'Missing topic or level' },
+                { units: [], success: false, error: 'Missing topic or level' },
                 { status: 400 }
             );
         }
 
         // Build prompt and call AI
-        const prompt = buildConceptPrompt(topic, level);
-        console.log('[generate-concepts] Calling HuggingFace for:', topic, level);
+        const prompt = buildUnitPrompt(topic, level);
+        console.log('[generate-units] Calling HuggingFace for:', topic, level);
 
         const response = await callWithRetry({ prompt, maxTokens: 500, temperature: 0.7 });
 
         if (!response.success) {
-            console.warn('[generate-concepts] AI failed, using fallback:', response.error);
+            console.warn('[generate-units] AI failed, using fallback:', response.error);
             return NextResponse.json({
-                concepts: getFallbackConcepts(topic, level),
+                units: getFallbackUnits(topic, level),
                 success: true,
                 fallback: true,
             });
         }
 
         // Parse the response
-        const concepts = parseConceptResponse(response.text);
+        const units = parseUnitResponse(response.text);
 
-        if (concepts.length === 0) {
-            console.warn('[generate-concepts] Failed to parse concepts, using fallback');
+        if (units.length === 0) {
+            console.warn('[generate-units] Failed to parse units, using fallback');
             return NextResponse.json({
-                concepts: getFallbackConcepts(topic, level),
+                units: getFallbackUnits(topic, level),
                 success: true,
                 fallback: true,
             });
         }
 
-        console.log('[generate-concepts] Generated', concepts.length, 'concepts');
+        console.log('[generate-units] Generated', units.length, 'units');
         return NextResponse.json({
-            concepts,
+            units,
             success: true,
             fallback: false,
         });
     } catch (error) {
-        console.error('[generate-concepts] Error:', error);
+        console.error('[generate-units] Error:', error);
         return NextResponse.json(
-            { concepts: [], success: false, error: 'Internal server error' },
+            { units: [], success: false, error: 'Internal server error' },
             { status: 500 }
         );
     }

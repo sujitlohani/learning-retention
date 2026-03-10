@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { StudySchedule, ScheduleSession } from '@/src/types/ai';
 import { calculateSessionIntervals, getSessionType } from '@/src/lib/spaced-repetition';
-import { calculateQuestionsPerSession, calculateSessionsPerConcept, formatDate, addDays } from '@/src/lib/schedule-calculator';
+import { calculateQuestionsPerSession, calculateSessionsPerUnit, formatDate, addDays } from '@/src/lib/schedule-calculator';
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { topicId, concepts, timeframeDays, dailyMinutes } = body;
+        const { topicId, units, timeframeDays, dailyMinutes } = body;
 
-        if (!topicId || !concepts || !timeframeDays || !dailyMinutes) {
+        if (!topicId || !units || !timeframeDays || !dailyMinutes) {
             return NextResponse.json(
                 { schedule: null, success: false, error: 'Missing required fields' },
                 { status: 400 }
@@ -17,24 +17,24 @@ export async function POST(request: NextRequest) {
 
         // Calculate session parameters
         const questionsPerSession = calculateQuestionsPerSession(dailyMinutes);
-        const sessionsPerConcept = calculateSessionsPerConcept(
+        const sessionsPerUnit = calculateSessionsPerUnit(
             timeframeDays,
-            concepts.length,
+            units.length,
             dailyMinutes
         );
 
         // Generate intervals using spaced repetition
-        const intervals = calculateSessionIntervals(timeframeDays, sessionsPerConcept);
+        const intervals = calculateSessionIntervals(timeframeDays, sessionsPerUnit);
 
         const startDate = new Date();
         const sessions: ScheduleSession[] = [];
         let sessionCounter = 0;
 
-        // Create sessions for each concept at spaced intervals
-        concepts.forEach((concept: { id: string; name: string }, conceptIndex: number) => {
+        // Create sessions for each unit at spaced intervals
+        units.forEach((unit: { id: string; name: string }, unitIndex: number) => {
             intervals.forEach((dayOffset, intervalIndex) => {
-                // Stagger concepts so they don't all fall on the same day
-                const staggerDays = conceptIndex;
+                // Stagger units so they don't all fall on the same day
+                const staggerDays = unitIndex;
                 const actualDayOffset = Math.min(dayOffset + staggerDays, timeframeDays);
                 const sessionDate = addDays(startDate, actualDayOffset);
 
@@ -43,11 +43,11 @@ export async function POST(request: NextRequest) {
                 const existingSession = sessions.find(s => s.date === dateStr);
 
                 if (existingSession) {
-                    // Add concept to existing session (interleave)
-                    if (!existingSession.conceptIds.includes(concept.id)) {
-                        existingSession.conceptIds.push(concept.id);
+                    // Add unit to existing session (interleave)
+                    if (!existingSession.unitIds.includes(unit.id)) {
+                        existingSession.unitIds.push(unit.id);
                         existingSession.type = 'mixed-review';
-                        // Slightly increase question count for multi-concept sessions
+                        // Slightly increase question count for multi-unit sessions
                         existingSession.questionCount = Math.min(
                             questionsPerSession + 2,
                             existingSession.questionCount + 2
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
                     sessions.push({
                         id: `session-${topicId}-${sessionCounter}-${Date.now()}`,
                         date: dateStr,
-                        conceptIds: [concept.id],
+                        unitIds: [unit.id],
                         type: getSessionType(intervalIndex, intervals.length),
                         questionCount: questionsPerSession,
                         estimatedMinutes: dailyMinutes,

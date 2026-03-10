@@ -1,7 +1,7 @@
 // topics.service.ts — All topic CRUD operations
 // Currently wraps localStorage. Swap to Supabase here only.
 
-import { Topic, QuizResult, Concept } from '@/src/types';
+import { Topic, QuizResult, Unit } from '@/src/types';
 
 const STORAGE_KEY = 'learning-retention-mvp-data';
 
@@ -41,7 +41,7 @@ export const topicsService = {
         const newTopic: Topic = {
             id: crypto.randomUUID(),
             name,
-            concepts: [],
+            units: [],
             memoryScore: 0,
             lastPracticed: new Date(),
             nextReviewDate: new Date(),
@@ -68,10 +68,17 @@ export const topicsService = {
         const hoursToAdd = result.score > 80 ? 72 : result.score > 60 ? 24 : 4;
         topic.nextReviewDate = new Date(Date.now() + 1000 * 60 * 60 * hoursToAdd);
 
-        // Update concept statuses
-        topic.concepts = topic.concepts.map(c => {
-            if (result.weakConcepts.includes(c.id)) return { ...c, status: 'weak' as const };
-            return { ...c, status: 'strong' as const };
+        // Sub-level adjustment
+        if (result.score >= 80) {
+            topic.subLevel = Math.min((topic.subLevel || 1) + 1, 5);
+        } else if (result.score < 50) {
+            topic.subLevel = Math.max((topic.subLevel || 1) - 1, 1);
+        }
+
+        // Update unit statuses
+        topic.units = topic.units.map(u => {
+            if (result.weakUnits.includes(u.id)) return { ...u, status: 'weak' as const };
+            return { ...u, status: 'strong' as const };
         });
 
         topicsService.saveTopic(topic);
@@ -92,41 +99,41 @@ export const topicsService = {
         }
     },
 
-    updateConceptFamiliarity: (topicId: string, conceptId: string, familiar: boolean) => {
+    updateUnitFamiliarity: (topicId: string, unitId: string, familiar: boolean) => {
         const topics = topicsService.getTopics();
         const topic = topics.find(t => t.id === topicId);
         if (!topic) return;
 
-        topic.concepts = topic.concepts.map(c =>
-            c.id === conceptId ? { ...c, familiar } : c
+        topic.units = topic.units.map(u =>
+            u.id === unitId ? { ...u, familiar } : u
         );
 
         topicsService.saveTopic(topic);
     },
 
-    addCustomConcept: (topicId: string, conceptText: string) => {
+    addCustomUnit: (topicId: string, unitText: string) => {
         const topics = topicsService.getTopics();
         const topic = topics.find(t => t.id === topicId);
         if (!topic) return;
 
-        const newConcept: Concept = {
+        const newUnit: Unit = {
             id: crypto.randomUUID(),
-            text: conceptText,
+            text: unitText,
             status: 'neutral',
             familiar: false
         };
 
-        topic.concepts.push(newConcept);
+        topic.units.push(newUnit);
         topicsService.saveTopic(topic);
-        return newConcept;
+        return newUnit;
     },
 
-    deleteConcept: (topicId: string, conceptId: string) => {
+    deleteUnit: (topicId: string, unitId: string) => {
         const topics = topicsService.getTopics();
         const topic = topics.find(t => t.id === topicId);
         if (!topic) return;
 
-        topic.concepts = topic.concepts.filter(c => c.id !== conceptId);
+        topic.units = topic.units.filter(u => u.id !== unitId);
         topicsService.saveTopic(topic);
     },
 

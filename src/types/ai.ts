@@ -1,13 +1,13 @@
-// AI-related types for concept generation, quiz generation, scheduling
+// AI-related types for unit generation, quiz generation, scheduling
 
-// === Concept Generation ===
-export interface ConceptGenerationRequest {
+// === Unit Generation ===
+export interface UnitGenerationRequest {
     topic: string;
     level: 'beginner' | 'intermediate' | 'expert';
 }
 
-export interface ConceptGenerationResponse {
-    concepts: string[];
+export interface UnitGenerationResponse {
+    units: string[];
     success: boolean;
     error?: string;
 }
@@ -15,7 +15,7 @@ export interface ConceptGenerationResponse {
 // === Quiz Generation ===
 export interface QuizGenerationRequest {
     topic: string;
-    concept: string;
+    unit: string;
     level: 'beginner' | 'intermediate' | 'expert';
     count?: number;
 }
@@ -29,8 +29,8 @@ export interface QuizGenerationResponse {
 export interface AIGeneratedQuestion {
     id: string;
     topicId: string;
-    conceptId: string;
-    conceptName?: string;
+    unitId: string;
+    unitName?: string;
     type: 'mcq' | 'short-answer';
     difficulty: 'beginner' | 'intermediate' | 'expert';
     question: string;
@@ -47,7 +47,7 @@ export interface AIGeneratedQuestion {
 // === Schedule Generation ===
 export interface ScheduleGenerationRequest {
     topicId: string;
-    concepts: { id: string; name: string }[];
+    units: { id: string; name: string }[];
     timeframeDays: number;
     dailyMinutes: number;
 }
@@ -68,7 +68,7 @@ export interface StudySchedule {
 export interface ScheduleSession {
     id: string;
     date: string;
-    conceptIds: string[];
+    unitIds: string[];
     type: 'initial' | 'reinforcement' | 'mixed-review' | 'final-review';
     questionCount: number;
     estimatedMinutes: number;
@@ -106,8 +106,8 @@ export interface QuizAttempt {
     id: string;
     topicId: string;
     sessionId?: string;
-    type: 'topic' | 'concept';
-    targetConceptId?: string;
+    type: 'topic' | 'unit';
+    targetUnitId?: string;
     score: number;
     correctCount: number;
     totalCount: number;
@@ -115,8 +115,8 @@ export interface QuizAttempt {
     durationSeconds?: number;
     questions: {
         questionId: string;
-        conceptId: string;
-        conceptName?: string;
+        unitId: string;
+        unitName?: string;
         questionText?: string;
         explanation?: string;
         isCorrect: boolean;
@@ -124,9 +124,9 @@ export interface QuizAttempt {
         correctAnswer: string;
         timeSpentSeconds?: number;
     }[];
-    conceptBreakdown: {
-        conceptId: string;
-        conceptName?: string;
+    unitBreakdown: {
+        unitId: string;
+        unitName?: string;
         correctCount: number;
         totalCount: number;
         score: number;

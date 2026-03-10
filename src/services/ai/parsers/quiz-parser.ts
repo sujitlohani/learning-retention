@@ -19,9 +19,9 @@ interface RawQuestion {
 export function parseQuizResponse(
     responseText: string,
     topicId: string,
-    conceptId: string,
+    unitId: string,
     level: 'beginner' | 'intermediate' | 'expert',
-    conceptName?: string
+    unitName?: string
 ): AIGeneratedQuestion[] {
     const trimmed = responseText.trim();
     let rawQuestions: RawQuestion[] = [];
@@ -62,10 +62,10 @@ export function parseQuizResponse(
         const now = new Date().toISOString();
 
         const question: AIGeneratedQuestion = {
-            id: `ai-${topicId}-${conceptId}-${index}-${Date.now()}`,
+            id: `ai-${topicId}-${unitId}-${index}-${Date.now()}`,
             topicId,
-            conceptId,
-            conceptName: conceptName,
+            unitId,
+            unitName: unitName,
             type: questionType as 'mcq' | 'short-answer',
             difficulty: level,
             question: String(raw.question).trim(),

@@ -39,7 +39,7 @@ export function OnboardingPage() {
                 <div className="space-y-4 text-left">
                     {[
                         { icon: '📝', title: 'Add a topic', desc: 'Tell us what you just learned' },
-                        { icon: '🤖', title: 'AI generates your plan', desc: 'Concepts, schedule, and quiz questions' },
+                        { icon: '🤖', title: 'AI generates your plan', desc: 'Units, schedule, and quiz questions' },
                         { icon: '🧠', title: 'Practice daily', desc: 'Short quizzes that adapt to your memory' },
                     ].map((item, i) => (
                         <motion.div

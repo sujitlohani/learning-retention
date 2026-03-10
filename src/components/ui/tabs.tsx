@@ -30,9 +30,10 @@ const TabsTrigger = React.forwardRef<
 // Simplified: Does not actually toggle tabs in this mock without State/Context, 
 // but for the MVP visual it might be 'okay' if I implement a basic state context? 
 // Actually, Shadcn Tabs relies on Radix Tabs which handles logic. 
+// Simple Context for Tabs
 // Writing a full Tabs implementation from scratch is non-trivial for a quick fix.
 // I will make a simple implementation that assumes controlled state or just renders. 
-// Wait, the user code uses Uncontrolled `<Tabs defaultValue="concepts">`.
+// Wait, the user code uses Uncontrolled `<Tabs defaultValue="units">`.
 // So I need a Context.
 >(({ className, ...props }, ref) => (
     <button

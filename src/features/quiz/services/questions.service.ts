@@ -21,19 +21,19 @@ export const questionsService = {
         return questionsService.getQuestions().filter(q => q.topicId === topicId);
     },
 
-    getQuestionsForConcept: (topicId: string, conceptId: string): AIGeneratedQuestion[] => {
+    getQuestionsForUnit: (topicId: string, unitId: string): AIGeneratedQuestion[] => {
         return questionsService.getQuestions().filter(
-            q => q.topicId === topicId && q.conceptId === conceptId
+            q => q.topicId === topicId && q.unitId === unitId
         );
     },
 
     getQuestionsForSession: (
         topicId: string,
-        conceptIds: string[],
+        unitIds: string[],
         count: number
     ): AIGeneratedQuestion[] => {
         const allQuestions = questionsService.getQuestions().filter(
-            q => q.topicId === topicId && conceptIds.includes(q.conceptId)
+            q => q.topicId === topicId && unitIds.includes(q.unitId)
         );
 
         // Shuffle and pick the requested count
@@ -59,10 +59,10 @@ export const questionsService = {
         localStorage.setItem(QUESTIONS_KEY, JSON.stringify(filtered));
     },
 
-    deleteQuestionsForConcept: (topicId: string, conceptId: string): void => {
+    deleteQuestionsForUnit: (topicId: string, unitId: string): void => {
         if (typeof window === 'undefined') return;
         const questions = questionsService.getQuestions();
-        const filtered = questions.filter(q => !(q.topicId === topicId && q.conceptId === conceptId));
+        const filtered = questions.filter(q => !(q.topicId === topicId && q.unitId === unitId));
         localStorage.setItem(QUESTIONS_KEY, JSON.stringify(filtered));
     },
 
@@ -70,11 +70,11 @@ export const questionsService = {
         return questionsService.getQuestionsForTopic(topicId).length > 0;
     },
 
-    getQuestionCountByConcept: (topicId: string): Record<string, number> => {
+    getQuestionCountByUnit: (topicId: string): Record<string, number> => {
         const questions = questionsService.getQuestionsForTopic(topicId);
         const counts: Record<string, number> = {};
         questions.forEach(q => {
-            counts[q.conceptId] = (counts[q.conceptId] || 0) + 1;
+            counts[q.unitId] = (counts[q.unitId] || 0) + 1;
         });
         return counts;
     },

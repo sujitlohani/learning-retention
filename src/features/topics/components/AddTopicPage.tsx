@@ -3,9 +3,8 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, Lightbulb, Sparkles, Calendar, Clock, CheckCircle2, Loader2, BookOpen, FileText, Video, Users, Globe } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
-import { useTopicWizard, sources, timeframeOptions, commitmentOptions } from '@/src/features/topics/hooks/useTopicWizard';
+import { useTopicWizard, sources } from '@/src/features/topics/hooks/useTopicWizard';
 import { MemoraMark } from '@/src/components/MemoraLogo';
-import { timeframeToDays } from '@/src/lib/schedule-calculator';
 
 const sourceIcons: Record<string, typeof BookOpen> = {
     book: BookOpen,
@@ -73,7 +72,7 @@ export function AddTopicPage() {
                                 Rate yourself in <span style={{ color: 'var(--accent)' }}>{w.topicName}</span>
                             </h2>
                             <p className="text-xl text-muted-foreground font-light">
-                                {w.isLoadingPreviews ? 'AI is generating concepts for each level...' : 'Pick a level to see its concepts.'}
+                                {w.isLoadingPreviews ? 'AI is generating units for each level...' : 'Pick a level to see its units.'}
                             </p>
                         </div>
 
@@ -126,61 +125,51 @@ export function AddTopicPage() {
                                                     <div className="p-6 border-2 border-t-0 border-border rounded-b-md space-y-6" style={{ background: 'var(--bg-surface)' }}>
                                                         <div className="space-y-4">
                                                             <div className="flex items-center justify-between px-1">
-                                                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Review Concepts</h3>
-                                                                <span className="text-xs text-muted-foreground">{w.subConcepts.length} concepts</span>
+                                                                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Review Units</h3>
+                                                                <span className="text-xs text-muted-foreground">{w.subUnits.length} units</span>
                                                             </div>
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                                                 {w.isLoadingPreviews ? (
                                                                     <div className="col-span-full flex items-center gap-2 text-sm text-muted-foreground p-4">
                                                                         <Loader2 className="w-4 h-4 animate-spin" />
-                                                                        <span>Generating concepts...</span>
+                                                                        <span>Generating units...</span>
                                                                     </div>
-                                                                ) : w.subConcepts.length > 0 ? (
-                                                                    w.subConcepts.map((sc) => (
+                                                                ) : w.subUnits.length > 0 ? (
+                                                                    w.subUnits.map((sc) => (
                                                                         <div
                                                                             key={sc.id}
-                                                                            className={cn(
-                                                                                "flex items-start gap-3 p-3 rounded-md border transition-all cursor-pointer",
-                                                                                sc.checked ? "border-border" : "border-border/30"
-                                                                            )}
-                                                                            style={sc.checked ? { background: 'var(--accent-light)' } : { background: 'var(--bg-surface)' }}
-                                                                            onClick={() => w.toggleSubConcept(sc.id)}
+                                                                            className="flex flex-col gap-1 p-3 rounded-md border border-border/50 text-left transition-all"
+                                                                            style={{ background: 'var(--bg-surface)' }}
                                                                         >
-                                                                            <div className="mt-0.5 flex-shrink-0">
-                                                                                <div className={cn(
-                                                                                    "w-5 h-5 rounded border flex items-center justify-center transition-colors",
-                                                                                    sc.checked ? "border-transparent" : "border-border"
-                                                                                )} style={sc.checked ? { background: 'var(--accent)', borderColor: 'var(--accent)' } : {}}>
-                                                                                    {sc.checked && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
-                                                                                </div>
-                                                                            </div>
-                                                                            <span className={cn(
-                                                                                "text-sm leading-tight",
-                                                                                sc.checked ? "font-medium" : "text-muted-foreground"
-                                                                            )}>
+                                                                            <span className="text-sm font-medium leading-tight text-foreground">
                                                                                 {sc.name}
                                                                             </span>
+                                                                            {sc.description && (
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    {sc.description}
+                                                                                </span>
+                                                                            )}
                                                                         </div>
                                                                     ))
                                                                 ) : (
-                                                                    <div className="col-span-full text-sm text-muted-foreground p-4">No concepts matched.</div>
+                                                                    <div className="col-span-full text-sm text-muted-foreground p-4">No units matched.</div>
                                                                 )}
                                                             </div>
                                                         </div>
 
-                                                        {w.subConcepts.length > 0 && !w.isLoadingPreviews && (
+                                                        {w.subUnits.length > 0 && !w.isLoadingPreviews && (
                                                             <div className="flex gap-2 max-w-md pt-2">
                                                                 <input
-                                                                    value={w.newConceptInput}
-                                                                    onChange={(e) => w.setNewConceptInput(e.target.value)}
-                                                                    placeholder="Missing something? Add a concept..."
+                                                                    value={w.newUnitInput}
+                                                                    onChange={(e) => w.setNewUnitInput(e.target.value)}
+                                                                    placeholder="Missing something? Add a unit..."
                                                                     className="flex-1 h-10 text-sm px-3 rounded-md border border-border bg-bg-surface focus:border-border focus:outline-none"
-                                                                    onKeyDown={(e) => e.key === 'Enter' && w.addSubConcept()}
+                                                                    onKeyDown={(e) => e.key === 'Enter' && w.addSubUnit()}
                                                                 />
                                                                 <button
                                                                     className="h-10 px-4 rounded-md text-sm font-medium"
                                                                     style={{ background: 'var(--bg-raised)' }}
-                                                                    onClick={w.addSubConcept}
+                                                                    onClick={w.addSubUnit}
                                                                 >
                                                                     Add
                                                                 </button>
@@ -207,71 +196,66 @@ export function AddTopicPage() {
                     </div>
                 );
 
-            case 'timeframe':
-                return (
-                    <div className="flex flex-col items-center text-center space-y-12 max-w-xl mx-auto">
-                        <div className="space-y-6">
-                            <div className="mx-auto w-16 h-16 rounded-md flex items-center justify-center" style={{ background: 'var(--accent-light)' }}>
-                                <Calendar className="w-8 h-8" style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">When do you want to master this?</h2>
-                            <p className="text-xl text-muted-foreground font-light">We'll create a spaced repetition schedule to fit your timeline.</p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-3 w-full max-w-md">
-                            {timeframeOptions.map((option) => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => w.handleTimeframeSelect(option.value)}
-                                    className={cn(
-                                        "group p-5 rounded-md border-2 transition-all text-left hover:border-border",
-                                        w.selectedTimeframe === option.value ? "border-border" : "border-border/30"
-                                    )}
-                                    style={{ background: w.selectedTimeframe === option.value ? 'var(--bg-raised)' : 'var(--bg-surface)' }}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="text-lg font-bold">{option.label}</div>
-                                            <div className="text-sm text-muted-foreground">{option.desc}</div>
-                                        </div>
-                                        <ArrowRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-foreground transition-colors" />
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                );
 
-            case 'commitment':
+
+            case 'familiarity':
                 return (
                     <div className="flex flex-col items-center text-center space-y-12 max-w-xl mx-auto">
                         <div className="space-y-6">
                             <div className="mx-auto w-16 h-16 rounded-md flex items-center justify-center" style={{ background: 'var(--accent-light)' }}>
-                                <Clock className="w-8 h-8" style={{ color: 'var(--accent)' }} />
+                                <Sparkles className="w-8 h-8" style={{ color: 'var(--accent)' }} />
                             </div>
-                            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Daily time commitment?</h2>
-                            <p className="text-xl text-muted-foreground font-light">Even small consistent effort compounds over time.</p>
+                            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Which of these do you already understand?</h2>
+                            <p className="text-xl text-muted-foreground font-light">Select all that apply to calibrate your starting level.</p>
                         </div>
-                        <div className="grid grid-cols-1 gap-3 w-full max-w-md">
-                            {commitmentOptions.map((option) => (
-                                <button
-                                    key={option.value}
-                                    onClick={() => w.handleCommitmentSelect(option.value)}
-                                    className={cn(
-                                        "group p-5 rounded-md border-2 transition-all text-left hover:border-border",
-                                        w.dailyCommitment === option.value ? "border-border" : "border-border/30"
-                                    )}
-                                    style={{ background: w.dailyCommitment === option.value ? 'var(--bg-raised)' : 'var(--bg-surface)' }}
-                                >
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <div className="text-lg font-bold">{option.label}</div>
-                                            <div className="text-sm text-muted-foreground">{option.desc}</div>
+
+                        <div className="w-full max-w-xl space-y-4 text-left">
+                            {w.isLoadingFamiliarity ? (
+                                <div className="flex flex-col items-center justify-center py-10 space-y-4">
+                                    <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+                                    <p className="text-sm text-muted-foreground">Generating knowledge check...</p>
+                                </div>
+                            ) : (
+                                w.familiarityStatements.map((stmt, idx) => {
+                                    const isChecked = w.checkedStatements.includes(stmt);
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={cn(
+                                                "flex items-start gap-4 p-4 rounded-md border transition-all cursor-pointer",
+                                                isChecked ? "border-border" : "border-border/30"
+                                            )}
+                                            style={isChecked ? { background: 'var(--accent-light)' } : { background: 'var(--bg-surface)' }}
+                                            onClick={() => w.toggleFamiliarityStatement(stmt)}
+                                        >
+                                            <div className="mt-0.5 flex-shrink-0">
+                                                <div className={cn(
+                                                    "w-6 h-6 rounded border flex items-center justify-center transition-colors",
+                                                    isChecked ? "border-transparent" : "border-border"
+                                                )} style={isChecked ? { background: 'var(--accent)', borderColor: 'var(--accent)' } : {}}>
+                                                    {isChecked && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                                </div>
+                                            </div>
+                                            <span className={cn(
+                                                "text-base leading-snug",
+                                                isChecked ? "font-medium text-foreground" : "text-muted-foreground"
+                                            )}>
+                                                {stmt}
+                                            </span>
                                         </div>
-                                        <ArrowRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-foreground transition-colors" />
-                                    </div>
-                                </button>
-                            ))}
+                                    );
+                                })
+                            )}
                         </div>
+
+                        <button
+                            disabled={w.isLoadingFamiliarity}
+                            className="w-full h-14 text-lg rounded-full font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-40"
+                            style={{ background: 'var(--accent)', color: '#fff' }}
+                            onClick={w.handleContinueFromFamiliarity}
+                        >
+                            Continue <ArrowRight className="w-5 h-5" />
+                        </button>
                     </div>
                 );
 
@@ -314,8 +298,7 @@ export function AddTopicPage() {
                 );
 
             case 'confirmation': {
-                const selectedCount = w.subConcepts.filter(sc => sc.checked).length || w.subConcepts.length;
-                const targetDate = w.selectedTimeframe ? new Date(Date.now() + timeframeToDays(w.selectedTimeframe) * 24 * 60 * 60 * 1000) : new Date();
+                const selectedCount = w.subUnits.length;
 
                 return (
                     <div className="flex flex-col items-center text-center space-y-12 max-w-xl mx-auto">
@@ -330,10 +313,7 @@ export function AddTopicPage() {
                             {[
                                 { label: 'Topic', value: w.topicName },
                                 { label: 'Level', value: w.level ? w.level.charAt(0).toUpperCase() + w.level.slice(1) : '' },
-                                { label: 'Concepts', value: `${selectedCount} selected` },
-                                { label: 'Timeframe', value: w.selectedTimeframe || '' },
-                                { label: 'Daily Commitment', value: `${w.dailyCommitment} minutes` },
-                                { label: 'Target Date', value: targetDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) },
+                                { label: 'Units', value: `${selectedCount} selected` },
                             ].map((item, idx) => (
                                 <motion.div
                                     key={item.label}
@@ -438,7 +418,7 @@ export function AddTopicPage() {
             {/* Step progress dots */}
             {!['generating', 'exit'].includes(w.currentStep) && (
                 <div className="absolute top-8 left-1/2 -translate-x-1/2 flex gap-2">
-                    {['capture', 'level', 'timeframe', 'commitment', 'source', 'confirmation'].map((step) => (
+                    {['capture', 'level', 'familiarity', 'source', 'confirmation'].map((step) => (
                         <div
                             key={step}
                             className="w-2 h-2 rounded-full transition-all"
@@ -473,7 +453,7 @@ export function AddTopicPage() {
                     <div className="rounded-md p-6 max-w-md w-full space-y-4" style={{ background: 'var(--bg-surface)' }}>
                         <h3 className="text-lg font-bold">Topic Already Exists</h3>
                         <p className="text-sm text-muted-foreground">
-                            "{w.duplicateTopic.name}" already exists with {w.duplicateTopic.concepts.length} concepts.
+                            "{w.duplicateTopic.name}" already exists with {w.duplicateTopic.units.length} units.
                         </p>
                         <div className="flex flex-col gap-2">
                             <button

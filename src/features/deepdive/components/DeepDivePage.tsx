@@ -10,7 +10,7 @@ import Link from 'next/link';
 const MOCK_CATEGORIES = [
     {
         name: 'UX Design',
-        concepts: [
+        units: [
             { id: '1', name: "Hick's Law", score: 88, active: true },
             { id: '2', name: "Fitts's Law", score: 72, active: false },
             { id: '3', name: "Jakob's Law", score: 91, active: false },
@@ -18,7 +18,7 @@ const MOCK_CATEGORIES = [
     },
     {
         name: 'Psychology',
-        concepts: [
+        units: [
             { id: '4', name: "Cognitive Load", score: 64, active: false },
             { id: '5', name: "Gestalt Theory", score: 82, active: false },
         ]
@@ -72,7 +72,7 @@ export function DeepDivePage() {
 
     return (
         <div className="flex h-screen overflow-hidden font-display w-full">
-            {/* Left Column: Concept Sidebar */}
+            {/* Left Column: Unit Sidebar */}
             <aside
                 className="w-[260px] shrink-0 border-r flex flex-col hidden md:flex"
                 style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)', boxShadow: 'var(--shadow-raised)' }}
@@ -81,7 +81,7 @@ export function DeepDivePage() {
                     <div className="relative">
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-50" />
                         <input
-                            placeholder="Filter concepts..."
+                            placeholder="Filter units..."
                             className="w-full pl-9 pr-4 py-2 rounded-lg text-sm border-none focus:ring-1 focus:outline-none transition-all"
                             style={{
                                 background: 'var(--bg-raised)',
@@ -98,34 +98,34 @@ export function DeepDivePage() {
                                 {category.name}
                             </h3>
                             <div className="space-y-1">
-                                {category.concepts.map((concept) => (
+                                {category.units.map((unit) => (
                                     <div
-                                        key={concept.id}
+                                        key={unit.id}
                                         className={cn(
                                             "group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all",
-                                            concept.active ? "border-l-4" : "hover:bg-bg-raised"
+                                            unit.active ? "border-l-4" : "hover:bg-bg-raised"
                                         )}
                                         style={{
-                                            background: concept.active ? 'var(--accent-light)' : 'transparent',
-                                            borderColor: concept.active ? 'var(--accent)' : 'transparent'
+                                            background: unit.active ? 'var(--accent-light)' : 'transparent',
+                                            borderColor: unit.active ? 'var(--accent)' : 'transparent'
                                         }}
                                     >
                                         <div className="flex items-center gap-3">
-                                            {concept.active
+                                            {unit.active
                                                 ? <CheckCircle className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                                                 : <Circle className="w-4 h-4 opacity-30" style={{ color: 'var(--text-muted)' }} />
                                             }
                                             <span
-                                                className={cn("text-sm", concept.active ? "font-semibold text-foreground" : "font-medium text-muted-foreground")}
+                                                className={cn("text-sm", unit.active ? "font-semibold text-foreground" : "font-medium text-muted-foreground")}
                                             >
-                                                {concept.name}
+                                                {unit.name}
                                             </span>
                                         </div>
                                         <span
                                             className={cn("text-[10px] px-1.5 py-0.5 rounded font-bold")}
-                                            style={concept.active ? { background: 'color-mix(in srgb, var(--accent) 20%, transparent)', color: 'var(--accent)' } : { color: 'var(--text-muted)' }}
+                                            style={unit.active ? { background: 'color-mix(in srgb, var(--accent) 20%, transparent)', color: 'var(--accent)' } : { color: 'var(--text-muted)' }}
                                         >
-                                            {concept.score}
+                                            {unit.score}
                                         </span>
                                     </div>
                                 ))}
