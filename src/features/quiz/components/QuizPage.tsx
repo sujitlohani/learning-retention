@@ -100,7 +100,7 @@ export function QuizPage() {
                                 <div className="text-4xl font-black" style={{ color: 'var(--accent)' }}>{q.finalPercentage}%</div>
                             </div>
                             <div className="p-6 border flex flex-col items-center justify-center gap-2" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', borderRadius: 'var(--radius-md)' }}>
-                                <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Topic Memory</div>
+                                <div className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Topic Score</div>
                                 <div className="text-4xl font-black">{q.topic?.memoryScore ?? 0}%</div>
                             </div>
                         </div>

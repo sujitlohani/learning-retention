@@ -12,6 +12,10 @@ import { AIGeneratedQuestion, QuizAttempt } from '@/src/types/ai';
 
 export type QuizPhase = 'quiz' | 'result';
 
+export type QuizTriggerParams = 
+    | { type: 'topic-challenge'; topicId: string }
+    | { type: 'unit-test'; topicId: string; targetUnitId: string };
+
 function aiQToQuizQ(q: AIGeneratedQuestion): QuizQuestion {
     return {
         id: q.id,
@@ -51,7 +55,7 @@ function evaluateShortAnswer(answer: string, question: QuizQuestion): boolean {
     return matchCount >= Math.ceil(correctWords.length * 0.4);
 }
 
-export function useQuizSession(topicId: string, sessionId?: string | null, unitId?: string | null) {
+export function useQuizSession(topicId?: string | null, sessionId?: string | null, unitId?: string | null) {
     const router = useRouter();
 
     const [topic, setTopic] = useState<Topic | null>(null);
@@ -70,6 +74,11 @@ export function useQuizSession(topicId: string, sessionId?: string | null, unitI
 
     // Load topic and questions
     useEffect(() => {
+        if (!topicId) {
+            setIsLoading(false);
+            return;
+        }
+
         const storedTopics = topicsService.getTopics();
         const foundTopic = storedTopics.find(t => t.id === topicId);
 
@@ -326,6 +335,14 @@ export function useQuizSession(topicId: string, sessionId?: string | null, unitI
         setQuizStartTime(Date.now());
     }, []);
 
+    const startQuiz = useCallback((params: QuizTriggerParams) => {
+        if (params.type === 'topic-challenge') {
+            router.push(`/learn/${params.topicId}`);
+        } else if (params.type === 'unit-test') {
+            router.push(`/learn/${params.topicId}?unitId=${params.targetUnitId}`);
+        }
+    }, [router]);
+
     const finalPercentage = quizQuestions.length > 0 ? Math.round((correctCount / quizQuestions.length) * 100) : 0;
 
     return {
@@ -351,6 +368,7 @@ export function useQuizSession(topicId: string, sessionId?: string | null, unitI
         nextQuestion,
         handleRegenerate,
         resetQuiz,
+        startQuiz,
         evaluateShortAnswer: (answer: string, question: QuizQuestion) => evaluateShortAnswer(answer, question),
         goHome: () => router.push('/'),
     };

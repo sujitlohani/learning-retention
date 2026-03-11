@@ -22,6 +22,11 @@ export const topicsService = {
         });
     },
 
+    getTopicById: (id: string): Topic | undefined => {
+        const topics = topicsService.getTopics();
+        return topics.find(t => t.id === id);
+    },
+
     saveTopic: (topic: Topic) => {
         const topics = topicsService.getTopics();
         const existingIndex = topics.findIndex((t) => t.id === topic.id);

@@ -13,6 +13,8 @@ export type Topic = {
     knowledgeGaps?: string[];
     studyPlan?: StudyPlan;
     scheduleId?: string;
+    description?: string;
+    useCases?: { title: string; description: string; tag: string }[];
 };
 
 export type Unit = {

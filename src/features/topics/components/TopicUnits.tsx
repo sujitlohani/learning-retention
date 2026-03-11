@@ -1,0 +1,126 @@
+'use client';
+
+import { useState } from 'react';
+import { Topic } from '@/src/types';
+import { QuizButton } from './QuizButton';
+import { useQuizSession } from '@/src/features/quiz/hooks/useQuizSession';
+import { ListFilter, Search } from 'lucide-react';
+
+interface TopicUnitsProps {
+    topic: Topic;
+}
+
+type FilterType = 'all' | 'weak' | 'strong' | 'unattempted';
+
+export function TopicUnits({ topic }: TopicUnitsProps) {
+    const { startQuiz } = useQuizSession();
+    const [filter, setFilter] = useState<FilterType>('all');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleStartUnit = (unitId: string) => {
+        startQuiz({ type: 'unit-test', topicId: topic.id, targetUnitId: unitId });
+    };
+
+    let filteredUnits = topic.units;
+    
+    if (filter === 'weak') filteredUnits = filteredUnits.filter(u => u.status === 'weak');
+    if (filter === 'strong') filteredUnits = filteredUnits.filter(u => u.status === 'strong');
+    if (filter === 'unattempted') filteredUnits = filteredUnits.filter(u => u.status === 'neutral');
+
+    if (searchQuery.trim() !== '') {
+        const lowerQ = searchQuery.toLowerCase();
+        filteredUnits = filteredUnits.filter(u => u.text.toLowerCase().includes(lowerQ));
+    }
+
+    return (
+        <div className="space-y-6">
+            
+            {/* Toolbar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                    <ListFilter className="w-5 h-5 text-[var(--text-muted)]" />
+                    <div className="flex bg-[var(--bg-raised)] p-1 rounded-md border border-[var(--border)]">
+                        {(['all', 'weak', 'strong', 'unattempted'] as const).map(f => (
+                            <button
+                                key={f}
+                                onClick={() => setFilter(f)}
+                                className={`px-4 py-1.5 text-xs font-semibold rounded ${filter === f ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-[var(--shadow-resting)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'} transition-all capitalize`}
+                            >
+                                {f}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                    <input
+                        type="text"
+                        placeholder="Search units..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9 pr-4 py-2 text-sm bg-[var(--bg-surface)] border border-[var(--border)] rounded-md outline-none focus:border-[var(--accent)] text-[var(--text-primary)] w-full sm:w-64 transition-ui"
+                    />
+                </div>
+            </div>
+
+            {/* List */}
+            <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border)] shadow-[var(--shadow-resting)] overflow-hidden">
+                <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-raised)] text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
+                    <div className="col-span-6">Unit Name</div>
+                    <div className="col-span-3 text-center">Status</div>
+                    <div className="col-span-3 text-right pr-4">Action</div>
+                </div>
+
+                <div className="divide-y divide-[var(--border)]">
+                    {filteredUnits.length === 0 ? (
+                        <div className="p-8 text-center text-[var(--text-muted)] text-sm font-medium">
+                            No units found.
+                        </div>
+                    ) : (
+                        filteredUnits.map(unit => {
+                            let statusColor = 'var(--text-muted)';
+                            let bgPill = 'var(--bg-raised)';
+                            if (unit.status === 'weak') {
+                                statusColor = 'var(--danger)';
+                                bgPill = '#fef2f2'; // light red
+                            } else if (unit.status === 'strong') {
+                                statusColor = 'var(--success)';
+                                bgPill = '#f0fdf4'; // light green
+                            }
+
+                            // Read theme safely or use a default standard background
+                            // Will rely heavily on standard accent classes or light tokens dynamically
+
+                            return (
+                                <div key={unit.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-[var(--bg-raised)] transition-colors">
+                                    <div className="col-span-6">
+                                        <p className="font-semibold text-[14px] text-[var(--text-primary)]">
+                                            {unit.text}
+                                        </p>
+                                    </div>
+                                    <div className="col-span-3 flex justify-center">
+                                        <span
+                                            className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md"
+                                            style={{
+                                                color: statusColor,
+                                                backgroundColor: unit.status === 'neutral' ? 'var(--bg-raised)' : `${statusColor}20`,
+                                                border: `1px solid ${unit.status === 'neutral' ? 'var(--border)' : statusColor}40`
+                                            }}
+                                        >
+                                            {unit.status}
+                                        </span>
+                                    </div>
+                                    <div className="col-span-3 flex justify-end">
+                                        <QuizButton onStart={() => handleStartUnit(unit.id)} />
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+
+        </div>
+    );
+}

@@ -1,275 +1,260 @@
 'use client';
 
-import { useState } from 'react';
-import { Search, Filter, CheckCircle, Circle, History, Download, ChevronUp, ChevronDown, Activity, Clock, HelpCircle, ArrowRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/src/lib/utils';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronDown, ChevronUp, Check, X, Zap, BookOpen, Target, Loader2 } from 'lucide-react';
+import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
+import { topicsService } from '@/src/features/topics/services/topics.service';
+import { useQuizSession } from '@/src/features/quiz/hooks/useQuizSession';
+import { QuizAttempt } from '@/src/types/ai';
 
-// Mock Data for the UI demo
-const MOCK_CATEGORIES = [
-    {
-        name: 'UX Design',
-        units: [
-            { id: '1', name: "Hick's Law", score: 88, active: true },
-            { id: '2', name: "Fitts's Law", score: 72, active: false },
-            { id: '3', name: "Jakob's Law", score: 91, active: false },
-        ]
-    },
-    {
-        name: 'Psychology',
-        units: [
-            { id: '4', name: "Cognitive Load", score: 64, active: false },
-            { id: '5', name: "Gestalt Theory", score: 82, active: false },
-        ]
-    }
-];
+type DateRange = '7d' | '30d' | 'all';
+type QuizTypeFilter = 'all' | 'topic' | 'unit';
 
-const MOCK_HISTORY = [
-    {
-        id: 'h1',
-        type: 'Mastery Review',
-        date: 'October 24, 2023 • 14:32',
-        score: 92,
-        icon: Activity,
-        colorClass: 'text-emerald-500',
-        bgClass: 'bg-emerald-500/10',
-        question: "According to Hick's Law, how does decision time increase as the number of choices grows?",
-        yourAnswer: "Linearly",
-        correctAnswer: "Logarithmically",
-        tags: ["ReactionTime", "UserExperience", "DecisionMaking"]
-    },
-    {
-        id: 'h2',
-        type: 'Daily Recap',
-        date: 'October 22, 2023 • 09:15',
-        score: 84,
-        icon: HelpCircle,
-        colorClass: 'text-[var(--accent)]',
-        bgClass: 'bg-[var(--accent-light)]',
-        question: "What is the primary benefit of applying Hick's Law to navigation menus?",
-        yourAnswer: "It reduces the time users take to make a choice",
-        correctAnswer: "It reduces the time users take to make a choice",
-        tags: ["Navigation", "UX"]
-    },
-    {
-        id: 'h3',
-        type: 'First Exposure',
-        date: 'October 15, 2023 • 18:40',
-        score: 62,
-        icon: Clock,
-        colorClass: 'text-slate-500',
-        bgClass: 'bg-slate-200 dark:bg-slate-800',
-        question: "Who formulated Hick's Law?",
-        yourAnswer: "William Hick",
-        correctAnswer: "William Edmund Hick and Ray Hyman",
-        tags: ["History", "Foundations"]
-    }
-];
+interface InsightsData {
+    insight?: { topicArea: string; accuracyPercent: number };
+    commonPattern?: string;
+    suggestedFocus?: string[];
+    recommendedUnit?: { unitName: string; topicId: string; unitId: string };
+    rawText?: string;
+}
 
 export function DeepDivePage() {
-    const [expandedRow, setExpandedRow] = useState<string>('h1');
+    const { startQuiz } = useQuizSession();
+    const [allAttempts, setAllAttempts] = useState<QuizAttempt[]>([]);
+    const [topicFilter, setTopicFilter] = useState('');
+    const [unitFilter, setUnitFilter] = useState('');
+    const [typeFilter, setTypeFilter] = useState<QuizTypeFilter>('all');
+    const [dateRange, setDateRange] = useState<DateRange>('30d');
+    const [expandedId, setExpandedId] = useState<string | null>(null);
+
+    // AI Insights
+    const [insights, setInsights] = useState<InsightsData | null>(null);
+    const [insightsLoading, setInsightsLoading] = useState(false);
+    const [insightsError, setInsightsError] = useState(false);
+
+    useEffect(() => {
+        const attempts = quizHistoryService.getAllAttempts();
+        setAllAttempts(attempts);
+    }, []);
+
+    // Unique topics from attempts
+    const uniqueTopics = useMemo(() => {
+        const map = new Map<string, string>();
+        allAttempts.forEach(a => {
+            const topic = topicsService.getTopicById(a.topicId);
+            if (topic) map.set(a.topicId, topic.name);
+        });
+        return Array.from(map.entries());
+    }, [allAttempts]);
+
+    // Unique units from attempts
+    const uniqueUnits = useMemo(() => {
+        const map = new Map<string, string>();
+        allAttempts.forEach(a => {
+            a.unitBreakdown.forEach(u => {
+                if (u.unitName) map.set(u.unitId, u.unitName);
+            });
+        });
+        return Array.from(map.entries());
+    }, [allAttempts]);
+
+    // Filtered attempts
+    const filtered = useMemo(() => {
+        let result = [...allAttempts];
+        if (topicFilter) result = result.filter(a => a.topicId === topicFilter);
+        if (unitFilter) result = result.filter(a => a.unitBreakdown.some(u => u.unitId === unitFilter));
+        if (typeFilter !== 'all') result = result.filter(a => a.type === typeFilter);
+        if (dateRange !== 'all') {
+            const days = dateRange === '7d' ? 7 : 30;
+            const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+            result = result.filter(a => new Date(a.completedAt) >= cutoff);
+        }
+        return result.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
+    }, [allAttempts, topicFilter, unitFilter, typeFilter, dateRange]);
+
+    // AI Insights generation
+    useEffect(() => {
+        if (allAttempts.length === 0) return;
+        setInsightsLoading(true);
+
+        const recent = [...allAttempts]
+            .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
+            .slice(0, 20);
+
+        // Build summary
+        const unitAccuracy: Record<string, { correct: number; total: number; name: string }> = {};
+        const topicAttemptCount: Record<string, number> = {};
+
+        recent.forEach(a => {
+            topicAttemptCount[a.topicId] = (topicAttemptCount[a.topicId] || 0) + 1;
+            a.unitBreakdown.forEach(u => {
+                if (!unitAccuracy[u.unitId]) unitAccuracy[u.unitId] = { correct: 0, total: 0, name: u.unitName || 'Unknown' };
+                unitAccuracy[u.unitId].correct += u.correctCount;
+                unitAccuracy[u.unitId].total += u.totalCount;
+            });
+        });
+
+        const summaryData = {
+            unitAccuracies: Object.entries(unitAccuracy).map(([id, v]) => ({
+                unitId: id, unitName: v.name, accuracy: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0
+            })),
+            topicAttemptCounts: Object.entries(topicAttemptCount).map(([id, count]) => ({
+                topicId: id, topicName: topicsService.getTopicById(id)?.name || 'Unknown', attempts: count
+            }))
+        };
+
+        fetch('/api/ai/generate-insights', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ summaryData }),
+        }).then(res => res.json()).then(data => {
+            if (data.success) {
+                setInsights(data);
+            } else {
+                setInsightsError(true);
+            }
+        }).catch(() => setInsightsError(true))
+            .finally(() => setInsightsLoading(false));
+    }, [allAttempts]);
+
+    // Empty state
+    if (allAttempts.length === 0) {
+        return (
+            <div className="min-h-screen font-display flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
+                <div className="text-center space-y-4 max-w-md mx-auto px-6">
+                    <h1 className="text-2xl font-bold">No quiz history yet.</h1>
+                    <p className="text-sm text-[var(--text-muted)]">Complete a quiz to see your review here.</p>
+                    <Link href="/knowledge-base" className="inline-flex items-center gap-1 px-5 py-2.5 rounded-md font-bold text-sm text-white transition-all hover:-translate-y-0.5" style={{ background: 'var(--accent)' }}>
+                        Go to Knowledge Base →
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="flex h-screen overflow-hidden font-display w-full">
-            {/* Left Column: Unit Sidebar */}
-            <aside
-                className="w-[260px] shrink-0 border-r flex flex-col hidden md:flex"
-                style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)', boxShadow: 'var(--shadow-raised)' }}
-            >
-                <div className="p-4 border-b" style={{ borderColor: 'var(--border)' }}>
-                    <div className="relative">
-                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-50" />
-                        <input
-                            placeholder="Filter units..."
-                            className="w-full pl-9 pr-4 py-2 rounded-lg text-sm border-none focus:ring-1 focus:outline-none transition-all"
-                            style={{
-                                background: 'var(--bg-raised)',
-                                ['--tw-ring-color' as string]: 'var(--accent)'
-                            }}
-                        />
-                    </div>
+        <div className="min-h-screen font-display pb-20" style={{ background: 'var(--bg-base)', color: 'var(--text-primary)' }}>
+            <div className="max-w-screen-xl mx-auto px-6 py-8 space-y-6">
+                {/* Header */}
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Deep Dive</h1>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">Review your past sessions and mistakes</p>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-2">
-                    {MOCK_CATEGORIES.map((category) => (
-                        <div key={category.name} className="mb-4">
-                            <h3 className="px-3 text-[10px] uppercase tracking-wider font-bold mb-2" style={{ color: 'var(--text-muted)' }}>
-                                {category.name}
-                            </h3>
-                            <div className="space-y-1">
-                                {category.units.map((unit) => (
-                                    <div
-                                        key={unit.id}
-                                        className={cn(
-                                            "group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all",
-                                            unit.active ? "border-l-4" : "hover:bg-bg-raised"
-                                        )}
-                                        style={{
-                                            background: unit.active ? 'var(--accent-light)' : 'transparent',
-                                            borderColor: unit.active ? 'var(--accent)' : 'transparent'
-                                        }}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            {unit.active
-                                                ? <CheckCircle className="w-4 h-4" style={{ color: 'var(--accent)' }} />
-                                                : <Circle className="w-4 h-4 opacity-30" style={{ color: 'var(--text-muted)' }} />
-                                            }
-                                            <span
-                                                className={cn("text-sm", unit.active ? "font-semibold text-foreground" : "font-medium text-muted-foreground")}
-                                            >
-                                                {unit.name}
-                                            </span>
-                                        </div>
-                                        <span
-                                            className={cn("text-[10px] px-1.5 py-0.5 rounded font-bold")}
-                                            style={unit.active ? { background: 'color-mix(in srgb, var(--accent) 20%, transparent)', color: 'var(--accent)' } : { color: 'var(--text-muted)' }}
-                                        >
-                                            {unit.score}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </aside>
-
-            {/* Right Column: Deep Dive Content */}
-            <div className="flex-1 overflow-y-auto" style={{ background: 'var(--bg-base)' }}>
-                <div className="max-w-[1000px] mx-auto p-8 lg:p-12 space-y-12">
-
-                    {/* Hero/Header Section */}
-                    <div className="flex flex-col md:flex-row items-start justify-between gap-8">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-3">
-                                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--accent)' }}>UX Design</span>
-                                <span style={{ color: 'var(--text-muted)' }}>•</span>
-                                <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Last session: 2 days ago</span>
-                            </div>
-                            <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-tight">Hick's Law</h1>
-                            <p className="mt-4 text-base md:text-lg max-w-2xl leading-relaxed font-medium" style={{ color: 'var(--text-muted)' }}>
-                                Describes the time it takes for a person to make a decision as a result of the possible choices: increasing the number of choices will increase the decision time logarithmically.
-                            </p>
-                        </div>
-
-                        <div className="flex flex-col items-center shrink-0">
-                            <div className="relative w-32 h-32 flex items-center justify-center">
-                                {/* Circular Progress SVG */}
-                                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                                    <circle
-                                        cx="50" cy="50" r="45"
-                                        fill="transparent"
-                                        strokeWidth="8"
-                                        style={{ stroke: 'var(--border)' }}
-                                    />
-                                    <circle
-                                        cx="50" cy="50" r="45"
-                                        fill="transparent"
-                                        strokeWidth="8"
-                                        strokeLinecap="round"
-                                        strokeDasharray="282.7"
-                                        strokeDashoffset={282.7 - (282.7 * 0.88)}
-                                        style={{ stroke: 'var(--accent)' }}
-                                    />
-                                </svg>
-                                <span className="absolute text-3xl font-black">88</span>
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest mt-3" style={{ color: 'var(--text-muted)' }}>Accuracy Score</span>
-                        </div>
-                    </div>
-
-                    {/* Session History Section */}
-                    <div className="space-y-6">
-                        <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: 'var(--border)' }}>
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <History className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                                Session History
-                            </h2>
-                            <button className="text-sm font-semibold flex items-center gap-1 hover:underline" style={{ color: 'var(--accent)' }}>
-                                Export Data <Download className="w-4 h-4" />
+                {/* Filters */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <select value={topicFilter} onChange={e => setTopicFilter(e.target.value)} className="text-xs font-bold px-3 py-2 rounded-md border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+                        <option value="">Topic: All</option>
+                        {uniqueTopics.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                    </select>
+                    <select value={unitFilter} onChange={e => setUnitFilter(e.target.value)} className="text-xs font-bold px-3 py-2 rounded-md border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+                        <option value="">Unit: All</option>
+                        {uniqueUnits.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                    </select>
+                    <div className="flex gap-1 bg-[var(--bg-raised)] p-1 rounded-md border border-[var(--border)]">
+                        {(['all', 'unit', 'topic'] as const).map(t => (
+                            <button key={t} onClick={() => setTypeFilter(t)} className="px-3 py-1 text-xs font-bold rounded transition-all" style={typeFilter === t ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
+                                {t === 'all' ? 'All' : t === 'unit' ? 'Unit Test' : 'Topic Challenge'}
                             </button>
-                        </div>
+                        ))}
+                    </div>
+                    <select value={dateRange} onChange={e => setDateRange(e.target.value as DateRange)} className="text-xs font-bold px-3 py-2 rounded-md border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+                        <option value="7d">Last 7 days</option>
+                        <option value="30d">Last 30 days</option>
+                        <option value="all">All time</option>
+                    </select>
+                </div>
 
-                        {/* Accordion Rows */}
-                        <div className="space-y-4">
-                            {MOCK_HISTORY.map((attempt) => {
-                                const isExpanded = expandedRow === attempt.id;
-                                const isCorrect = attempt.yourAnswer === attempt.correctAnswer;
-                                const IconComponent = attempt.icon;
+                {/* Two-column layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Left: Session List */}
+                    <div className="lg:col-span-8 space-y-4">
+                        {filtered.length === 0 ? (
+                            <div className="text-center py-12 text-sm text-[var(--text-muted)]">No sessions match your filters.</div>
+                        ) : (
+                            filtered.map(attempt => {
+                                const isExpanded = expandedId === attempt.id;
+                                const topicName = topicsService.getTopicById(attempt.topicId)?.name || 'Unknown Topic';
+                                const TypeIcon = attempt.type === 'unit' ? Target : attempt.type === 'topic' ? BookOpen : Zap;
+                                const typeLabel = attempt.type === 'unit' ? 'Unit Test' : attempt.type === 'topic' ? 'Topic Challenge' : 'Daily';
+                                let scoreColor = 'var(--danger)';
+                                if (attempt.score >= 75) scoreColor = 'var(--success)';
+                                else if (attempt.score >= 50) scoreColor = 'var(--warning)';
+                                const incorrectCount = attempt.questions.filter(q => !q.isCorrect).length;
 
                                 return (
-                                    <div
-                                        key={attempt.id}
-                                        className={cn(
-                                            "border overflow-hidden transition-ui",
-                                            !isExpanded && "cursor-pointer"
-                                        )}
-                                        style={{
-                                            background: isExpanded ? 'var(--bg-surface)' : 'color-mix(in srgb, var(--bg-surface) 40%, transparent)',
-                                            borderColor: 'var(--border)',
-                                            borderRadius: 'var(--radius-md)',
-                                            boxShadow: 'var(--shadow-resting)',
-                                        }}
-                                        onClick={() => setExpandedRow(isExpanded ? '' : attempt.id)}
-                                    >
-                                        <div className={cn("p-4 flex items-center justify-between transition-colors", !isExpanded && "hover:bg-bg-raised")}>
-                                            <div className="flex items-center gap-4">
-                                                <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", attempt.bgClass, attempt.colorClass)}>
-                                                    <IconComponent className="w-5 h-5" />
-                                                </div>
+                                    <div key={attempt.id} className="border rounded-lg overflow-hidden" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-resting)' }}>
+                                        {/* Collapsed header */}
+                                        <button onClick={() => setExpandedId(isExpanded ? null : attempt.id)} className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-[var(--bg-raised)] transition-colors">
+                                            <div className="flex items-center gap-3">
+                                                <TypeIcon className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
                                                 <div>
-                                                    <h4 className="font-bold text-sm">{attempt.type}</h4>
-                                                    <p className="text-xs mt-0.5 opacity-80" style={{ color: 'var(--text-muted)' }}>{attempt.date}</p>
+                                                    <div className="text-sm font-bold">{topicName}</div>
+                                                    <div className="text-xs text-[var(--text-muted)]">{typeLabel} • {attempt.totalCount} questions</div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-6">
-                                                <div className="text-right hidden sm:block">
-                                                    <p className="text-[10px] font-bold uppercase" style={{ color: 'var(--text-muted)' }}>Score</p>
-                                                    <p className={cn("font-black", attempt.colorClass)}>{attempt.score}%</p>
+                                            <div className="flex items-center gap-4">
+                                                <div className="text-right">
+                                                    <div className="text-sm font-black" style={{ color: scoreColor }}>{attempt.score}%</div>
+                                                    <div className="text-[10px] text-[var(--text-muted)]">{new Date(attempt.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
                                                 </div>
-                                                {isExpanded ? <ChevronUp className="w-5 h-5 opacity-50" /> : <ChevronDown className="w-5 h-5 opacity-50" />}
+                                                {isExpanded ? <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />}
                                             </div>
+                                        </button>
+                                        {/* Progress bar */}
+                                        <div className="h-1 w-full bg-[var(--bg-raised)]">
+                                            <div className="h-full rounded-r-full transition-all duration-500" style={{ width: `${attempt.score}%`, background: scoreColor }} />
                                         </div>
 
+                                        {/* Expanded */}
                                         <AnimatePresence>
                                             {isExpanded && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    className="overflow-hidden"
-                                                >
-                                                    <div className="px-4 pb-6 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
-                                                        <div className="rounded-lg p-5 mt-2 space-y-5 border" style={{ background: 'var(--bg-raised)', borderColor: 'var(--border)' }}>
-
-                                                            <div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider block mb-1.5" style={{ color: 'var(--text-muted)' }}>Question</span>
-                                                                <p className="text-sm font-medium leading-relaxed">{attempt.question}</p>
-                                                            </div>
-
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                <div className="p-4 rounded-lg border-2" style={{ borderColor: isCorrect ? 'color-mix(in srgb, var(--success) 30%, transparent)' : 'color-mix(in srgb, var(--danger) 30%, transparent)', background: isCorrect ? 'color-mix(in srgb, var(--success) 5%, transparent)' : 'color-mix(in srgb, var(--danger) 5%, transparent)' }}>
-                                                                    <span className={cn("text-[10px] font-bold uppercase tracking-wider block mb-1.5", isCorrect ? "text-green-500" : "text-red-500")}>Your Answer</span>
-                                                                    <p className="text-sm font-medium">{attempt.yourAnswer}</p>
+                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                                                    <div className="p-4 border-t space-y-4" style={{ borderColor: 'var(--border)' }}>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-sm font-bold">Correct: {attempt.correctCount} / {attempt.totalCount}</span>
+                                                            {incorrectCount > 0 && (
+                                                                <button onClick={() => {
+                                                                    if (attempt.targetUnitId) {
+                                                                        startQuiz({ type: 'unit-test', topicId: attempt.topicId, targetUnitId: attempt.targetUnitId });
+                                                                    } else {
+                                                                        startQuiz({ type: 'topic-challenge', topicId: attempt.topicId });
+                                                                    }
+                                                                }} className="text-xs font-bold px-3 py-1.5 rounded-md border transition-all hover:-translate-y-0.5" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
+                                                                    Retry Weak Questions
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            {attempt.questions.map((q, i) => (
+                                                                <div key={i} className="text-sm space-y-1">
+                                                                    <div className="flex items-start gap-2">
+                                                                        {q.isCorrect ? (
+                                                                            <Check className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
+                                                                        ) : (
+                                                                            <X className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} />
+                                                                        )}
+                                                                        <div className="flex-1">
+                                                                            <div className="font-medium">{q.questionText || `Question ${i + 1}`}</div>
+                                                                            {q.isCorrect ? (
+                                                                                <div className="text-xs text-[var(--text-muted)] mt-0.5">Answered: {q.userAnswer}</div>
+                                                                            ) : (
+                                                                                <div className="mt-2 flex flex-col gap-1.5">
+                                                                                    <div className="text-xs" style={{ color: 'var(--danger)' }}>Your answer: {q.userAnswer}</div>
+                                                                                    <div className="text-xs" style={{ color: 'var(--success)' }}>Correct: {q.correctAnswer}</div>
+                                                                                    {q.unitName && (
+                                                                                        <div className="flex flex-wrap gap-1.5 mt-1">
+                                                                                            <span className="rounded-full text-[10px] font-bold px-2 py-0.5 bg-[var(--bg-raised)] text-[var(--text-muted)]">Concept: {q.unitName}</span>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
-                                                                <div className="p-4 rounded-lg border-2" style={{ borderColor: 'color-mix(in srgb, var(--success) 30%, transparent)', background: 'color-mix(in srgb, var(--success) 5%, transparent)' }}>
-                                                                    <span className="text-[10px] font-bold uppercase tracking-wider block mb-1.5 text-green-500">Correct Answer</span>
-                                                                    <p className="text-sm font-medium">{attempt.correctAnswer}</p>
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="pt-2">
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider block mb-2" style={{ color: 'var(--text-muted)' }}>Related Tags</span>
-                                                                <div className="flex flex-wrap gap-2">
-                                                                    {attempt.tags.map(tag => (
-                                                                        <span key={tag} className="text-[10px] px-2 py-1 rounded font-semibold italic border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-muted)' }}>
-                                                                            #{tag}
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-
+                                                            ))}
                                                         </div>
                                                     </div>
                                                 </motion.div>
@@ -277,21 +262,79 @@ export function DeepDivePage() {
                                         </AnimatePresence>
                                     </div>
                                 );
-                            })}
-                        </div>
+                            })
+                        )}
                     </div>
 
-                    {/* Footer Call to Action */}
-                    <div className="mt-16 p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden" style={{ background: 'var(--accent)', color: '#fff', borderRadius: 'var(--radius-md)' }}>
-                        <div className="relative z-10">
-                            <h3 className="text-2xl md:text-3xl font-black tracking-tight mb-2">Ready to boost your score?</h3>
-                            <p className="font-medium opacity-90 text-sm md:text-base">Custom session available based on your weak points in Hick's Law.</p>
-                        </div>
-                        <button className="relative z-10 bg-white px-8 py-4 font-black uppercase tracking-wider text-sm transition-ui flex items-center gap-2" style={{ color: 'var(--accent)', borderRadius: '9999px' }}>
-                            Start Deep Session <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </div>
+                    {/* Right: AI Insights */}
+                    <div className="lg:col-span-4">
+                        <div className="sticky top-6 space-y-4">
+                            <div className="p-5 rounded-lg border bg-[var(--bg-surface)] border-[var(--border)] shadow-[var(--shadow-resting)]">
+                                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                                    Insights
+                                    {insightsLoading && <Loader2 className="w-3 h-3 animate-spin" style={{ color: 'var(--accent)' }} />}
+                                </h3>
 
+                                {insightsLoading ? (
+                                    <div className="space-y-4">
+                                        {[1, 2, 3].map(i => (
+                                            <div key={i} className="space-y-2">
+                                                <div className="h-3 rounded bg-[var(--bg-raised)] animate-pulse w-1/2" />
+                                                <div className="h-3 rounded bg-[var(--bg-raised)] animate-pulse w-full" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : insightsError ? (
+                                    <p className="text-sm text-[var(--text-muted)]">Unable to generate insights</p>
+                                ) : insights?.rawText ? (
+                                    <p className="text-sm text-[var(--text-muted)] whitespace-pre-wrap">{insights.rawText}</p>
+                                ) : insights ? (
+                                    <div className="space-y-5">
+                                        {/* Performance Insight */}
+                                        {insights.insight && (
+                                            <div>
+                                                <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--accent)' }}>Performance Insight</div>
+                                                {insights.insight.topicArea ? (
+                                                    <>
+                                                        <p className="text-sm font-medium">{insights.insight.topicArea} questions: {insights.insight.accuracyPercent}% accuracy</p>
+                                                        {insights.commonPattern && <p className="text-xs text-[var(--text-muted)] mt-1">{insights.commonPattern}</p>}
+                                                    </>
+                                                ) : (
+                                                    <p className="text-sm text-[var(--text-muted)]">Insufficient data to generate insight</p>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Suggested Focus */}
+                                        {insights.suggestedFocus && insights.suggestedFocus.length > 0 && (
+                                            <div>
+                                                <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--accent)' }}>Suggested Focus</div>
+                                                <ul className="space-y-1">
+                                                    {insights.suggestedFocus.map((f, i) => (
+                                                        <li key={i} className="text-sm text-[var(--text-muted)]">• {f}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+
+                                        {/* Recommended Action */}
+                                        {insights.recommendedUnit && (
+                                            <div>
+                                                <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)' }}>Recommended Action</div>
+                                                <button
+                                                    onClick={() => startQuiz({ type: 'unit-test', topicId: insights.recommendedUnit!.topicId, targetUnitId: insights.recommendedUnit!.unitId })}
+                                                    className="w-full text-xs font-bold px-4 py-2.5 rounded-md text-white transition-all hover:-translate-y-0.5"
+                                                    style={{ background: 'var(--accent)' }}
+                                                >
+                                                    Start Unit Test → {insights.recommendedUnit.unitName}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : null}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

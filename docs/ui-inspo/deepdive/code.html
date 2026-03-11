@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memora - Review History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#514DD9",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101022",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "8px",
+                        "lg": "8px",
+                        "xl": "12px",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-slate-200 bg-white dark:bg-slate-900 flex flex-col shrink-0">
+<div class="p-6">
+<div class="flex items-center gap-2 mb-8">
+<div class="bg-primary size-8 rounded flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-xl">neurology</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight">Memora</h1>
+</div>
+<nav class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">grid_view</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">history</span>
+<span class="text-sm font-medium">Review</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">auto_stories</span>
+<span class="text-sm font-medium">Study</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded transition-colors" href="#">
+<span class="material-symbols-outlined text-lg">folder_open</span>
+<span class="text-sm font-medium">Library</span>
+</a>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t border-slate-100">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded transition-colors mb-4" href="#">
+<span class="material-symbols-outlined text-lg">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<button class="w-full bg-primary text-white py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">add</span>
+                    New Quiz
+                </button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-hidden">
+<!-- Top Header -->
+<header class="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-8 shrink-0">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+<h2 class="text-lg font-bold">Quiz History</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-slate-100 border-none rounded-lg text-sm w-64 focus:ring-1 focus:ring-primary" placeholder="Search topics..." type="text"/>
+</div>
+<button class="size-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600">
+<span class="material-symbols-outlined text-lg">notifications</span>
+</button>
+<div class="size-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/30">
+                        JD
+                    </div>
+</div>
+</header>
+<div class="flex-1 overflow-y-auto bg-background-light p-8">
+<div class="max-w-6xl mx-auto flex gap-8">
+<!-- Left Column: Filters and History -->
+<div class="flex-1 space-y-6">
+<!-- Filters Row -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4">
+<div class="flex gap-2">
+<select class="text-xs font-medium border-slate-200 rounded-lg focus:ring-primary focus:border-primary">
+<option>Topic: All</option>
+<option>Computer Science</option>
+<option>Modern History</option>
+<option>Molecular Biology</option>
+</select>
+<select class="text-xs font-medium border-slate-200 rounded-lg focus:ring-primary focus:border-primary">
+<option>Unit: All</option>
+<option>Unit 1</option>
+<option>Unit 2</option>
+<option>Final Exam</option>
+</select>
+</div>
+<div class="h-6 w-px bg-slate-200 mx-1"></div>
+<div class="flex gap-1 bg-slate-100 p-1 rounded-lg">
+<button class="px-3 py-1 text-xs font-bold bg-white text-primary shadow-sm rounded-md">All</button>
+<button class="px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900">Unit Test</button>
+<button class="px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900">Topic Challenge</button>
+<button class="px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900">Daily</button>
+</div>
+<div class="ml-auto flex items-center gap-2 text-xs font-medium text-slate-500 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 cursor-pointer hover:bg-slate-100">
+<span class="material-symbols-outlined text-sm">calendar_today</span>
+<span>Oct 1, 2023 - Oct 31, 2023</span>
+<span class="material-symbols-outlined text-sm">expand_more</span>
+</div>
+</div>
+<!-- Attempt List -->
+<div class="space-y-3">
+<!-- List Item: Expanded -->
+<div class="bg-white border-2 border-primary rounded-xl overflow-hidden shadow-md">
+<div class="flex items-center gap-4 p-4 cursor-pointer hover:bg-slate-50 transition-colors">
+<div class="size-10 bg-primary/10 rounded flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">quiz</span>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-slate-900">Data Structures &amp; Algorithms</h3>
+<div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> 12 mins</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">calendar_month</span> Oct 28, 2023</span>
+</div>
+</div>
+<div class="text-right mr-4">
+<div class="text-lg font-bold text-primary">82%</div><div class="w-16 h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden ml-auto">
+<div class="h-full bg-primary rounded-full" style="width: 82%"></div>
+</div>
+<div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Score</div>
+</div>
+<span class="material-symbols-outlined text-slate-400">expand_less</span>
+</div>
+<!-- Expanded Content -->
+<div class="px-4 pb-6 border-t border-slate-100 pt-4 bg-slate-50/50">
+<div class="flex justify-between items-center mb-6">
+<div class="text-sm font-semibold text-slate-700">
+                                            Correct Count: <span class="text-emerald-600">16</span> / 20
+                                        </div>
+<button class="text-xs font-bold border-2 border-primary text-primary px-4 py-2 rounded hover:bg-primary/5 transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                                            Retry Weak Questions
+                                        </button>
+</div>
+<div class="space-y-3">
+<!-- Question Row Correct -->
+<div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200">
+<span class="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800">What is the time complexity of a binary search on a sorted array?</p>
+<p class="text-xs text-emerald-600 font-medium mt-1">Answered: O(log n)</p>
+</div>
+</div>
+<!-- Question Row Incorrect -->
+<div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-red-100 shadow-sm border-l-4 border-l-red-500">
+<span class="material-symbols-outlined text-red-500 mt-0.5">cancel</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800">Which data structure uses LIFO (Last-In-First-Out) principle?</p>
+<div class="mt-1 flex flex-col gap-0.5">
+<p class="text-xs text-red-600 font-medium">Your answer: Queue</p>
+<p class="text-xs text-slate-500">Correct: Stack</p>
+</div>
+<div class="flex gap-2 mt-2"><span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-semibold rounded-full">Concept: Stack &amp; Queue</span><span class="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-semibold rounded-full">Difficulty: Medium</span></div></div>
+</div>
+<!-- Question Row Correct -->
+<div class="flex items-start gap-3 p-3 bg-white rounded-lg border border-slate-200 opacity-60">
+<span class="material-symbols-outlined text-emerald-500 mt-0.5">check_circle</span>
+<div class="flex-1">
+<p class="text-sm font-medium text-slate-800">A hash table with chaining solves which problem?</p>
+<p class="text-xs text-emerald-600 font-medium mt-1">Answered: Collisions</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- List Item: Collapsed -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-slate-300 transition-all">
+<div class="flex items-center gap-4 p-4 cursor-pointer">
+<div class="size-10 bg-slate-100 rounded flex items-center justify-center text-slate-500">
+<span class="material-symbols-outlined">verified</span>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-slate-900">Modern History: The Cold War</h3>
+<div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> 8 mins</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">calendar_month</span> Oct 25, 2023</span>
+</div>
+</div>
+<div class="text-right mr-4">
+<div class="text-lg font-bold text-slate-700">95%</div><div class="w-16 h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden ml-auto">
+<div class="h-full bg-emerald-500 rounded-full" style="width: 95%"></div>
+</div>
+<div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Score</div>
+</div>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</div>
+</div>
+<!-- List Item: Collapsed -->
+<div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:border-slate-300 transition-all">
+<div class="flex items-center gap-4 p-4 cursor-pointer">
+<div class="size-10 bg-amber-50 rounded flex items-center justify-center text-amber-600">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div class="flex-1">
+<h3 class="font-bold text-slate-900">Daily Challenge: Logic Puzzles</h3>
+<div class="flex items-center gap-3 text-xs text-slate-500 mt-0.5">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">schedule</span> 4 mins</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-xs">calendar_month</span> Oct 24, 2023</span>
+</div>
+</div>
+<div class="text-right mr-4">
+<div class="text-lg font-bold text-slate-700">60%</div><div class="w-16 h-1.5 bg-slate-100 rounded-full mt-1 overflow-hidden ml-auto">
+<div class="h-full bg-amber-500 rounded-full" style="width: 60%"></div>
+</div>
+<div class="text-[10px] uppercase tracking-wider font-bold text-slate-400">Score</div>
+</div>
+<span class="material-symbols-outlined text-slate-400">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Empty State Example (Hidden by default, shown for demo purpose context) -->
+<div class="hidden flex flex-col items-center justify-center py-20 bg-white border border-dashed border-slate-300 rounded-xl space-y-4">
+<div class="size-16 bg-slate-50 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-300 text-4xl">history</span>
+</div>
+<div class="text-center">
+<h4 class="font-bold text-slate-900">No quiz history yet.</h4>
+<p class="text-slate-500 text-sm">Complete a quiz to see your review here.</p>
+</div>
+<button class="bg-primary text-white px-6 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-primary/90 transition-all">
+                                Start Your First Quiz
+                            </button>
+</div>
+</div>
+<!-- Right Column: Insights -->
+<div class="w-80 shrink-0">
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 sticky top-8"><div class="flex items-center justify-between mb-6"><h3 class="text-[11px] font-extrabold text-slate-400 tracking-widest uppercase">Insights</h3><div class="flex items-center gap-2"><div class="size-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div><span class="text-[10px] font-bold text-primary italic">AI Analyzing...</span></div></div><div class="space-y-6"><section><div><h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mb-3">Performance Insight</h4><div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-slate-900">Binary Trees</span><span class="text-xs font-bold text-emerald-600">92% Acc.</span></div><p class="text-[11px] text-slate-500 leading-relaxed"><span class="font-bold text-slate-700">Common pattern:</span> You consistently excel at traversal logic but occasionally miscalculate depth-first recursion steps.</p></div></div></section><section><div><h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mb-3">Suggested Focus</h4><div class="space-y-2"><div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-100"><span class="size-1.5 rounded-full bg-primary"></span><span class="text-xs font-medium text-slate-700">Memory Management</span></div><div class="flex items-center gap-2 px-3 py-2 bg-slate-50 rounded-lg border border-slate-100"><span class="size-1.5 rounded-full bg-primary"></span><span class="text-xs font-medium text-slate-700">Heaps &amp; Priority Queues</span></div></div></div></section><section class="pt-2"><div><h4 class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mb-3">Recommended Action</h4><button class="w-full bg-primary text-white py-3 rounded-xl font-bold text-xs shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2">Start Unit Test → Unit 3<span class="material-symbols-outlined text-sm">arrow_forward</span></button></div></section></div></div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

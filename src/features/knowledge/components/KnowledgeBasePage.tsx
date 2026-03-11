@@ -219,8 +219,54 @@ export function KnowledgeBasePage() {
                         </span>
                     </div>
 
-                    {/* Grid of Unit Cards */}
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    {/* Topics Section */}
+                    {topics.length > 0 && (
+                        <div className="space-y-4">
+                            <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Topics</h2>
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                {topics.map(topic => (
+                                    <Link key={topic.id} href={`/topics/${topic.id}`} className="flex flex-col">
+                                        <div
+                                            className="p-6 border flex flex-col gap-4 h-full cursor-pointer transition-ui group hover:bg-[var(--bg-raised)]"
+                                            style={{
+                                                background: 'var(--bg-surface)',
+                                                borderColor: 'var(--border)',
+                                                borderRadius: 'var(--radius-md)'
+                                            }}
+                                        >
+                                            <div className="flex justify-between items-start gap-4">
+                                                <div>
+                                                    <span
+                                                        className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border"
+                                                        style={{ borderColor: 'var(--border)', color: 'var(--text-muted)' }}
+                                                    >
+                                                        {topic.level}
+                                                    </span>
+                                                    <h3 className="text-lg font-bold mt-2 group-hover:text-[var(--accent)] transition-colors" style={{ color: 'var(--text-primary)' }}>{topic.name}</h3>
+                                                </div>
+                                                <div className="text-right shrink-0">
+                                                     <div className="text-sm font-bold" style={{ color: 'var(--accent)' }}>
+                                                        Topic Mastery: {topic.memoryScore}%
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-auto pt-2">
+                                                <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                                                    {topic.units.length} unit{topic.units.length !== 1 ? 's' : ''}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Units Section */}
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Units</h2>
+                        {/* Grid of Unit Cards */}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                         {filteredUnits.length === 0 ? (
                             <div className="col-span-1 xl:col-span-2 text-center py-16 border rounded-xl border-dashed" style={{ borderColor: 'var(--border)' }}>
                                 <Brain className="w-10 h-10 mx-auto mb-3 opacity-20" />
@@ -280,6 +326,7 @@ export function KnowledgeBasePage() {
                                 </div>
                             ))
                         )}
+                        </div>
                     </div>
                 </div>
             </div>
