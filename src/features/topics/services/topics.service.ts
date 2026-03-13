@@ -2,6 +2,8 @@
 // Currently wraps localStorage. Swap to Supabase here only.
 
 import { Topic, QuizResult, Unit } from '@/src/types';
+import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
+import { computeTopicScore, computeUnitScore } from '@/src/lib/retention-calculator';
 
 const STORAGE_KEY = 'learning-retention-mvp-data';
 
@@ -63,11 +65,12 @@ export const topicsService = {
         const topic = topics.find(t => t.id === topicId);
         if (!topic) return;
 
-        // Weighted average memory score
-        const newMemoryScore = Math.round((topic.memoryScore * topic.totalAttempts + result.score) / (topic.totalAttempts + 1));
-        topic.memoryScore = newMemoryScore;
         topic.totalAttempts += 1;
         topic.lastPracticed = new Date();
+
+        // Calculate advanced memory score instead of naive running average
+        const allAttempts = quizHistoryService.getAllAttempts();
+        topic.memoryScore = Math.round(computeTopicScore(topic, allAttempts));
 
         // Naive spaced repetition: score > 80 → 72h, > 60 → 24h, else → 4h
         const hoursToAdd = result.score > 80 ? 72 : result.score > 60 ? 24 : 4;
@@ -80,10 +83,15 @@ export const topicsService = {
             topic.subLevel = Math.max((topic.subLevel || 1) - 1, 1);
         }
 
-        // Update unit statuses
+        // Update unit statuses — only for tested units based on new 60/75 thresholds
         topic.units = topic.units.map(u => {
-            if (result.weakUnits.includes(u.id)) return { ...u, status: 'weak' as const };
-            return { ...u, status: 'strong' as const };
+            const wasTested = result.testedUnitIds?.includes(u.id);
+            if (!wasTested) return u;
+            
+            const uScore = computeUnitScore(topic.id, u.id, allAttempts);
+            if (uScore < 60) return { ...u, status: 'weak' as const };
+            if (uScore >= 75) return { ...u, status: 'strong' as const };
+            return { ...u, status: 'neutral' as const };
         });
 
         topicsService.saveTopic(topic);

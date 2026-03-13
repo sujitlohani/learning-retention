@@ -47,4 +47,5 @@ export type QuizResult = {
     correctCount: number;
     totalCount: number;
     weakUnits: string[];
+    testedUnitIds?: string[];
 };

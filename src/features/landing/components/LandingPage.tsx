@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { MemoraLogo } from '@/src/components/MemoraLogo';
+import { BookOpen, BrainCircuit, TrendingUp, RefreshCw, Sparkles, BarChart2, Target, Check } from 'lucide-react';
 
 /**
  * Landing Page — marketing entry point for unauthenticated users.
- * Based on `landing-page-spec.md` + Stitch hero_ladningpage2 design.
  * Full-width, no sidebar, dark premium feel.
  */
 export function LandingPage() {
@@ -76,14 +76,13 @@ export function LandingPage() {
                     {/* Question marks */}
                     <div className="absolute top-1/3 right-[30%] blur-[2px] select-none text-7xl font-serif italic" style={{ color: 'var(--accent)', opacity: 0.2 }}>?</div>
                     <div className="absolute bottom-1/3 left-[40%] blur-[1px] select-none text-8xl font-serif italic" style={{ color: 'var(--accent)', opacity: 0.3 }}>?</div>
-                    {/* Central glow removed per refinement brief — no glow effects */}
                 </div>
 
                 <div className="relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20 max-w-[1280px] w-full">
                     {/* Left column — text */}
                     <div className="flex flex-col gap-8 flex-1 text-center lg:text-left">
                         <div className="flex flex-col gap-4">
-                            {/* Beta label */}
+                            {/* Badge */}
                             <div
                                 className="inline-flex items-center gap-2 self-center lg:self-start px-3 py-1 text-xs font-bold uppercase tracking-wider"
                                 style={{
@@ -94,18 +93,18 @@ export function LandingPage() {
                                 }}
                             >
                                 <span className="flex h-2 w-2 rounded-full animate-pulse" style={{ background: 'var(--accent)' }} />
-                                Now in beta
+                                Early Access
                             </div>
 
                             {/* Headline */}
                             <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">
-                                Knowledge that{' '}
-                                <span style={{ color: 'var(--accent)' }}>sticks.</span>
+                                Learn it once.<br />
+                                <span style={{ color: 'var(--accent)' }}>Actually keep it.</span>
                             </h1>
 
                             {/* Subheading */}
                             <p className="text-lg md:text-xl font-normal leading-relaxed max-w-[600px]" style={{ color: 'var(--text-muted)' }}>
-                                The cognitive-first workspace that turns information into long-term memory using AI-driven active recall and spaced repetition.
+                                Memora turns what you study into quizzes that follow you. Add a topic, get tested on it, see what sticks.
                             </p>
                         </div>
 
@@ -120,7 +119,7 @@ export function LandingPage() {
                                     transitionDuration: 'var(--duration-instant)',
                                 }}
                             >
-                                Start Learning
+                                Start for free
                             </Link>
                             <Link
                                 href="#how-it-works"
@@ -133,40 +132,8 @@ export function LandingPage() {
                                     transitionDuration: 'var(--duration-instant)',
                                 }}
                             >
-                                View Demo
+                                See how it works
                             </Link>
-                        </div>
-
-                        {/* Social proof */}
-                        <div className="flex items-center gap-6 justify-center lg:justify-start pt-4">
-                            <div className="flex -space-x-3">
-                                {[1, 2, 3].map((i) => (
-                                    <div
-                                        key={i}
-                                        className="w-10 h-10 rounded-full border-2 flex items-center justify-center text-xs font-bold"
-                                        style={{
-                                            background: 'var(--bg-raised)',
-                                            borderColor: 'var(--bg-base)',
-                                            color: 'var(--text-muted)',
-                                        }}
-                                    >
-                                        {String.fromCharCode(64 + i)}
-                                    </div>
-                                ))}
-                                <div
-                                    className="flex w-10 h-10 items-center justify-center rounded-full border-2 text-[10px] font-bold uppercase"
-                                    style={{
-                                        background: 'var(--bg-raised)',
-                                        borderColor: 'var(--bg-base)',
-                                        color: 'var(--text-muted)',
-                                    }}
-                                >
-                                    +2k
-                                </div>
-                            </div>
-                            <div className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
-                                Trusted by <span className="font-bold" style={{ color: 'var(--text-primary)' }}>2,400+</span> lifelong learners
-                            </div>
                         </div>
                     </div>
 
@@ -189,8 +156,8 @@ export function LandingPage() {
                                     }}
                                 >
                                     <div className="flex items-center gap-3 mb-2">
-                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(74, 222, 128, 0.1)', color: 'var(--success)' }}>
-                                            ✓
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(74, 222, 128, 0.1)' }}>
+                                            <Check className="w-4 h-4" style={{ color: 'var(--success)' }} />
                                         </div>
                                         <div className="h-2 w-20 rounded-full" style={{ background: 'var(--bg-raised)' }} />
                                     </div>
@@ -208,7 +175,7 @@ export function LandingPage() {
                                         <div className="w-full h-full rounded-full border-dashed" style={{ borderWidth: '0.5px', borderColor: 'var(--accent)', opacity: 0.3, animation: 'spin 20s linear infinite' }} />
                                         <div className="absolute w-80 h-80 rounded-full rotate-45" style={{ borderWidth: '0.5px', borderColor: 'var(--accent)', opacity: 0.2 }} />
                                         <div className="absolute w-40 h-40 rounded-full flex items-center justify-center" style={{ border: '1px solid var(--accent)', opacity: 0.4 }}>
-                                            <span style={{ color: 'var(--accent)', fontSize: '2rem' }}>✦</span>
+                                            <BrainCircuit className="w-8 h-8" style={{ color: 'var(--accent)' }} />
                                         </div>
                                     </div>
                                 </div>
@@ -225,7 +192,7 @@ export function LandingPage() {
                                     }}
                                 >
                                     <div className="flex gap-2 items-center mb-3">
-                                        <span style={{ color: 'var(--accent)' }}>📊</span>
+                                        <BarChart2 className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                                         <div className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Topic Score</div>
                                     </div>
                                     <div className="flex items-end gap-1 h-12">
@@ -255,15 +222,15 @@ export function LandingPage() {
             <section id="how-it-works" className="px-6 lg:px-20 py-24" style={{ background: 'var(--bg-surface)' }}>
                 <div className="max-w-[1280px] mx-auto flex flex-col gap-16">
                     <div className="flex flex-col gap-4 text-center items-center">
-                        <span className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Process</span>
-                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">A proven loop for mastery</h2>
+                        <span className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--accent)' }}>How It Works</span>
+                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Three steps. One habit.</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
-                            { step: '01', icon: '📝', title: 'Log', desc: 'Capture units, thoughts, and complex data naturally. Our editor understands intent and context.' },
-                            { step: '02', icon: '✨', title: 'AI Plan', desc: 'Memora analyzes your logs to generate personalized review schedules based on your personal forgetting curve.' },
-                            { step: '03', icon: '🔄', title: 'Review', desc: 'Engage in active recall through dynamic quizzes and interactive sessions designed for retention.' },
+                            { step: '01', Icon: BookOpen, title: 'Add what you learned', desc: 'Drop in a topic — a lecture, a concept, anything. Memora breaks it into the units you actually need to know.' },
+                            { step: '02', Icon: BrainCircuit, title: 'Get quizzed on it', desc: 'AI generates questions calibrated to your level. The more you practice, the sharper the questions get.' },
+                            { step: '03', Icon: TrendingUp, title: 'Track what\u2019s slipping', desc: 'See exactly which units need work and when to revisit them. No guessing, no wasted revision time.' },
                         ].map((item) => (
                             <div
                                 key={item.step}
@@ -276,13 +243,13 @@ export function LandingPage() {
                                 }}
                             >
                                 <div
-                                    className="flex items-center justify-center w-14 h-14 text-2xl"
+                                    className="flex items-center justify-center w-14 h-14"
                                     style={{
                                         borderRadius: 'var(--radius-md)',
                                         background: 'var(--accent-light)',
                                     }}
                                 >
-                                    {item.icon}
+                                    <item.Icon className="w-6 h-6" style={{ color: 'var(--accent)' }} />
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     <h3 className="text-xl font-bold">
@@ -302,18 +269,18 @@ export function LandingPage() {
                     {/* Left — headline + stats */}
                     <div className="flex-1 flex flex-col gap-8">
                         <span className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Features</span>
-                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Engineered for cognitive depth.</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Built around how memory actually works.</h2>
                         <p className="text-base leading-relaxed max-w-lg" style={{ color: 'var(--text-muted)' }}>
-                            Every feature is designed around the science of memory. No gimmicks, no gamification for its own sake — just tools that make knowledge permanent.
+                            No flashcard decks to maintain. No schedules to follow. Just practice when you&apos;re ready and let the system do the rest.
                         </p>
                         <div className="flex gap-12 pt-4">
                             <div>
-                                <div className="text-3xl font-bold" style={{ color: 'var(--success)' }}>98%</div>
-                                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>Retention rate reported by active users</div>
+                                <div className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Adapts to your level</div>
+                                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>Questions scale with your progress</div>
                             </div>
                             <div>
-                                <div className="text-3xl font-bold" style={{ color: 'var(--accent)' }}>4x</div>
-                                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>Faster recall of complex topics</div>
+                                <div className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Covers every unit</div>
+                                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>Nothing falls through the cracks</div>
                             </div>
                         </div>
                     </div>
@@ -321,10 +288,10 @@ export function LandingPage() {
                     {/* Right — 2×2 feature grid */}
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {[
-                            { icon: '🔁', title: 'Spaced Repetition', desc: 'Intelligent intervals that hit the sweet spot of memory consolidation.' },
-                            { icon: '✨', title: 'AI Quizzes', desc: 'Dynamic testing generated from your notes to verify true understanding.' },
-                            { icon: '🗺️', title: 'Unit Tracking', desc: 'Visualize the neural map of your knowledge and how topics interconnect.' },
-                            { icon: '📊', title: 'Topic Score', desc: 'Quantify your mastery level for every single subject in your library.' },
+                            { Icon: RefreshCw, title: 'Spaced Repetition', desc: 'Questions resurface at the right time, not randomly.' },
+                            { Icon: Sparkles, title: 'AI Quizzes', desc: 'Generated from your topics, not copied from a question bank.' },
+                            { Icon: BarChart2, title: 'Unit Tracking', desc: 'Every unit has a score. You always know where you stand.' },
+                            { Icon: Target, title: 'Topic Score', desc: 'One number per topic that reflects your real performance over time.' },
                         ].map((f) => (
                             <div
                                 key={f.title}
@@ -336,7 +303,9 @@ export function LandingPage() {
                                     boxShadow: 'var(--shadow-resting)',
                                 }}
                             >
-                                <div className="text-2xl" style={{ color: 'var(--accent)' }}>{f.icon}</div>
+                                <div className="w-10 h-10 flex items-center justify-center" style={{ background: 'var(--accent-light)', borderRadius: 'var(--radius-md)' }}>
+                                    <f.Icon className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                                </div>
                                 <h3 className="text-[15px] font-semibold">{f.title}</h3>
                                 <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
                             </div>

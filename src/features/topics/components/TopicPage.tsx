@@ -13,6 +13,7 @@ import { cn } from '@/src/lib/utils';
 
 import { TopicOverview } from './TopicOverview';
 import { TopicUnits } from './TopicUnits';
+import { TopicHistory } from './TopicHistory';
 import { QuizButton } from './QuizButton';
 
 interface TopicPageProps {
@@ -23,8 +24,12 @@ export function TopicPage({ topicId }: TopicPageProps) {
     const router = useRouter();
     const { startQuiz } = useQuizSession();
 
+    type TabType = 'overview' | 'units' | 'history';
+    type FilterType = 'all' | 'strong' | 'weak' | 'unattempted';
+
     const [topic, setTopic] = useState<Topic | null>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'units'>('overview');
+    const [activeTab, setActiveTab] = useState<TabType>('overview');
+    const [initialUnitFilter, setInitialUnitFilter] = useState<FilterType | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -51,6 +56,11 @@ export function TopicPage({ topicId }: TopicPageProps) {
     let masteryColor = 'var(--danger)';
     if (memoryScore >= 75) masteryColor = 'var(--success)';
     else if (memoryScore >= 50) masteryColor = 'var(--warning)';
+
+    // Donut chart math
+    const radius = 36;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = Math.max(0, circumference - (memoryScore / 100) * circumference);
 
     // Streak logic (basic implementation, just reading lastPracticed for UI nudges)
     // Detailed streak logic can be elaborated if needed, here just basic UI strings.
@@ -97,10 +107,32 @@ export function TopicPage({ topicId }: TopicPageProps) {
                         <div className="flex flex-col items-end gap-4 shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="text-right">
-                                    <div className="text-3xl font-black leading-none" style={{ color: masteryColor }}>
-                                        {memoryScore}%
+                                    <div className="flex justify-end items-center mb-1">
+                                        <svg width="88" height="88" viewBox="0 0 88 88" className="-mr-1">
+                                            <circle 
+                                                cx="44" cy="44" r={radius} 
+                                                fill="none" 
+                                                stroke="color-mix(in srgb, var(--text-muted) 20%, transparent)" 
+                                                strokeWidth="8" 
+                                            />
+                                            <motion.circle 
+                                                cx="44" cy="44" r={radius} 
+                                                fill="none" 
+                                                stroke={masteryColor} 
+                                                strokeWidth="8" 
+                                                strokeDasharray={circumference} 
+                                                strokeLinecap="round" 
+                                                transform="rotate(-90 44 44)"
+                                                initial={{ strokeDashoffset: circumference }}
+                                                animate={{ strokeDashoffset }}
+                                                transition={{ duration: 1, ease: 'easeOut' }}
+                                            />
+                                            <text x="44" y="44" textAnchor="middle" dominantBaseline="central" className="text-2xl font-black" fill={masteryColor}>
+                                                {memoryScore}%
+                                            </text>
+                                        </svg>
                                     </div>
-                                    <div className="text-xs uppercase tracking-wider font-bold mt-1" style={{ color: 'var(--text-muted)' }}>
+                                    <div className="text-xs uppercase tracking-wider font-bold" style={{ color: 'var(--text-muted)' }}>
                                         Topic Mastery
                                     </div>
                                 </div>
@@ -117,32 +149,22 @@ export function TopicPage({ topicId }: TopicPageProps) {
 
                     {/* Tabs */}
                     <div className="flex items-center gap-6 border-b" style={{ borderColor: 'var(--border)' }}>
-                        <button
-                            onClick={() => setActiveTab('overview')}
-                            className={cn(
-                                "pb-3 text-sm font-bold border-b-2 transition-colors",
-                                activeTab === 'overview' ? "border-accent text-primary" : "border-transparent text-muted hover:text-primary"
-                            )}
-                            style={{
-                                color: activeTab === 'overview' ? 'var(--text-primary)' : 'var(--text-muted)',
-                                borderColor: activeTab === 'overview' ? 'var(--accent)' : 'transparent'
-                            }}
-                        >
-                            Overview
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('units')}
-                            className={cn(
-                                "pb-3 text-sm font-bold border-b-2 transition-colors",
-                                activeTab === 'units' ? "border-accent text-primary" : "border-transparent text-muted hover:text-primary"
-                            )}
-                            style={{
-                                color: activeTab === 'units' ? 'var(--text-primary)' : 'var(--text-muted)',
-                                borderColor: activeTab === 'units' ? 'var(--accent)' : 'transparent'
-                            }}
-                        >
-                            Units
-                        </button>
+                        {(['overview', 'units', 'history'] as TabType[]).map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={cn(
+                                    "pb-3 text-sm font-bold border-b-2 transition-colors capitalize",
+                                    activeTab === tab ? "border-[var(--accent)]" : "border-transparent hover:text-[var(--text-primary)]"
+                                )}
+                                style={{
+                                    color: activeTab === tab ? 'var(--text-primary)' : 'var(--text-muted)',
+                                    borderColor: activeTab === tab ? 'var(--accent)' : 'transparent'
+                                }}
+                            >
+                                {tab}
+                            </button>
+                        ))}
                     </div>
                 </div>
             </header>
@@ -158,9 +180,15 @@ export function TopicPage({ topicId }: TopicPageProps) {
                             exit={{ opacity: 0, scale: 0.98 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <TopicOverview topic={topic} />
+                            <TopicOverview 
+                                topic={topic} 
+                                onNavigateToUnits={(filter) => {
+                                    setInitialUnitFilter(filter);
+                                    setActiveTab('units');
+                                }} 
+                            />
                         </motion.div>
-                    ) : (
+                    ) : activeTab === 'units' ? (
                         <motion.div
                             key="units"
                             initial={{ opacity: 0, y: 10 }}
@@ -168,7 +196,21 @@ export function TopicPage({ topicId }: TopicPageProps) {
                             exit={{ opacity: 0, scale: 0.98 }}
                             transition={{ duration: 0.2 }}
                         >
-                            <TopicUnits topic={topic} />
+                            <TopicUnits 
+                                topic={topic} 
+                                initialFilter={initialUnitFilter}
+                                onFilterConsumed={() => setInitialUnitFilter(null)}
+                            />
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="history"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <TopicHistory topicId={topic.id} />
                         </motion.div>
                     )}
                 </AnimatePresence>

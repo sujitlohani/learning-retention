@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, ArrowRight, Calendar, Clock } from 'lucide-react';
+import { Plus, ArrowRight, Flame, ClipboardList, CheckCircle2, BarChart3, AlertTriangle, Target, RefreshCw, X as XIcon } from 'lucide-react';
 import { topicsService } from '@/src/features/topics/services/topics.service';
-import { useSchedule, DueSession } from '@/src/features/schedule/hooks/useSchedule';
 import { Topic } from '@/src/types';
+import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
+import { checkThresholds, Recommendation, computeOverallMastery, scoreTopicPriority } from '@/src/lib/retention-calculator';
+import { QuizAttempt } from '@/src/types/ai';
 
 function getGreeting(): string {
     const hour = new Date().getHours();
@@ -15,247 +17,204 @@ function getGreeting(): string {
     return 'Good evening';
 }
 
+function getFormattedDate(): string {
+    return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+function computeStreak(allAttempts: QuizAttempt[]): number {
+    if (allAttempts.length === 0) return 0;
+    const dateSet = new Set<string>();
+    allAttempts.forEach(a => {
+        const d = new Date(a.completedAt);
+        dateSet.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`);
+    });
+    let streak = 0;
+    const now = new Date();
+    for (let i = 0; i < 365; i++) {
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        if (dateSet.has(key)) {
+            streak++;
+        } else {
+            // Allow today to be missing (haven't quizzed yet today)
+            if (i === 0) continue;
+            break;
+        }
+    }
+    return streak;
+}
+
 function getScoreColor(score: number): string {
     if (score >= 80) return 'var(--success)';
     if (score >= 60) return 'var(--warning)';
     return 'var(--danger)';
 }
 
-function DueSessionCard({ dueSession }: { dueSession: DueSession }) {
-    const { topic, session } = dueSession;
-    if (!topic) return null;
-
-    const scoreColor = getScoreColor(topic.memoryScore);
-    // Get unit names from ids
-    const unitNames = session.unitIds
-        .map(id => topic.units.find(c => c.id === id)?.text)
-        .filter(Boolean)
-        .slice(0, 4);
-
-    return (
-        <Link href={`/learn/${topic.id}?session=${session.id}`}>
-            <motion.div
-                className="group flex flex-col gap-4 p-6 transition-ui cursor-pointer"
-                style={{
-                    background: 'var(--bg-surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)',
-                    boxShadow: 'var(--shadow-resting)',
-                }}
-            >
-                {/* Top row — topic name + score */}
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-lg">{topic.name}</h3>
-                        {/* Unit pills */}
-                        <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                            {unitNames.map((name) => (
-                                <span
-                                    key={name}
-                                    className="text-xs font-medium px-2.5 py-1"
-                                    style={{
-                                        background: 'var(--bg-raised)',
-                                        color: 'var(--text-muted)',
-                                        borderRadius: 'var(--radius-sm)',
-                                    }}
-                                >
-                                    {name}
-                                </span>
-                            ))}
-                            {session.unitIds.length > 4 && (
-                                <span
-                                    className="text-xs font-medium px-2.5 py-1"
-                                    style={{
-                                        background: 'var(--bg-raised)',
-                                        color: 'var(--text-muted)',
-                                        borderRadius: 'var(--radius-sm)',
-                                    }}
-                                >
-                                    +{session.unitIds.length - 4}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Large score numeral — color-coded, no ring */}
-                    <div className="text-right flex-shrink-0">
-                        <div
-                            className="text-5xl font-bold leading-none"
-                            style={{ color: scoreColor }}
-                        >
-                            {topic.memoryScore}
-                        </div>
-                        <div className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                            Topic score
-                        </div>
-                    </div>
-                </div>
-
-                {/* Bottom row — meta + action */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--text-muted)' }}>
-                        <span className="flex items-center gap-1">
-                            {session.questionCount} questions
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5" />
-                            ~{session.estimatedMinutes} min
-                        </span>
-                    </div>
-                    <button
-                        className="flex items-center gap-2 h-10 px-5 text-sm font-bold text-white transition-ui"
-                        style={{
-                            background: 'var(--accent)',
-                            borderRadius: '9999px',
-                        }}
-                    >
-                        Start Session
-                        <ArrowRight className="w-4 h-4" />
-                    </button>
-                </div>
-            </motion.div>
-        </Link>
-    );
-}
-
 export function HomeDashboard() {
     const [topics, setTopics] = useState<Topic[]>([]);
-    const { todaySessions, upcomingSessions, isLoading } = useSchedule();
+    const [allAttempts, setAllAttempts] = useState<QuizAttempt[]>([]);
+    const [dismissedRecs, setDismissedRecs] = useState<Set<number>>(new Set());
 
     useEffect(() => {
         setTopics(topicsService.getTopics());
+        setAllAttempts(quizHistoryService.getAllAttempts());
     }, []);
 
+    const streak = useMemo(() => computeStreak(allAttempts), [allAttempts]);
+    const totalSessions = allAttempts.length;
+    const overallMastery = useMemo(() => topics.length > 0 ? Math.round(computeOverallMastery(topics, allAttempts)) : -1, [topics, allAttempts]);
+
+    const focusTopic = useMemo(() => {
+        if (topics.length === 0) return null;
+        let best: Topic | null = null;
+        let bestScore = -Infinity;
+        topics.forEach(t => {
+            const s = scoreTopicPriority(t, allAttempts);
+            if (s > bestScore) { bestScore = s; best = t; }
+        });
+        return best as Topic | null;
+    }, [topics, allAttempts]);
+
+    const recommendations = useMemo(() => {
+        if (topics.length === 0) return [];
+        const recs = checkThresholds(topics, allAttempts);
+        // Priority: weak-unit → ready-for-challenge → challenge-stale, max 3
+        const sorted = [
+            ...recs.filter(r => r.type === 'weak-unit'),
+            ...recs.filter(r => r.type === 'ready-for-challenge'),
+            ...recs.filter(r => r.type === 'challenge-stale'),
+        ];
+        return sorted.slice(0, 3);
+    }, [topics, allAttempts]);
+
+    const visibleRecs = recommendations.filter((_, i) => !dismissedRecs.has(i));
     const hasTopics = topics.length > 0;
 
     return (
-        <div className="max-w-4xl mx-auto p-6 lg:p-10 space-y-10">
-            {/* Header */}
-            <motion.div
-                className="space-y-2"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-            >
-                <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
-                    {getGreeting()}
-                </h1>
-                <p className="text-lg" style={{ color: 'var(--text-muted)' }}>
-                    {hasTopics
-                        ? todaySessions.length > 0
-                            ? `You have ${todaySessions.length} session${todaySessions.length !== 1 ? 's' : ''} due today.`
-                            : 'Nothing due today.'
-                        : 'Add your first topic to start learning.'}
-                </p>
+        <div className="max-w-4xl mx-auto p-6 lg:p-10 space-y-8 font-display" style={{ color: 'var(--text-primary)' }}>
+
+            {/* ── 1. Greeting Header ── */}
+            <motion.div className="flex items-end justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                <div>
+                    <h1 className="text-[26px] font-extrabold tracking-tight">{getGreeting()}</h1>
+                    <p className="text-[13px] mt-1" style={{ color: 'var(--text-muted)' }}>{getFormattedDate()}</p>
+                </div>
+                <div className="text-right">
+                    {streak > 0 ? (
+                        <div className="flex items-center gap-1.5">
+                            <Flame className="w-5 h-5" style={{ color: 'var(--warning)' }} />
+                            <span className="text-sm font-bold">{streak} day streak</span>
+                        </div>
+                    ) : (
+                        <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>Start your streak today</span>
+                    )}
+                </div>
             </motion.div>
 
-            {/* Add Topic CTA */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: 0.1 }}
-            >
-                <Link href="/add-topic">
-                    <div
-                        className="group p-5 border-2 border-dashed transition-all cursor-pointer flex items-center gap-4"
-                        style={{
-                            borderColor: 'var(--border)',
-                            borderRadius: 'var(--radius-md)',
-                            transitionDuration: 'var(--duration-fast)',
-                        }}
-                    >
-                        <div
-                            className="w-10 h-10 flex items-center justify-center"
-                            style={{
-                                background: 'var(--accent-light)',
-                                borderRadius: 'var(--radius-sm)',
-                            }}
-                        >
-                            <Plus className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                        </div>
-                        <div>
-                            <div className="font-semibold">Add a new topic</div>
-                            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                                AI will generate units, schedule, and quiz questions
+            {/* ── 2. Daily Quiz Card ── */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
+                <Link href={hasTopics ? '/quiz/daily' : '/add-topic'}>
+                    <div className="p-6 rounded-xl text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #3730A3 0%, #4338CA 40%, #5B4FE8 100%)' }}>
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-4">
+                                <ClipboardList className="w-7 h-7 shrink-0 opacity-90" />
+                                <div>
+                                    <div className="text-lg font-bold">Daily Quiz</div>
+                                    <div className="text-sm text-white/80 mt-0.5">
+                                        {hasTopics && focusTopic
+                                            ? `Focusing on ${focusTopic.name} today · 20 questions`
+                                            : hasTopics
+                                                ? 'Practice across your topics · 20 questions'
+                                                : 'Add a topic to get started'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold shrink-0" style={{ background: '#fff', color: '#4338CA' }}>
+                                Start <ArrowRight className="w-4 h-4" />
                             </div>
                         </div>
-                        <ArrowRight className="w-5 h-5 ml-auto transition-ui" style={{ color: 'var(--text-muted)' }} />
                     </div>
                 </Link>
             </motion.div>
 
-            {/* Due Today */}
-            {todaySessions.length > 0 && (
-                <motion.section
-                    className="space-y-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.2 }}
-                >
-                    <h2 className="text-lg font-semibold">Due today</h2>
-                    <div className="grid gap-4">
-                        {todaySessions.map((ds) => (
-                            <DueSessionCard key={ds.session.id} dueSession={ds} />
-                        ))}
+            {/* ── Add Topic ── */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
+                <Link href="/add-topic">
+                    <div className="group p-5 border-2 border-dashed rounded-xl transition-all cursor-pointer flex items-center gap-4 hover:border-[var(--accent)]" style={{ borderColor: 'var(--border)' }}>
+                        <div className="w-10 h-10 flex items-center justify-center rounded-lg" style={{ background: 'var(--accent-light)' }}>
+                            <Plus className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                        </div>
+                        <div>
+                            <div className="font-semibold">Add a new topic</div>
+                            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>AI will generate units, schedule, and quiz questions</div>
+                        </div>
+                        <ArrowRight className="w-5 h-5 ml-auto" style={{ color: 'var(--text-muted)' }} />
                     </div>
-                </motion.section>
-            )}
+                </Link>
+            </motion.div>
 
-            {/* This Week */}
-            {upcomingSessions.length > 0 && (
-                <motion.section
-                    className="space-y-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                >
-                    <div className="flex items-center gap-2">
-                        <Calendar className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
-                        <h2 className="text-lg font-semibold">This week</h2>
+            {/* ── 3. Stats Row ── */}
+            <motion.div className="grid grid-cols-3 gap-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
+                <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <Flame className="w-3.5 h-3.5" style={{ color: 'var(--warning)' }} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Current Streak</span>
                     </div>
-                    <div
-                        className="divide-y overflow-hidden"
-                        style={{
-                            background: 'var(--bg-surface)',
-                            border: '1px solid var(--border)',
-                            borderRadius: 'var(--radius-md)',
-                            borderColor: 'var(--border)',
-                        }}
-                    >
-                        {upcomingSessions.map((ds) => {
-                            const { topic, session } = ds;
-                            if (!topic) return null;
+                    <div className="text-2xl font-bold">{streak} <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>days</span></div>
+                </div>
+                <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--success)' }} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Total Sessions</span>
+                    </div>
+                    <div className="text-2xl font-bold">{totalSessions} <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>sessions</span></div>
+                </div>
+                <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <BarChart3 className="w-3.5 h-3.5" style={{ color: 'var(--accent)' }} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Overall Mastery</span>
+                    </div>
+                    <div className="text-2xl font-bold">{overallMastery >= 0 ? `${overallMastery}%` : '—'}</div>
+                </div>
+            </motion.div>
+
+            {/* ── 4. Recommendations (max 3) ── */}
+            {visibleRecs.length > 0 && (
+                <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
+                    <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Suggested for you</h2>
+                    <div className={`grid gap-3 ${visibleRecs.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+                        {recommendations.map((rec, i) => {
+                            if (dismissedRecs.has(i)) return null;
+                            const isWeak = rec.type === 'weak-unit';
+                            const isReady = rec.type === 'ready-for-challenge';
+                            const Icon = isWeak ? AlertTriangle : isReady ? Target : RefreshCw;
+                            const iconColor = isWeak ? 'var(--warning)' : isReady ? 'var(--accent)' : 'var(--text-muted)';
+                            const href = isWeak
+                                ? `/quiz/weak-area?topicId=${rec.topicId}${rec.unitId ? `&unitId=${rec.unitId}` : ''}`
+                                : `/topics/${rec.topicId}`;
+                            const actionLabel = isWeak ? 'Review now →' : isReady ? 'Start Challenge →' : 'Revisit →';
+
                             return (
-                                <div
-                                    key={session.id}
-                                    className="flex items-center justify-between px-5 py-3"
-                                    style={{ borderColor: 'var(--border)' }}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        {/* Date pill */}
-                                        <span
-                                            className="text-xs font-medium px-2.5 py-1 shrink-0"
-                                            style={{
-                                                background: 'var(--bg-raised)',
-                                                color: 'var(--text-muted)',
-                                                borderRadius: 'var(--radius-sm)',
-                                            }}
-                                        >
-                                            {new Date(session.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                                        </span>
-                                        <span className="text-sm font-medium">{topic.name}</span>
-                                    </div>
-                                    {/* Session type badge */}
-                                    <span
-                                        className="text-xs font-medium px-2.5 py-1 capitalize"
-                                        style={{
-                                            background: 'var(--accent-light)',
-                                            color: 'var(--accent)',
-                                            borderRadius: 'var(--radius-sm)',
-                                        }}
+                                <div key={i} className="p-4 rounded-xl border relative group" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                                    <button
+                                        onClick={() => setDismissedRecs(prev => new Set(prev).add(i))}
+                                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-[var(--bg-raised)]"
                                     >
-                                        {session.type.replace('-', ' ')}
-                                    </span>
+                                        <XIcon className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                                    </button>
+                                    <div className="flex items-start gap-3">
+                                        <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: iconColor }} />
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-medium leading-snug">{rec.message}</p>
+                                            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+                                                {rec.unitName || rec.topicName}
+                                            </p>
+                                            <Link href={href} className="inline-flex items-center gap-1 text-xs font-bold mt-2 transition-colors hover:opacity-80" style={{ color: 'var(--accent)' }}>
+                                                {actionLabel}
+                                            </Link>
+                                        </div>
+                                    </div>
                                 </div>
                             );
                         })}
@@ -263,68 +222,43 @@ export function HomeDashboard() {
                 </motion.section>
             )}
 
-            {/* All Topics */}
-            {hasTopics && (
-                <motion.section
-                    className="space-y-4"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.4 }}
-                >
-                    <h2 className="text-lg font-semibold">All topics</h2>
+            {/* ── 5. Your Topics ── */}
+            {hasTopics ? (
+                <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+                    <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your topics</h2>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        {topics.map((topic) => (
-                            <Link key={topic.id} href={`/cockpit?topic=${topic.id}`}>
-                                <div
-                                    className="group p-5 transition-ui cursor-pointer"
-                                    style={{
-                                        background: 'var(--bg-surface)',
-                                        border: '1px solid var(--border)',
-                                        borderRadius: 'var(--radius-md)',
-                                        boxShadow: 'var(--shadow-resting)',
-                                    }}
-                                >
+                        {topics.map(topic => (
+                            <Link key={topic.id} href={`/topics/${topic.id}`}>
+                                <div className="group p-5 rounded-xl border transition-all cursor-pointer hover:shadow-md" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
                                     <div className="flex items-start justify-between">
-                                        <div>
-                                            <h3 className="font-semibold text-[15px]">{topic.name}</h3>
-                                            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                                                {topic.units.length} units · {topic.level}
-                                            </p>
+                                        <div className="min-w-0">
+                                            <h3 className="font-semibold text-[15px] truncate">{topic.name}</h3>
+                                            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{topic.units.length} units · {topic.level}</p>
                                         </div>
-                                        <div
-                                            className="text-3xl font-bold"
-                                            style={{ color: getScoreColor(topic.memoryScore) }}
-                                        >
-                                            {topic.memoryScore}
-                                        </div>
+                                        <div className="text-3xl font-bold shrink-0" style={{ color: getScoreColor(topic.memoryScore) }}>{topic.memoryScore}</div>
                                     </div>
-                                    {/* Score bar */}
                                     <div className="mt-3 w-full h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
-                                        <div
-                                            className="h-full rounded-full"
-                                            style={{
-                                                width: `${topic.memoryScore}%`,
-                                                background: getScoreColor(topic.memoryScore),
-                                                transition: 'width var(--duration-progress) ease-in-out',
-                                            }}
-                                        />
+                                        <div className="h-full rounded-full transition-all" style={{ width: `${topic.memoryScore}%`, background: getScoreColor(topic.memoryScore) }} />
                                     </div>
                                 </div>
                             </Link>
                         ))}
                     </div>
                 </motion.section>
-            )}
-
-            {/* Empty state */}
-            {!hasTopics && !isLoading && (
-                <motion.div
-                    className="text-center py-20"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    <p style={{ color: 'var(--text-muted)' }}>Nothing here yet. Add your first topic.</p>
+            ) : (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
+                    <Link href="/add-topic">
+                        <div className="group p-5 border-2 border-dashed rounded-xl transition-all cursor-pointer flex items-center gap-4" style={{ borderColor: 'var(--border)' }}>
+                            <div className="w-10 h-10 flex items-center justify-center rounded-lg" style={{ background: 'var(--accent-light)' }}>
+                                <Plus className="w-5 h-5" style={{ color: 'var(--accent)' }} />
+                            </div>
+                            <div>
+                                <div className="font-semibold">Add a new topic</div>
+                                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>AI will generate units, schedule, and quiz questions</div>
+                            </div>
+                            <ArrowRight className="w-5 h-5 ml-auto" style={{ color: 'var(--text-muted)' }} />
+                        </div>
+                    </Link>
                 </motion.div>
             )}
         </div>

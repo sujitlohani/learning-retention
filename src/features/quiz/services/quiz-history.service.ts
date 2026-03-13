@@ -11,7 +11,14 @@ export const quizHistoryService = {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return [];
         try {
-            return JSON.parse(raw);
+            const parsed = JSON.parse(raw) as QuizAttempt[];
+            // Shim: normalise legacy type values
+            return parsed.map(attempt => ({
+                ...attempt,
+                type: (attempt.type as any) === 'unit' ? 'unit-test'
+                    : (attempt.type as any) === 'topic' ? 'topic-challenge'
+                    : attempt.type
+            }));
         } catch (e) {
             console.error('Failed to parse quiz history', e);
             return [];
@@ -93,6 +100,35 @@ export const quizHistoryService = {
             attempts: unitAttempts.length,
             lastPracticed: latestDate ? latestDate.toISOString() : null
         };
+    },
+
+    computeUnitAccuracy: (topicId: string, unitId: string): number => {
+        const history = quizHistoryService.getHistoryForTopic(topicId);
+        
+        const unitAttempts = history.filter(h => 
+            h.targetUnitId === unitId || 
+            h.unitBreakdown.some(b => b.unitId === unitId)
+        );
+
+        if (unitAttempts.length === 0) return 0;
+
+        let sumScores = 0;
+        let count = 0;
+
+        for (const attempt of unitAttempts) {
+            if (attempt.targetUnitId === unitId) {
+                sumScores += attempt.score;
+                count++;
+            } else {
+                const breakdown = attempt.unitBreakdown.find(b => b.unitId === unitId);
+                if (breakdown) {
+                    sumScores += breakdown.score;
+                    count++;
+                }
+            }
+        }
+
+        return count > 0 ? Math.round(sumScores / count) : 0;
     },
 
     getAccuracyOverTime: (topicId: string): { date: string; score: number }[] => {

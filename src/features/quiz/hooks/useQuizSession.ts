@@ -6,7 +6,6 @@ import { topicsService } from '@/src/features/topics/services/topics.service';
 import { scheduleService } from '@/src/features/schedule/services/schedule.service';
 import { questionsService } from '@/src/features/quiz/services/questions.service';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
-import { retentionCalculator } from '@/src/lib/retention-calculator';
 import { Topic, QuizQuestion, QuizResult } from '@/src/types';
 import { AIGeneratedQuestion, QuizAttempt } from '@/src/types/ai';
 
@@ -223,7 +222,7 @@ export function useQuizSession(topicId?: string | null, sessionId?: string | nul
                 id: `attempt-${Date.now()}`,
                 topicId: topic.id,
                 sessionId: sessionId || undefined,
-                type: unitId ? 'unit' : 'topic',
+                type: unitId ? 'unit-test' : 'topic-challenge',
                 targetUnitId: unitId || undefined,
                 score: finalScore,
                 correctCount,
@@ -236,8 +235,7 @@ export function useQuizSession(topicId?: string | null, sessionId?: string | nul
 
             quizHistoryService.saveAttempt(historyAttempt);
 
-            const updatedHistory = quizHistoryService.getHistoryForTopic(topic.id);
-            const newRetentionScore = retentionCalculator.calculateTopicScore(topic, updatedHistory);
+            const testedUnitIds = [...new Set(quizQuestions.map(q => q.unitId))];
 
             const result: QuizResult = {
                 topicId: topic.id,
@@ -245,6 +243,7 @@ export function useQuizSession(topicId?: string | null, sessionId?: string | nul
                 correctCount,
                 totalCount: quizQuestions.length,
                 weakUnits: Array.from(weakUnits),
+                testedUnitIds,
             };
 
             topicsService.updateTopicAfterQuiz(topic.id, result);

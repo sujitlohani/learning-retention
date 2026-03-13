@@ -19,7 +19,6 @@ import { useState } from 'react';
 
 const navItems = [
     { href: '/', label: 'Home', icon: Home },
-    { href: '/cockpit', label: 'Cockpit', icon: Activity },
     { href: '/knowledge-base', label: 'Knowledge Base', icon: BookOpen },
     { href: '/deep-dive', label: 'Deep Dive', icon: Brain },
 ];

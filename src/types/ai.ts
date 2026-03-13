@@ -106,7 +106,7 @@ export interface QuizAttempt {
     id: string;
     topicId: string;
     sessionId?: string;
-    type: 'topic' | 'unit';
+    type: 'daily' | 'unit-test' | 'topic-challenge' | 'weak-area' | 'onboarding';
     targetUnitId?: string;
     score: number;
     correctCount: number;

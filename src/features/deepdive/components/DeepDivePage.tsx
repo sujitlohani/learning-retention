@@ -2,23 +2,18 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, Check, X, Zap, BookOpen, Target, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Zap, Loader2, ArrowRight, Microscope } from 'lucide-react';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { useQuizSession } from '@/src/features/quiz/hooks/useQuizSession';
 import { QuizAttempt } from '@/src/types/ai';
+import { QuizSessionCard } from '@/src/features/quiz/components/QuizSessionCard';
+import { NeedsReviewSlider } from '@/src/features/deepdive/components/NeedsReviewSlider';
+import { computeUnitScore } from '@/src/lib/retention-calculator';
 
 type DateRange = '7d' | '30d' | 'all';
-type QuizTypeFilter = 'all' | 'topic' | 'unit';
-
-interface InsightsData {
-    insight?: { topicArea: string; accuracyPercent: number };
-    commonPattern?: string;
-    suggestedFocus?: string[];
-    recommendedUnit?: { unitName: string; topicId: string; unitId: string };
-    rawText?: string;
-}
+type QuizTypeFilter = 'all' | 'topic-challenge' | 'unit-test' | 'daily' | 'weak-area';
 
 export function DeepDivePage() {
     const { startQuiz } = useQuizSession();
@@ -27,40 +22,29 @@ export function DeepDivePage() {
     const [unitFilter, setUnitFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState<QuizTypeFilter>('all');
     const [dateRange, setDateRange] = useState<DateRange>('30d');
-    const [expandedId, setExpandedId] = useState<string | null>(null);
-
-    // AI Insights
-    const [insights, setInsights] = useState<InsightsData | null>(null);
-    const [insightsLoading, setInsightsLoading] = useState(false);
-    const [insightsError, setInsightsError] = useState(false);
 
     useEffect(() => {
-        const attempts = quizHistoryService.getAllAttempts();
-        setAllAttempts(attempts);
+        setAllAttempts(quizHistoryService.getAllAttempts());
     }, []);
 
-    // Unique topics from attempts
+    // ── Filters ──────────────────────
     const uniqueTopics = useMemo(() => {
         const map = new Map<string, string>();
         allAttempts.forEach(a => {
-            const topic = topicsService.getTopicById(a.topicId);
-            if (topic) map.set(a.topicId, topic.name);
+            const t = topicsService.getTopicById(a.topicId);
+            if (t) map.set(a.topicId, t.name);
         });
         return Array.from(map.entries());
     }, [allAttempts]);
 
-    // Unique units from attempts
     const uniqueUnits = useMemo(() => {
         const map = new Map<string, string>();
         allAttempts.forEach(a => {
-            a.unitBreakdown.forEach(u => {
-                if (u.unitName) map.set(u.unitId, u.unitName);
-            });
+            a.unitBreakdown.forEach(u => { if (u.unitName) map.set(u.unitId, u.unitName); });
         });
         return Array.from(map.entries());
     }, [allAttempts]);
 
-    // Filtered attempts
     const filtered = useMemo(() => {
         let result = [...allAttempts];
         if (topicFilter) result = result.filter(a => a.topicId === topicFilter);
@@ -74,52 +58,7 @@ export function DeepDivePage() {
         return result.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
     }, [allAttempts, topicFilter, unitFilter, typeFilter, dateRange]);
 
-    // AI Insights generation
-    useEffect(() => {
-        if (allAttempts.length === 0) return;
-        setInsightsLoading(true);
-
-        const recent = [...allAttempts]
-            .sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime())
-            .slice(0, 20);
-
-        // Build summary
-        const unitAccuracy: Record<string, { correct: number; total: number; name: string }> = {};
-        const topicAttemptCount: Record<string, number> = {};
-
-        recent.forEach(a => {
-            topicAttemptCount[a.topicId] = (topicAttemptCount[a.topicId] || 0) + 1;
-            a.unitBreakdown.forEach(u => {
-                if (!unitAccuracy[u.unitId]) unitAccuracy[u.unitId] = { correct: 0, total: 0, name: u.unitName || 'Unknown' };
-                unitAccuracy[u.unitId].correct += u.correctCount;
-                unitAccuracy[u.unitId].total += u.totalCount;
-            });
-        });
-
-        const summaryData = {
-            unitAccuracies: Object.entries(unitAccuracy).map(([id, v]) => ({
-                unitId: id, unitName: v.name, accuracy: v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0
-            })),
-            topicAttemptCounts: Object.entries(topicAttemptCount).map(([id, count]) => ({
-                topicId: id, topicName: topicsService.getTopicById(id)?.name || 'Unknown', attempts: count
-            }))
-        };
-
-        fetch('/api/ai/generate-insights', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ summaryData }),
-        }).then(res => res.json()).then(data => {
-            if (data.success) {
-                setInsights(data);
-            } else {
-                setInsightsError(true);
-            }
-        }).catch(() => setInsightsError(true))
-            .finally(() => setInsightsLoading(false));
-    }, [allAttempts]);
-
-    // Empty state
+    // Empty
     if (allAttempts.length === 0) {
         return (
             <div className="min-h-screen font-display flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
@@ -153,10 +92,10 @@ export function DeepDivePage() {
                         <option value="">Unit: All</option>
                         {uniqueUnits.map(([id, name]) => <option key={id} value={id}>{name}</option>)}
                     </select>
-                    <div className="flex gap-1 bg-[var(--bg-raised)] p-1 rounded-md border border-[var(--border)]">
-                        {(['all', 'unit', 'topic'] as const).map(t => (
+                    <div className="flex gap-1 bg-[var(--bg-raised)] p-1 rounded-md border border-[var(--border)] hidden md:flex">
+                        {(['all', 'unit-test', 'topic-challenge', 'daily', 'weak-area'] as const).map(t => (
                             <button key={t} onClick={() => setTypeFilter(t)} className="px-3 py-1 text-xs font-bold rounded transition-all" style={typeFilter === t ? { background: 'var(--accent)', color: '#fff' } : { color: 'var(--text-muted)' }}>
-                                {t === 'all' ? 'All' : t === 'unit' ? 'Unit Test' : 'Topic Challenge'}
+                                {t === 'all' ? 'All' : t.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                             </button>
                         ))}
                     </div>
@@ -174,169 +113,181 @@ export function DeepDivePage() {
                         {filtered.length === 0 ? (
                             <div className="text-center py-12 text-sm text-[var(--text-muted)]">No sessions match your filters.</div>
                         ) : (
-                            filtered.map(attempt => {
-                                const isExpanded = expandedId === attempt.id;
-                                const topicName = topicsService.getTopicById(attempt.topicId)?.name || 'Unknown Topic';
-                                const TypeIcon = attempt.type === 'unit' ? Target : attempt.type === 'topic' ? BookOpen : Zap;
-                                const typeLabel = attempt.type === 'unit' ? 'Unit Test' : attempt.type === 'topic' ? 'Topic Challenge' : 'Daily';
-                                let scoreColor = 'var(--danger)';
-                                if (attempt.score >= 75) scoreColor = 'var(--success)';
-                                else if (attempt.score >= 50) scoreColor = 'var(--warning)';
-                                const incorrectCount = attempt.questions.filter(q => !q.isCorrect).length;
-
-                                return (
-                                    <div key={attempt.id} className="border rounded-lg overflow-hidden" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', boxShadow: 'var(--shadow-resting)' }}>
-                                        {/* Collapsed header */}
-                                        <button onClick={() => setExpandedId(isExpanded ? null : attempt.id)} className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-[var(--bg-raised)] transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <TypeIcon className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
-                                                <div>
-                                                    <div className="text-sm font-bold">{topicName}</div>
-                                                    <div className="text-xs text-[var(--text-muted)]">{typeLabel} • {attempt.totalCount} questions</div>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <div className="text-right">
-                                                    <div className="text-sm font-black" style={{ color: scoreColor }}>{attempt.score}%</div>
-                                                    <div className="text-[10px] text-[var(--text-muted)]">{new Date(attempt.completedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</div>
-                                                </div>
-                                                {isExpanded ? <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />}
-                                            </div>
-                                        </button>
-                                        {/* Progress bar */}
-                                        <div className="h-1 w-full bg-[var(--bg-raised)]">
-                                            <div className="h-full rounded-r-full transition-all duration-500" style={{ width: `${attempt.score}%`, background: scoreColor }} />
-                                        </div>
-
-                                        {/* Expanded */}
-                                        <AnimatePresence>
-                                            {isExpanded && (
-                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                                                    <div className="p-4 border-t space-y-4" style={{ borderColor: 'var(--border)' }}>
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="text-sm font-bold">Correct: {attempt.correctCount} / {attempt.totalCount}</span>
-                                                            {incorrectCount > 0 && (
-                                                                <button onClick={() => {
-                                                                    if (attempt.targetUnitId) {
-                                                                        startQuiz({ type: 'unit-test', topicId: attempt.topicId, targetUnitId: attempt.targetUnitId });
-                                                                    } else {
-                                                                        startQuiz({ type: 'topic-challenge', topicId: attempt.topicId });
-                                                                    }
-                                                                }} className="text-xs font-bold px-3 py-1.5 rounded-md border transition-all hover:-translate-y-0.5" style={{ borderColor: 'var(--accent)', color: 'var(--accent)' }}>
-                                                                    Retry Weak Questions
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                        <div className="space-y-3">
-                                                            {attempt.questions.map((q, i) => (
-                                                                <div key={i} className="text-sm space-y-1">
-                                                                    <div className="flex items-start gap-2">
-                                                                        {q.isCorrect ? (
-                                                                            <Check className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--success)' }} />
-                                                                        ) : (
-                                                                            <X className="w-4 h-4 shrink-0 mt-0.5" style={{ color: 'var(--danger)' }} />
-                                                                        )}
-                                                                        <div className="flex-1">
-                                                                            <div className="font-medium">{q.questionText || `Question ${i + 1}`}</div>
-                                                                            {q.isCorrect ? (
-                                                                                <div className="text-xs text-[var(--text-muted)] mt-0.5">Answered: {q.userAnswer}</div>
-                                                                            ) : (
-                                                                                <div className="mt-2 flex flex-col gap-1.5">
-                                                                                    <div className="text-xs" style={{ color: 'var(--danger)' }}>Your answer: {q.userAnswer}</div>
-                                                                                    <div className="text-xs" style={{ color: 'var(--success)' }}>Correct: {q.correctAnswer}</div>
-                                                                                    {q.unitName && (
-                                                                                        <div className="flex flex-wrap gap-1.5 mt-1">
-                                                                                            <span className="rounded-full text-[10px] font-bold px-2 py-0.5 bg-[var(--bg-raised)] text-[var(--text-muted)]">Concept: {q.unitName}</span>
-                                                                                        </div>
-                                                                                    )}
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </div>
-                                );
-                            })
+                            filtered.map(attempt => (
+                                <QuizSessionCard
+                                    key={attempt.id}
+                                    attempt={attempt}
+                                    onRetry={(type, topicId, targetUnitId) => {
+                                        if (type === 'unit-test' && targetUnitId) {
+                                            startQuiz({ type: 'unit-test', topicId, targetUnitId });
+                                        } else {
+                                            startQuiz({ type: 'topic-challenge', topicId });
+                                        }
+                                    }}
+                                />
+                            ))
                         )}
                     </div>
 
-                    {/* Right: AI Insights */}
+                    {/* Right Panel */}
                     <div className="lg:col-span-4">
                         <div className="sticky top-6 space-y-4">
-                            <div className="p-5 rounded-lg border bg-[var(--bg-surface)] border-[var(--border)] shadow-[var(--shadow-resting)]">
-                                <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
-                                    Insights
-                                    {insightsLoading && <Loader2 className="w-3 h-3 animate-spin" style={{ color: 'var(--accent)' }} />}
-                                </h3>
-
-                                {insightsLoading ? (
-                                    <div className="space-y-4">
-                                        {[1, 2, 3].map(i => (
-                                            <div key={i} className="space-y-2">
-                                                <div className="h-3 rounded bg-[var(--bg-raised)] animate-pulse w-1/2" />
-                                                <div className="h-3 rounded bg-[var(--bg-raised)] animate-pulse w-full" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : insightsError ? (
-                                    <p className="text-sm text-[var(--text-muted)]">Unable to generate insights</p>
-                                ) : insights?.rawText ? (
-                                    <p className="text-sm text-[var(--text-muted)] whitespace-pre-wrap">{insights.rawText}</p>
-                                ) : insights ? (
-                                    <div className="space-y-5">
-                                        {/* Performance Insight */}
-                                        {insights.insight && (
-                                            <div>
-                                                <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--accent)' }}>Performance Insight</div>
-                                                {insights.insight.topicArea ? (
-                                                    <>
-                                                        <p className="text-sm font-medium">{insights.insight.topicArea} questions: {insights.insight.accuracyPercent}% accuracy</p>
-                                                        {insights.commonPattern && <p className="text-xs text-[var(--text-muted)] mt-1">{insights.commonPattern}</p>}
-                                                    </>
-                                                ) : (
-                                                    <p className="text-sm text-[var(--text-muted)]">Insufficient data to generate insight</p>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Suggested Focus */}
-                                        {insights.suggestedFocus && insights.suggestedFocus.length > 0 && (
-                                            <div>
-                                                <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--accent)' }}>Suggested Focus</div>
-                                                <ul className="space-y-1">
-                                                    {insights.suggestedFocus.map((f, i) => (
-                                                        <li key={i} className="text-sm text-[var(--text-muted)]">• {f}</li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
-
-                                        {/* Recommended Action */}
-                                        {insights.recommendedUnit && (
-                                            <div>
-                                                <div className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)' }}>Recommended Action</div>
-                                                <button
-                                                    onClick={() => startQuiz({ type: 'unit-test', topicId: insights.recommendedUnit!.topicId, targetUnitId: insights.recommendedUnit!.unitId })}
-                                                    className="w-full text-xs font-bold px-4 py-2.5 rounded-md text-white transition-all hover:-translate-y-0.5"
-                                                    style={{ background: 'var(--accent)' }}
-                                                >
-                                                    Start Unit Test → {insights.recommendedUnit.unitName}
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : null}
-                            </div>
+                            <NeedsReviewSlider />
+                            <AIInsightCard allAttempts={allAttempts} />
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+// ─── AI Insight Card ─────────────────────────
+interface InsightResult {
+    diagnosis: string;
+    confusions: string[];
+}
+
+function AIInsightCard({ allAttempts }: { allAttempts: QuizAttempt[] }) {
+    const topics = useMemo(() => topicsService.getTopics().sort((a, b) => a.name.localeCompare(b.name)), []);
+
+    const [selectedTopicId, setSelectedTopicId] = useState(topics[0]?.id || '');
+    const [selectedUnitId, setSelectedUnitId] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState<InsightResult | null>(null);
+    const [error, setError] = useState(false);
+
+    const selectedTopic = topics.find(t => t.id === selectedTopicId);
+    const units = useMemo(() => {
+        if (!selectedTopic) return [];
+        return [...selectedTopic.units].sort((a, b) => (a.text || '').localeCompare(b.text || ''));
+    }, [selectedTopic]);
+
+    // Default unit on topic change
+    useEffect(() => {
+        if (units.length > 0) setSelectedUnitId(units[0].id);
+        else setSelectedUnitId('');
+    }, [selectedTopicId, units]);
+
+    const selectedUnit = units.find(u => u.id === selectedUnitId);
+
+    const generateInsight = async () => {
+        if (!selectedTopicId || !selectedUnitId || !selectedUnit) return;
+        setLoading(true);
+        setError(false);
+
+        const accuracy = computeUnitScore(selectedTopicId, selectedUnitId, allAttempts);
+        const unitName = selectedUnit.text || '';
+        const topicName = selectedTopic?.name || '';
+
+        const prompt = `A student is struggling with the unit '${unitName}' from topic '${topicName}'. Their accuracy on this unit is ${Math.round(accuracy)}%. Return ONLY valid JSON with no markdown: { "diagnosis": string, "confusions": string[] } — diagnosis is one sentence identifying the root cause of their struggle. confusions is an array of 2–3 short phrases describing the specific sub-concepts they are most likely misunderstanding. Be specific to this unit, not generic.`;
+
+        try {
+            const res = await fetch('/api/ai/generate-insights', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt }),
+            });
+            const data = await res.json();
+            if (data.success && data.insight) {
+                setResult(data.insight as InsightResult);
+            } else {
+                setError(true);
+            }
+        } catch {
+            setError(true);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const resetCard = () => {
+        setResult(null);
+        setError(false);
+    };
+
+    if (topics.length === 0) return null;
+
+    return (
+        <div className="p-5 rounded-lg border bg-[var(--bg-surface)] border-[var(--border)] shadow-[var(--shadow-resting)]">
+            <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>AI Insight</h3>
+
+            {result ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                    <div className="text-sm font-bold">Why you might be struggling with {selectedUnit?.text || 'this unit'}</div>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{result.diagnosis}</p>
+
+                    {result.confusions && result.confusions.length > 0 && (
+                        <div>
+                            <div className="text-xs font-bold mb-2">You&apos;re likely confusing:</div>
+                            <ul className="space-y-1.5">
+                                {result.confusions.map((c, i) => (
+                                    <li key={i} className="text-sm flex items-start gap-2">
+                                        <span className="shrink-0 mt-0.5" style={{ color: 'var(--accent)' }}>•</span>
+                                        <span style={{ color: 'var(--text-muted)' }}>{c}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    <Link
+                        href={`/deep-dive/learn?unitId=${selectedUnitId}&topicId=${selectedTopicId}`}
+                        className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-xs font-bold text-white transition-transform hover:scale-[1.02]"
+                        style={{ background: 'var(--accent)' }}
+                    >
+                        <Microscope className="w-3.5 h-3.5" /> Deep Dive Concept <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+
+                    <button onClick={resetCard} className="text-xs font-medium w-full text-center transition-colors hover:underline" style={{ color: 'var(--text-muted)' }}>
+                        Generate another
+                    </button>
+                </motion.div>
+            ) : error ? (
+                <div className="text-center py-4 space-y-3">
+                    <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Unable to generate insight. Try again.</p>
+                    <button onClick={resetCard} className="text-xs font-bold" style={{ color: 'var(--accent)' }}>Retry</button>
+                </div>
+            ) : (
+                <div className="space-y-3">
+                    {/* Topic dropdown */}
+                    <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>Topic</label>
+                        <select
+                            value={selectedTopicId}
+                            onChange={e => { setSelectedTopicId(e.target.value); setResult(null); }}
+                            className="w-full text-xs font-bold px-3 py-2 rounded-md border"
+                            style={{ background: 'var(--bg-raised)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                        >
+                            {topics.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                    </div>
+
+                    {/* Unit dropdown */}
+                    <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest block mb-1" style={{ color: 'var(--text-muted)' }}>Unit</label>
+                        <select
+                            value={selectedUnitId}
+                            onChange={e => setSelectedUnitId(e.target.value)}
+                            className="w-full text-xs font-bold px-3 py-2 rounded-md border"
+                            style={{ background: 'var(--bg-raised)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
+                        >
+                            {units.map(u => <option key={u.id} value={u.id}>{u.text}</option>)}
+                        </select>
+                    </div>
+
+                    {/* Generate button */}
+                    <button
+                        onClick={generateInsight}
+                        disabled={loading || !selectedUnitId}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-xs font-bold text-white transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0"
+                        style={{ background: 'var(--accent)' }}
+                    >
+                        {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+                        {loading ? 'Generating...' : 'Generate Insight'}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

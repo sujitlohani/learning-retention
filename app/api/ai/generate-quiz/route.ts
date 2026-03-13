@@ -7,7 +7,30 @@ import { validateAndFilterQuestions } from '@/src/services/ai/validators/quality
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { topic, unit, unitId, topicId, level, count = 10, subLevel, knowledgeGaps } = body;
+        const { topic, unit, unitId, topicId, level, count = 10, subLevel, knowledgeGaps, type, units } = body;
+
+        // Synthesis question handling
+        if (type === 'synthesis') {
+            if (!topic || !topicId || !units || units.length < 2) {
+                return NextResponse.json(
+                    { questions: [], success: false, error: 'Missing required fields for synthesis' },
+                    { status: 400 }
+                );
+            }
+
+            const unitNames = units.map((u: any) => u.text || u.name).join(', ');
+            const prompt = `Return ONLY valid JSON array containing exactly one question object with "type", "question", "options", "correctAnswer", and "explanation". Generate 1 applied reasoning question for topic '${topic}' that requires combining knowledge from at least 2 of these units: ${unitNames}. The question must require synthesis — the user must connect concepts across units to answer correctly, not just recall one fact. Make it harder than a standard unit question. Return as a single question object in the same format as other questions.`;
+
+            console.log('[generate-quiz] Calling HuggingFace for synthesis question');
+
+            const response = await callWithRetry({ prompt, maxTokens: 2000, temperature: 0.7 });
+            if (!response.success) {
+                return NextResponse.json({ questions: [], success: false, error: 'AI failed to generate synthesis question' });
+            }
+
+            const questions = parseQuizResponse(response.text, topicId, 'synthesis', 'expert', 'Cross-Unit Synthesis');
+            return NextResponse.json({ questions: questions.slice(0, 1), success: true, fallback: false });
+        }
 
         if (!topic || !unit || !unitId || !topicId || !level) {
             return NextResponse.json(

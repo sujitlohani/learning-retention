@@ -10,9 +10,10 @@ import { Loader2 } from 'lucide-react';
 
 interface TopicOverviewProps {
     topic: Topic;
+    onNavigateToUnits: (filter: 'all' | 'strong' | 'weak' | 'unattempted') => void;
 }
 
-export function TopicOverview({ topic }: TopicOverviewProps) {
+export function TopicOverview({ topic, onNavigateToUnits }: TopicOverviewProps) {
     const { startQuiz } = useQuizSession();
 
     const [performanceData, setPerformanceData] = useState<{ date: string; score: number }[]>([]);
@@ -22,9 +23,13 @@ export function TopicOverview({ topic }: TopicOverviewProps) {
     const [descLoading, setDescLoading] = useState(!topic.description);
     const [descError, setDescError] = useState(false);
 
+    // Ref for the Needs Practice slider
+    const sliderRef = useRef<number | null>(null);
+    const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+    const [isHoveringSlider, setIsHoveringSlider] = useState(false);
+
     useEffect(() => {
         setPerformanceData(quizHistoryService.getAccuracyOverTime(topic.id));
-        setPracticeDist(quizHistoryService.getPracticeDistribution(topic.id));
     }, [topic.id]);
 
     // Fix 1 — Generate AI description on mount if missing
@@ -36,7 +41,7 @@ export function TopicOverview({ topic }: TopicOverviewProps) {
                 const res = await fetch('/api/ai/generate-description', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ topicName: topic.name }),
+                    body: JSON.stringify({ topicName: topic.name, level: topic.level }),
                 });
                 const data = await res.json();
                 if (data.success && data.description) {
@@ -66,9 +71,28 @@ export function TopicOverview({ topic }: TopicOverviewProps) {
 
     // Fix 3 — Unit accuracy data for horizontal bars
     const unitAccuracies = units.map(u => {
+        const accuracy = quizHistoryService.computeUnitAccuracy(topic.id, u.id);
         const stats = quizHistoryService.getUnitStats(u.id);
-        return { ...u, accuracy: stats.accuracy };
+        return { ...u, accuracy, attempts: stats.attempts };
     }).sort((a, b) => b.accuracy - a.accuracy); // descending
+
+    // Slider units
+    const weakestUnits = [...unitAccuracies].sort((a, b) => a.accuracy - b.accuracy).slice(0, 3);
+    
+    // Auto advance timer
+    useEffect(() => {
+        if (weakestUnits.length <= 1) return;
+        
+        if (!isHoveringSlider) {
+            sliderRef.current = window.setInterval(() => {
+                setCurrentSlideIndex(prev => (prev + 1) % weakestUnits.length);
+            }, 8000);
+        }
+
+        return () => {
+            if (sliderRef.current) window.clearInterval(sliderRef.current);
+        };
+    }, [weakestUnits.length, isHoveringSlider]);
 
     const handleStartUnit = (unitId: string) => {
         startQuiz({ type: 'unit-test', topicId: topic.id, targetUnitId: unitId });
@@ -81,30 +105,39 @@ export function TopicOverview({ topic }: TopicOverviewProps) {
                 {/* What Is It? (Fix 1) */}
                 <section>
                     <h2 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>What Is It?</h2>
-                    <div className="p-5 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-resting)]">
+                    <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-resting)] overflow-hidden">
                         {descLoading ? (
-                            <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+                            <div className="p-5 flex items-center gap-2 text-sm text-[var(--text-muted)]">
                                 <Loader2 className="w-4 h-4 animate-spin" />
                                 Generating description...
                             </div>
                         ) : descError ? (
-                            <p className="text-sm text-[var(--text-muted)]">Unable to generate description</p>
+                            <div className="p-5">
+                                <p className="text-sm text-[var(--text-muted)]">Unable to generate description</p>
+                            </div>
                         ) : (
                             <>
-                                <p className="text-sm leading-relaxed text-[var(--text-muted)]">{description}</p>
+                                {/* Concept Section */}
+                                <div className="p-5">
+                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent)] mb-3">Concept</h3>
+                                    <p className="text-[15px] leading-relaxed text-[var(--text-primary)]">{description}</p>
+                                </div>
+                                
+                                {/* Commonly Used In Section */}
                                 {useCases.length > 0 && (
-                                    <div className="mt-5 space-y-3">
-                                        {useCases.map((uc, i) => (
-                                            <div key={i} className="flex items-start justify-between gap-4 py-2 border-t border-[var(--border)]">
-                                                <div>
-                                                    <div className="font-bold text-sm">{uc.title}</div>
-                                                    <div className="text-xs text-[var(--text-muted)] mt-0.5">{uc.description}</div>
+                                    <div className="p-5 border-t border-[var(--border)]">
+                                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-[var(--accent)] mb-4">Commonly Used In</h3>
+                                        <div className="space-y-4">
+                                            {useCases.map((uc, i) => (
+                                                <div key={i} className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
+                                                        <div className="font-bold text-[15px] tracking-tight text-[var(--text-primary)]">{uc.title}</div>
+                                                    </div>
+                                                    <div className="text-[14px] leading-relaxed text-[var(--text-muted)] pl-3.5">{uc.description}</div>
                                                 </div>
-                                                <span className="shrink-0 rounded-full text-xs px-2 py-0.5" style={{ background: 'var(--accent-light)', color: 'var(--accent)' }}>
-                                                    {uc.tag}
-                                                </span>
-                                            </div>
-                                        ))}
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                             </>
@@ -112,48 +145,127 @@ export function TopicOverview({ topic }: TopicOverviewProps) {
                     </div>
                 </section>
 
+                {/* Commonly Used In is now inside the What Is It card above */}
+
                 {/* Unit Progress Overview */}
                 <section>
                     <h2 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Unit Progress</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <StatCard label="Practiced" value={practicedUnits.length} total={units.length} color="var(--text-primary)" />
-                        <StatCard label="Strong" value={strongUnits.length} total={units.length} color="var(--success)" />
-                        <StatCard label="Weak" value={weakUnits.length} total={units.length} color="var(--danger)" />
-                        <StatCard label="Unattempted" value={unattemptedUnits.length} total={units.length} color="var(--text-muted)" />
-                    </div>
-                </section>
-
-                {/* Needs Practice */}
-                <section>
-                    <h2 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--danger)' }}>Needs Practice</h2>
-                    <div className="space-y-4">
-                        {weakUnits.length === 0 ? (
-                            <div className="p-8 text-center border border-dashed border-[var(--border)] rounded-lg text-[var(--text-muted)] font-medium">
-                                All units are in good shape
-                            </div>
-                        ) : (
-                            weakUnits.map(unit => (
-                                <div key={unit.id} className="flex items-center justify-between p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] shadow-[var(--shadow-resting)] border-l-4 border-l-[var(--danger)]">
-                                    <span className="font-semibold text-[15px]">{unit.text}</span>
-                                    <QuizButton onStart={() => handleStartUnit(unit.id)} />
-                                </div>
-                            ))
-                        )}
+                        <StatCard label="Practiced" value={practicedUnits.length} total={units.length} color="var(--text-primary)" onClick={() => onNavigateToUnits('all')} />
+                        <StatCard label="Strong" value={strongUnits.length} total={units.length} color="var(--success)" onClick={() => onNavigateToUnits('strong')} />
+                        <StatCard label="Weak" value={weakUnits.length} total={units.length} color="var(--danger)" onClick={() => onNavigateToUnits('weak')} />
+                        <StatCard label="Unattempted" value={unattemptedUnits.length} total={units.length} color="var(--text-muted)" onClick={() => onNavigateToUnits('unattempted')} />
                     </div>
                 </section>
             </div>
 
             {/* Right Column: Analytics */}
             <div className="lg:col-span-5 space-y-6">
+                
+                {/* Needs Practice Slider */}
+                {weakestUnits.length > 0 && (
+                    <div 
+                        className="rounded-xl overflow-hidden relative"
+                        style={{ 
+                            background: 'linear-gradient(135deg, #3730A3 0%, #4338CA 40%, #5B4FE8 100%)',
+                            border: '1px solid rgba(104,96,240,.5)',
+                            boxShadow: '0 4px 24px rgba(104,96,240,.25), 0 1px 4px rgba(0,0,0,.4)'
+                        }}
+                        onMouseEnter={() => setIsHoveringSlider(true)}
+                        onMouseLeave={() => setIsHoveringSlider(false)}
+                    >
+                        {/* Header Row */}
+                        <div className="px-5 pt-4 pb-2 flex items-center justify-between">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/60 flex items-center gap-1.5">
+                                <span className="text-[12px]">⚠</span> NEEDS PRACTICE
+                            </span>
+                            {/* Dots */}
+                            {weakestUnits.length > 1 && (
+                                <div className="flex gap-1.5">
+                                    {weakestUnits.map((_, i) => (
+                                        <button 
+                                            key={i} 
+                                            onClick={() => {
+                                                setCurrentSlideIndex(i);
+                                                // Reset interval on manual click
+                                                if (sliderRef.current) window.clearInterval(sliderRef.current);
+                                                if (!isHoveringSlider) {
+                                                    sliderRef.current = window.setInterval(() => {
+                                                        setCurrentSlideIndex(prev => (prev + 1) % weakestUnits.length);
+                                                    }, 8000);
+                                                }
+                                            }}
+                                            className="h-1.5 rounded-full transition-all"
+                                            style={{ 
+                                                width: currentSlideIndex === i ? '12px' : '6px',
+                                                background: currentSlideIndex === i ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0.25)' 
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Viewport clips height to ~100px to avoid jumpy resizing */}
+                        <div className="overflow-hidden relative" style={{ height: '110px' }}>
+                            <div 
+                                className="absolute top-0 left-0 h-full flex" 
+                                style={{ 
+                                    width: `${weakestUnits.length * 100}%`,
+                                    transform: `translateX(-${(currentSlideIndex / weakestUnits.length) * 100}%)`,
+                                    transition: 'transform 500ms cubic-bezier(0.4, 0, 0.2, 1)'
+                                }}
+                            >
+                                {weakestUnits.map((unit, i) => (
+                                    <div key={i} className="flex flex-col justify-between px-5 pb-5 h-full" style={{ width: `${100 / weakestUnits.length}%` }}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <h3 className="text-white font-bold text-[15px] leading-tight line-clamp-2">
+                                                {unit.text}
+                                            </h3>
+                                            <div className="shrink-0 pt-0.5">
+                                                <button
+                                                    onClick={() => handleStartUnit(unit.id)}
+                                                    className="bg-white text-[var(--accent)] text-xs font-bold px-3 py-1.5 rounded-md hover:bg-white/90 transition-colors shadow-sm"
+                                                >
+                                                    Start
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mt-4 flex items-center justify-between gap-4">
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <span className="text-[11px] font-medium text-white/75 uppercase tracking-wide">
+                                                        {unit.attempts === 0 ? "0% — Never practiced" : `${unit.accuracy}% Mastery`}
+                                                    </span>
+                                                </div>
+                                                <div className="h-1 w-full bg-white/20 rounded-full overflow-hidden">
+                                                    <div 
+                                                        className="h-full bg-white/85 rounded-full" 
+                                                        style={{ width: `${Math.max(0, unit.accuracy)}%` }} 
+                                                    />
+                                                </div>
+                                            </div>
+                                            <span className="text-[10px] text-white/45 font-bold tabular-nums self-end">
+                                                {i + 1} of {weakestUnits.length}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Fix 5 — Performance Trend: Interactive SVG Chart */}
                 <div className="p-5 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-resting)]">
                     <h3 className="text-[10px] font-bold uppercase tracking-widest mb-6" style={{ color: 'var(--text-muted)' }}>Performance Trend</h3>
                     <InteractiveLineChart data={performanceData} />
                 </div>
 
-                {/* Fix 3 — Unit Strength: Individual horizontal bars */}
+                {/* Fix 3 — Unit Health: Individual horizontal bars */}
                 <div className="p-5 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-resting)]">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Unit Strength</h3>
+                    <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Unit Health</h3>
                     {unitAccuracies.length === 0 ? (
                         <p className="text-sm text-[var(--text-muted)] text-center py-4">No units yet</p>
                     ) : (
@@ -178,43 +290,40 @@ export function TopicOverview({ topic }: TopicOverviewProps) {
                     )}
                 </div>
 
-                {/* Fix 4 — Practice Frequency (renamed from Practice Distribution) */}
-                <div className="p-5 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-resting)]">
-                    <h3 className="text-[10px] font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Practice Frequency</h3>
-                    {practiceDist.length === 0 ? (
-                        <p className="text-sm text-[var(--text-muted)] text-center py-4">No practice data yet.</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {practiceDist.map((dist, i) => {
-                                const maxCount = practiceDist[0].count;
-                                const pct = Math.max(5, (dist.count / maxCount) * 100);
-                                return (
-                                    <div key={i} className="space-y-1">
-                                        <div className="flex justify-between text-xs font-medium">
-                                            <span className="truncate pr-4 text-[var(--text-primary)]">{dist.unitName}</span>
-                                            <span className="text-[var(--text-muted)] shrink-0">{dist.count} session{dist.count !== 1 ? 's' : ''}</span>
-                                        </div>
-                                        <div className="w-full h-2 rounded-full bg-[var(--bg-raised)] overflow-hidden">
-                                            <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: 'var(--accent)' }} />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );
 }
 
-function StatCard({ label, value, total, color }: { label: string; value: number; total: number; color: string }) {
+function StatCard({ label, value, total, color, onClick }: { label: string; value: number; total: number; color: string; onClick?: () => void }) {
     return (
-        <div className="p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] shadow-[var(--shadow-resting)] flex flex-col items-center justify-center">
-            <div className="text-2xl font-black" style={{ color }}>{value}</div>
-            <div className="text-xs font-medium text-[var(--text-muted)] mt-1">{label}</div>
-            {total > 0 && <div className="text-[10px] text-[var(--text-muted)] mt-0.5">{Math.round((value / total) * 100)}%</div>}
-        </div>
+        <button 
+            onClick={onClick}
+            className="w-full relative group p-4 rounded-lg bg-[var(--bg-surface)] border border-[var(--border)] shadow-[var(--shadow-resting)] flex flex-col items-center justify-center transition-all hover:-translate-y-[1px]"
+            style={{ 
+                '--hover-bg': `${color}0A`, // Very light transparent tint
+            } as React.CSSProperties}
+        >
+            <div className="absolute inset-0 rounded-lg group-hover:bg-[var(--hover-bg)] transition-colors" />
+            
+            {/* View Arrow Hint */}
+            <div 
+                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold tracking-wider"
+                style={{ color }}
+            >
+                View →
+            </div>
+
+            <div className="relative text-2xl font-black transition-colors group-hover:drop-shadow-sm" style={{ color }}>{value}</div>
+            <div className="relative text-xs font-medium text-[var(--text-muted)] mt-1">{label}</div>
+            {total > 0 && <div className="relative text-[10px] text-[var(--text-muted)] mt-0.5">{Math.round((value / total) * 100)}%</div>}
+            
+            <style jsx>{`
+                button:hover {
+                    border-color: ${color}40; /* 25% opacity border */
+                }
+            `}</style>
+        </button>
     );
 }
 

@@ -1,21 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Topic } from '@/src/types';
 import { QuizButton } from './QuizButton';
 import { useQuizSession } from '@/src/features/quiz/hooks/useQuizSession';
+import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
 import { ListFilter, Search } from 'lucide-react';
-
-interface TopicUnitsProps {
-    topic: Topic;
-}
 
 type FilterType = 'all' | 'weak' | 'strong' | 'unattempted';
 
-export function TopicUnits({ topic }: TopicUnitsProps) {
+interface TopicUnitsProps {
+    topic: Topic;
+    initialFilter?: FilterType | null;
+    onFilterConsumed?: () => void;
+}
+
+export function TopicUnits({ topic, initialFilter, onFilterConsumed }: TopicUnitsProps) {
     const { startQuiz } = useQuizSession();
     const [filter, setFilter] = useState<FilterType>('all');
     const [searchQuery, setSearchQuery] = useState('');
+
+    useEffect(() => {
+        if (initialFilter) {
+            setFilter(initialFilter);
+            if (onFilterConsumed) onFilterConsumed();
+        }
+    }, [initialFilter, onFilterConsumed]);
 
     const handleStartUnit = (unitId: string) => {
         startQuiz({ type: 'unit-test', topicId: topic.id, targetUnitId: unitId });
@@ -67,9 +77,10 @@ export function TopicUnits({ topic }: TopicUnitsProps) {
             {/* List */}
             <div className="bg-[var(--bg-surface)] rounded-xl border border-[var(--border)] shadow-[var(--shadow-resting)] overflow-hidden">
                 <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-[var(--border)] bg-[var(--bg-raised)] text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">
-                    <div className="col-span-6">Unit Name</div>
-                    <div className="col-span-3 text-center">Status</div>
-                    <div className="col-span-3 text-right pr-4">Action</div>
+                    <div className="col-span-5">Unit Name</div>
+                    <div className="col-span-2 text-center">Status</div>
+                    <div className="col-span-3 text-center">Score</div>
+                    <div className="col-span-2 text-right pr-4">Action</div>
                 </div>
 
                 <div className="divide-y divide-[var(--border)]">
@@ -80,26 +91,32 @@ export function TopicUnits({ topic }: TopicUnitsProps) {
                     ) : (
                         filteredUnits.map(unit => {
                             let statusColor = 'var(--text-muted)';
-                            let bgPill = 'var(--bg-raised)';
                             if (unit.status === 'weak') {
                                 statusColor = 'var(--danger)';
-                                bgPill = '#fef2f2'; // light red
                             } else if (unit.status === 'strong') {
                                 statusColor = 'var(--success)';
-                                bgPill = '#f0fdf4'; // light green
                             }
 
-                            // Read theme safely or use a default standard background
-                            // Will rely heavily on standard accent classes or light tokens dynamically
+                            // Compute score via service
+                            const stats = quizHistoryService.getUnitStats(unit.id);
+                            const attempts = stats.attempts;
+                            const score = quizHistoryService.computeUnitAccuracy(topic.id, unit.id);
+                            
+                            let scoreColor = 'var(--text-muted)';
+                            if (attempts > 0) {
+                                if (score >= 75) scoreColor = 'var(--success)';
+                                else if (score >= 50) scoreColor = 'var(--warning)';
+                                else scoreColor = 'var(--danger)';
+                            }
 
                             return (
                                 <div key={unit.id} className="grid grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-[var(--bg-raised)] transition-colors">
-                                    <div className="col-span-6">
+                                    <div className="col-span-5">
                                         <p className="font-semibold text-[14px] text-[var(--text-primary)]">
                                             {unit.text}
                                         </p>
                                     </div>
-                                    <div className="col-span-3 flex justify-center">
+                                    <div className="col-span-2 flex justify-center">
                                         <span
                                             className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md"
                                             style={{
@@ -111,7 +128,17 @@ export function TopicUnits({ topic }: TopicUnitsProps) {
                                             {unit.status}
                                         </span>
                                     </div>
-                                    <div className="col-span-3 flex justify-end">
+                                    <div className="col-span-3 flex justify-center flex-col items-center">
+                                        {attempts === 0 ? (
+                                            <span style={{ color: 'var(--text-muted)' }}>—</span>
+                                        ) : (
+                                            <>
+                                                <span className="font-bold tracking-tight" style={{ color: scoreColor }}>{score}%</span>
+                                                <span className="text-[10px] text-[var(--text-muted)] mt-0.5">{attempts} attempt{attempts !== 1 && 's'}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="col-span-2 flex justify-end">
                                         <QuizButton onStart={() => handleStartUnit(unit.id)} />
                                     </div>
                                 </div>
