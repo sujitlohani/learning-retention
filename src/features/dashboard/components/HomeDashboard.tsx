@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Plus, ArrowRight, Flame, ClipboardList, CheckCircle2, BarChart3, AlertTriangle, Target, RefreshCw, X as XIcon } from 'lucide-react';
+import { ArrowRight, Flame, ClipboardList, CheckCircle2, BarChart3, AlertTriangle, Target, RefreshCw, X as XIcon, BookOpen, Plus, Search, Zap } from 'lucide-react';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { Topic } from '@/src/types';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
@@ -15,10 +16,6 @@ function getGreeting(): string {
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
     return 'Good evening';
-}
-
-function getFormattedDate(): string {
-    return new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
 function computeStreak(allAttempts: QuizAttempt[]): number {
@@ -37,7 +34,6 @@ function computeStreak(allAttempts: QuizAttempt[]): number {
         if (dateSet.has(key)) {
             streak++;
         } else {
-            // Allow today to be missing (haven't quizzed yet today)
             if (i === 0) continue;
             break;
         }
@@ -51,10 +47,15 @@ function getScoreColor(score: number): string {
     return 'var(--danger)';
 }
 
+const STATIC_PILLS = ['Binary Trees', 'React Hooks', 'SQL Joins'];
+
 export function HomeDashboard() {
+    const router = useRouter();
+    const inputRef = useRef<HTMLInputElement>(null);
     const [topics, setTopics] = useState<Topic[]>([]);
     const [allAttempts, setAllAttempts] = useState<QuizAttempt[]>([]);
     const [dismissedRecs, setDismissedRecs] = useState<Set<number>>(new Set());
+    const [heroInput, setHeroInput] = useState('');
 
     useEffect(() => {
         setTopics(topicsService.getTopics());
@@ -79,7 +80,6 @@ export function HomeDashboard() {
     const recommendations = useMemo(() => {
         if (topics.length === 0) return [];
         const recs = checkThresholds(topics, allAttempts);
-        // Priority: weak-unit → ready-for-challenge → challenge-stale, max 3
         const sorted = [
             ...recs.filter(r => r.type === 'weak-unit'),
             ...recs.filter(r => r.type === 'ready-for-challenge'),
@@ -91,15 +91,38 @@ export function HomeDashboard() {
     const visibleRecs = recommendations.filter((_, i) => !dismissedRecs.has(i));
     const hasTopics = topics.length > 0;
 
+    // Change 4: Suggestion pills — real topics (max 3, most recently practiced) or static fallback
+    const suggestionPills = useMemo(() => {
+        if (topics.length === 0) return STATIC_PILLS;
+        const sorted = [...topics].sort((a, b) => {
+            const aTime = a.lastPracticed ? new Date(a.lastPracticed).getTime() : 0;
+            const bTime = b.lastPracticed ? new Date(b.lastPracticed).getTime() : 0;
+            return bTime - aTime;
+        });
+        return sorted.slice(0, 3).map(t => t.name);
+    }, [topics]);
+
+    const handleHeroSubmit = () => {
+        if (!heroInput.trim()) return;
+        router.push(`/add-topic?name=${encodeURIComponent(heroInput.trim())}`);
+    };
+
+    const handlePillClick = (text: string) => {
+        setHeroInput(text);
+        inputRef.current?.focus();
+    };
+
     return (
         <div className="max-w-4xl mx-auto p-6 lg:p-10 space-y-8 font-display" style={{ color: 'var(--text-primary)' }}>
 
-            {/* ── 1. Greeting Header ── */}
-            <motion.div className="flex items-end justify-between" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-                <div>
-                    <h1 className="text-[26px] font-extrabold tracking-tight">{getGreeting()}</h1>
-                    <p className="text-[13px] mt-1" style={{ color: 'var(--text-muted)' }}>{getFormattedDate()}</p>
-                </div>
+            {/* ── 1. Greeting Row ── */}
+            <motion.div
+                className="flex items-end justify-between"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+            >
+                <h1 className="text-[32px] font-extrabold tracking-tight">{getGreeting()}</h1>
                 <div className="text-right">
                     {streak > 0 ? (
                         <div className="flex items-center gap-1.5">
@@ -112,57 +135,132 @@ export function HomeDashboard() {
                 </div>
             </motion.div>
 
-            {/* ── 2. Daily Quiz Card ── */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
-                <Link href={hasTopics ? '/quiz/daily' : '/add-topic'}>
-                    <div className="p-6 rounded-xl text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #3730A3 0%, #4338CA 40%, #5B4FE8 100%)' }}>
-                        <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                <ClipboardList className="w-7 h-7 shrink-0 opacity-90" />
+            {/* ── 2. Add Topic Section: Warm Input Block (Change 1) ── */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.05 }}
+                className="p-7 border"
+                style={{
+                    background: 'var(--bg-surface)',
+                    borderColor: 'var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                }}
+            >
+                <h2 className="text-lg font-bold text-center mb-5" style={{ color: 'var(--text-primary)' }}>
+                    What do you want to learn?
+                </h2>
+
+                {/* Search input row */}
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5" style={{ color: 'var(--text-muted)' }} />
+                    <input
+                        ref={inputRef}
+                        value={heroInput}
+                        onChange={(e) => setHeroInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleHeroSubmit()}
+                        placeholder="Start typing a topic..."
+                        className="w-full h-12 pl-11 pr-14 text-[15px] font-medium outline-none transition-all"
+                        style={{
+                            background: 'var(--bg-raised)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'var(--text-primary)',
+                        }}
+                    />
+                    <button
+                        onClick={handleHeroSubmit}
+                        disabled={!heroInput.trim()}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
+                        style={{ background: 'var(--accent)', color: '#fff' }}
+                    >
+                        <Plus className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Suggestion pills (Change 4 — real data or static) */}
+                <div className="flex flex-wrap gap-2 mt-4 justify-center">
+                    {suggestionPills.map((pill) => (
+                        <button
+                            key={pill}
+                            onClick={() => handlePillClick(pill)}
+                            className="text-xs font-medium px-3 py-1 transition-all cursor-pointer"
+                            style={{
+                                background: 'var(--bg-raised)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '20px',
+                                color: 'var(--text-muted)',
+                                transitionDuration: 'var(--duration-fast)',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                        >
+                            {pill}
+                        </button>
+                    ))}
+                </div>
+            </motion.div>
+
+            {/* ── 3. Daily Quiz Card (Change 2 — elevated) ── */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
+                {hasTopics ? (
+                    <Link href="/quiz/daily">
+                        <div className="p-6 text-white relative overflow-hidden group cursor-pointer transition-all" style={{ background: 'linear-gradient(135deg, #3730A3 0%, #4338CA 40%, #5B4FE8 100%)', borderRadius: 'var(--radius-md)' }}>
+                            {/* DAILY QUIZ badge (Change 2) */}
+                            <div className="mb-4">
+                                <span
+                                    className="text-[10px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full"
+                                    style={{
+                                        color: 'rgba(255,255,255,0.7)',
+                                        border: '1px solid rgba(255,255,255,0.3)',
+                                    }}
+                                >
+                                    Daily Quiz
+                                </span>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-4">
                                 <div>
-                                    <div className="text-lg font-bold">Daily Quiz</div>
-                                    <div className="text-sm text-white/80 mt-0.5">
-                                        {hasTopics && focusTopic
-                                            ? `Focusing on ${focusTopic.name} today · 20 questions`
-                                            : hasTopics
-                                                ? 'Practice across your topics · 20 questions'
-                                                : 'Add a topic to get started'}
+                                    <div className="text-xl font-bold">Ready when you are</div>
+                                    <div className="text-sm text-white/70 mt-1">
+                                        Across your {topics.length} topic{topics.length !== 1 ? 's' : ''} · 20 questions
                                     </div>
                                 </div>
+                                <div className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold shrink-0 transition-transform group-hover:scale-105" style={{ background: '#fff', color: '#4338CA' }}>
+                                    <Zap className="w-4 h-4" /> Start
+                                </div>
                             </div>
-                            <div className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold shrink-0" style={{ background: '#fff', color: '#4338CA' }}>
-                                Start <ArrowRight className="w-4 h-4" />
+                        </div>
+                    </Link>
+                ) : (
+                    <div className="p-6 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #3730A3 0%, #4338CA 40%, #5B4FE8 100%)', borderRadius: 'var(--radius-md)', opacity: 0.6 }}>
+                        <div className="mb-4">
+                            <span
+                                className="text-[10px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full"
+                                style={{
+                                    color: 'rgba(255,255,255,0.7)',
+                                    border: '1px solid rgba(255,255,255,0.3)',
+                                }}
+                            >
+                                Daily Quiz
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <div className="text-xl font-bold">Daily Quiz</div>
+                                <div className="text-sm text-white/70 mt-1">
+                                    Add a topic to start your daily practice
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold shrink-0 opacity-50 cursor-not-allowed" style={{ background: '#fff', color: '#4338CA' }}>
+                                <Zap className="w-4 h-4" /> Start
                             </div>
                         </div>
                     </div>
-                </Link>
+                )}
             </motion.div>
 
-            {/* ── Add Topic ── */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.08 }}>
-                <Link href="/add-topic">
-                    <div className="group p-5 border-2 border-dashed rounded-xl transition-all cursor-pointer flex items-center gap-4 hover:border-[var(--accent)]" style={{ borderColor: 'var(--border)' }}>
-                        <div className="w-10 h-10 flex items-center justify-center rounded-lg" style={{ background: 'var(--accent-light)' }}>
-                            <Plus className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                        </div>
-                        <div>
-                            <div className="font-semibold">Add a new topic</div>
-                            <div className="text-sm" style={{ color: 'var(--text-muted)' }}>AI will generate units, schedule, and quiz questions</div>
-                        </div>
-                        <ArrowRight className="w-5 h-5 ml-auto" style={{ color: 'var(--text-muted)' }} />
-                    </div>
-                </Link>
-            </motion.div>
-
-            {/* ── 3. Stats Row ── */}
-            <motion.div className="grid grid-cols-3 gap-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
-                <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
-                    <div className="flex items-center gap-1.5 mb-2">
-                        <Flame className="w-3.5 h-3.5" style={{ color: 'var(--warning)' }} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Current Streak</span>
-                    </div>
-                    <div className="text-2xl font-bold">{streak} <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>days</span></div>
-                </div>
+            {/* ── 4. Stats Row ── */}
+            <motion.div className="grid grid-cols-3 gap-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
                 <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
                     <div className="flex items-center gap-1.5 mb-2">
                         <CheckCircle2 className="w-3.5 h-3.5" style={{ color: 'var(--success)' }} />
@@ -177,13 +275,20 @@ export function HomeDashboard() {
                     </div>
                     <div className="text-2xl font-bold">{overallMastery >= 0 ? `${overallMastery}%` : '—'}</div>
                 </div>
+                <div className="p-4 rounded-xl border" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                    <div className="flex items-center gap-1.5 mb-2">
+                        <BookOpen className="w-3.5 h-3.5" style={{ color: 'var(--warning)' }} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Topics Active</span>
+                    </div>
+                    <div className="text-2xl font-bold">{topics.length} <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>topics</span></div>
+                </div>
             </motion.div>
 
-            {/* ── 4. Recommendations (max 3) ── */}
+            {/* ── 5. Recommendations (compact, single-row) ── */}
             {visibleRecs.length > 0 && (
-                <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
+                <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
                     <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Suggested for you</h2>
-                    <div className={`grid gap-3 ${visibleRecs.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+                    <div className="space-y-2">
                         {recommendations.map((rec, i) => {
                             if (dismissedRecs.has(i)) return null;
                             const isWeak = rec.type === 'weak-unit';
@@ -193,28 +298,23 @@ export function HomeDashboard() {
                             const href = isWeak
                                 ? `/quiz/weak-area?topicId=${rec.topicId}${rec.unitId ? `&unitId=${rec.unitId}` : ''}`
                                 : `/topics/${rec.topicId}`;
-                            const actionLabel = isWeak ? 'Review now →' : isReady ? 'Start Challenge →' : 'Revisit →';
+                            const actionLabel = isWeak ? 'Review →' : isReady ? 'Challenge →' : 'Revisit →';
 
                             return (
-                                <div key={i} className="p-4 rounded-xl border relative group" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                                <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl border group" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                                    <Icon className="w-4 h-4 shrink-0" style={{ color: iconColor }} />
+                                    <span className="text-sm font-medium flex-1 min-w-0 truncate">
+                                        {rec.unitName ? `${rec.unitName} · ${rec.topicName}` : rec.topicName}
+                                    </span>
+                                    <Link href={href} className="text-xs font-bold shrink-0 transition-colors hover:opacity-80" style={{ color: 'var(--accent)' }}>
+                                        {actionLabel}
+                                    </Link>
                                     <button
                                         onClick={() => setDismissedRecs(prev => new Set(prev).add(i))}
-                                        className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-[var(--bg-raised)]"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-[var(--bg-raised)] shrink-0"
                                     >
-                                        <XIcon className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                                        <XIcon className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
                                     </button>
-                                    <div className="flex items-start gap-3">
-                                        <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: iconColor }} />
-                                        <div className="min-w-0">
-                                            <p className="text-sm font-medium leading-snug">{rec.message}</p>
-                                            <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-                                                {rec.unitName || rec.topicName}
-                                            </p>
-                                            <Link href={href} className="inline-flex items-center gap-1 text-xs font-bold mt-2 transition-colors hover:opacity-80" style={{ color: 'var(--accent)' }}>
-                                                {actionLabel}
-                                            </Link>
-                                        </div>
-                                    </div>
                                 </div>
                             );
                         })}
@@ -222,9 +322,9 @@ export function HomeDashboard() {
                 </motion.section>
             )}
 
-            {/* ── 5. Your Topics ── */}
-            {hasTopics ? (
-                <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+            {/* ── 6. Your Topics (no dashed add-card — Change 3) ── */}
+            {hasTopics && (
+                <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.25 }}>
                     <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your topics</h2>
                     <div className="grid gap-3 sm:grid-cols-2">
                         {topics.map(topic => (
@@ -245,21 +345,6 @@ export function HomeDashboard() {
                         ))}
                     </div>
                 </motion.section>
-            ) : (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
-                    <Link href="/add-topic">
-                        <div className="group p-5 border-2 border-dashed rounded-xl transition-all cursor-pointer flex items-center gap-4" style={{ borderColor: 'var(--border)' }}>
-                            <div className="w-10 h-10 flex items-center justify-center rounded-lg" style={{ background: 'var(--accent-light)' }}>
-                                <Plus className="w-5 h-5" style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <div>
-                                <div className="font-semibold">Add a new topic</div>
-                                <div className="text-sm" style={{ color: 'var(--text-muted)' }}>AI will generate units, schedule, and quiz questions</div>
-                            </div>
-                            <ArrowRight className="w-5 h-5 ml-auto" style={{ color: 'var(--text-muted)' }} />
-                        </div>
-                    </Link>
-                </motion.div>
             )}
         </div>
     );

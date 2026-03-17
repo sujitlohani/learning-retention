@@ -1,21 +1,23 @@
 // auth.service.ts — Auth state management
 // Currently: localStorage flag. Later: Supabase Auth.
+// Currently: localStorage flag. Later: Supabase Auth.
+import { getUserId } from '@/src/lib/user-store';
 
-const ONBOARDING_KEY = 'learning_loop_onboarding_completed';
+const getOnboardingKey = () => `learning_loop_onboarding_completed-${getUserId()}`;
 
 export const authService = {
     hasCompletedOnboarding: (): boolean => {
         if (typeof window === 'undefined') return false;
-        return localStorage.getItem(ONBOARDING_KEY) === 'true';
+        return localStorage.getItem(getOnboardingKey()) === 'true';
     },
 
     completeOnboarding: (): void => {
         if (typeof window === 'undefined') return;
-        localStorage.setItem(ONBOARDING_KEY, 'true');
+        localStorage.setItem(getOnboardingKey(), 'true');
     },
 
     resetOnboarding: (): void => {
         if (typeof window === 'undefined') return;
-        localStorage.removeItem(ONBOARDING_KEY);
+        localStorage.removeItem(getOnboardingKey());
     },
 };

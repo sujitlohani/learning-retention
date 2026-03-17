@@ -4,17 +4,20 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Clock, Flame, Loader2 } from 'lucide-react';
+import { Clock, Flame, Loader2, Dices } from 'lucide-react';
 
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { useQuizSession } from '@/src/features/quiz/hooks/useQuizSession';
 import { Topic } from '@/src/types';
 import { cn } from '@/src/lib/utils';
+import { getTopicCodingQuestions } from '@/src/lib/coding-question-bank';
 
 import { TopicOverview } from './TopicOverview';
 import { TopicUnits } from './TopicUnits';
 import { TopicHistory } from './TopicHistory';
 import { QuizButton } from './QuizButton';
+import { codeChallengeStore } from '@/src/features/quiz/store/code-challenge-store';
+import { questionsService } from '@/src/features/quiz/services/questions.service';
 
 interface TopicPageProps {
     topicId: string;
@@ -30,7 +33,55 @@ export function TopicPage({ topicId }: TopicPageProps) {
     const [topic, setTopic] = useState<Topic | null>(null);
     const [activeTab, setActiveTab] = useState<TabType>('overview');
     const [initialUnitFilter, setInitialUnitFilter] = useState<FilterType | null>(null);
+    const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+    const [isRegenerating, setIsRegenerating] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+
+    const detectLanguage = (t: Topic): 'javascript' | 'python' => {
+        const text = [t.name, ...t.units.map(u => u.text)].join(' ').toLowerCase();
+        if (text.match(/python|django|flask|pandas|data science/)) return 'python';
+        if (text.match(/javascript|typescript|react|node|web|frontend/)) return 'javascript';
+        return 'python'; // default
+    };
+
+    const handleStartCodingChallenge = async () => {
+        if (!topic) return;
+        setIsGeneratingCode(true);
+        const language = detectLanguage(topic);
+        
+        // Fast-path: Pre-built standard coding questions
+        const unitNames = topic.units.map(u => u.text);
+        const bankQuestions = getTopicCodingQuestions(topic.id, unitNames, language);
+        if (bankQuestions.length >= 2) {
+            codeChallengeStore.setQuestions(bankQuestions);
+            router.push(`/topics/${topic.id}/code-challenge`);
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/ai/generate-quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: topic.name,
+                    topicId: topic.id,
+                    type: 'coding',
+                    language,
+                    units: topic.units,
+                    count: 5
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.questions && data.questions.length > 0) {
+                codeChallengeStore.setQuestions(data.questions);
+                router.push(`/topics/${topic.id}/code-challenge`);
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsGeneratingCode(false);
+        }
+    };
 
     useEffect(() => {
         const t = topicsService.getTopicById(topicId);
@@ -41,6 +92,38 @@ export function TopicPage({ topicId }: TopicPageProps) {
         setTopic(t);
         setIsLoading(false);
     }, [topicId, router]);
+
+    const handleRegenerateQuestions = async () => {
+        if (!topic) return;
+        setIsRegenerating(true);
+        try {
+            const quizPromises = topic.units.map(u =>
+                fetch('/api/ai/generate-quiz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        topic: topic.name,
+                        unit: u.text,
+                        unitId: u.id,
+                        topicId: topic.id,
+                        level: topic.level,
+                        count: 5,
+                    }),
+                }).then(r => r.json()).catch(() => null)
+            );
+            const results = await Promise.all(quizPromises);
+            const allNewQuestions = results
+                .filter(r => r?.success && r.questions?.length > 0)
+                .flatMap(r => r.questions);
+            if (allNewQuestions.length > 0) {
+                questionsService.replaceQuestionsForTopic(topic.id, allNewQuestions);
+            }
+        } catch (e) {
+            console.error('Regeneration failed:', e);
+        } finally {
+            setIsRegenerating(false);
+        }
+    };
 
     if (isLoading || !topic) {
         return (
@@ -138,11 +221,31 @@ export function TopicPage({ topicId }: TopicPageProps) {
                                 </div>
                             </div>
                             
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 relative">
                                 <QuizButton 
                                     onStart={() => startQuiz({ type: 'topic-challenge', topicId })} 
+                                    onRegenerate={handleRegenerateQuestions}
+                                    isRegenerating={isRegenerating}
                                     label="Start Topic Challenge" 
+                                    className="pb-0 mt-0"
                                 />
+                                <button
+                                    onClick={handleStartCodingChallenge}
+                                    disabled={isGeneratingCode}
+                                    className="px-4 py-2 border rounded-md font-bold text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+                                    style={{ 
+                                        borderColor: 'var(--accent)', 
+                                        color: isGeneratingCode ? 'var(--text-muted)' : 'var(--accent)',
+                                        background: isGeneratingCode ? 'var(--bg-raised)' : 'transparent',
+                                        height: '36px'
+                                    }}
+                                >
+                                    {isGeneratingCode ? (
+                                        <><Loader2 className="w-4 h-4 animate-spin"/> Generating...</>
+                                    ) : (
+                                        <><span style={{ fontFamily: 'monospace' }}>&lt;/&gt;</span> Code Challenge</>
+                                    )}
+                                </button>
                             </div>
                         </div>
                     </div>

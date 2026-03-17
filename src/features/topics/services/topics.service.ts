@@ -4,19 +4,20 @@
 import { Topic, QuizResult, Unit } from '@/src/types';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
 import { computeTopicScore, computeUnitScore } from '@/src/lib/retention-calculator';
+import { getUserId } from '@/src/lib/user-store';
 
-const STORAGE_KEY = 'learning-retention-mvp-data';
+const getKey = () => `learning-retention-mvp-data-${getUserId()}`;
 
 export const topicsService = {
     _saveTopics: (topics: Topic[]) => {
         if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(topics));
+            localStorage.setItem(getKey(), JSON.stringify(topics));
         }
     },
 
     getTopics: (): Topic[] => {
         if (typeof window === 'undefined') return [];
-        const data = localStorage.getItem(STORAGE_KEY);
+        const data = localStorage.getItem(getKey());
         if (!data) return [];
         return JSON.parse(data, (key, value) => {
             if (key === 'lastPracticed' || key === 'nextReviewDate') return new Date(value);
@@ -40,7 +41,7 @@ export const topicsService = {
         }
 
         if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(topics));
+            localStorage.setItem(getKey(), JSON.stringify(topics));
         }
     },
 
@@ -84,13 +85,16 @@ export const topicsService = {
         }
 
         // Update unit statuses — only for tested units based on new 60/75 thresholds
+        const topicAttempts = allAttempts.filter(a => a.topicId === topicId);
+        const latestAttempt = topicAttempts[topicAttempts.length - 1];
+        const sessionUnitIds = latestAttempt ? latestAttempt.unitBreakdown.map(b => b.unitId) : [];
+
         topic.units = topic.units.map(u => {
-            const wasTested = result.testedUnitIds?.includes(u.id);
-            if (!wasTested) return u;
+            if (!sessionUnitIds.includes(u.id)) return u;
             
-            const uScore = computeUnitScore(topic.id, u.id, allAttempts);
-            if (uScore < 60) return { ...u, status: 'weak' as const };
+            const uScore = quizHistoryService.computeUnitAccuracy(topic.id, u.id);
             if (uScore >= 75) return { ...u, status: 'strong' as const };
+            if (uScore < 50) return { ...u, status: 'weak' as const };
             return { ...u, status: 'neutral' as const };
         });
 

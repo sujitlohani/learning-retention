@@ -56,7 +56,7 @@ export function LandingPage() {
                                 transitionDuration: 'var(--duration-instant)',
                             }}
                         >
-                            Get Started
+                            Try Memora Free →
                         </Link>
                     </div>
                 </div>
@@ -98,13 +98,13 @@ export function LandingPage() {
 
                             {/* Headline */}
                             <h1 className="text-5xl md:text-7xl font-bold leading-[1.1] tracking-tight">
-                                Learn it once.<br />
-                                <span style={{ color: 'var(--accent)' }}>Actually keep it.</span>
+                                Your knowledge has a shelf life.<br />
+                                <span style={{ color: 'var(--accent)' }}>Memora keeps it from expiring.</span>
                             </h1>
 
                             {/* Subheading */}
                             <p className="text-lg md:text-xl font-normal leading-relaxed max-w-[600px]" style={{ color: 'var(--text-muted)' }}>
-                                Memora turns what you study into quizzes that follow you. Add a topic, get tested on it, see what sticks.
+                                Add any topic you've studied. Memora turns it into a personal quiz system — tracking every unit, testing what's weak, and closing gaps before they cost you.
                             </p>
                         </div>
 
@@ -119,7 +119,7 @@ export function LandingPage() {
                                     transitionDuration: 'var(--duration-instant)',
                                 }}
                             >
-                                Start for free
+                                Add your first topic — it's free
                             </Link>
                             <Link
                                 href="#how-it-works"
@@ -222,15 +222,15 @@ export function LandingPage() {
             <section id="how-it-works" className="px-6 lg:px-20 py-24" style={{ background: 'var(--bg-surface)' }}>
                 <div className="max-w-[1280px] mx-auto flex flex-col gap-16">
                     <div className="flex flex-col gap-4 text-center items-center">
-                        <span className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--accent)' }}>How It Works</span>
+                        <span className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--accent)' }}>The Loop</span>
                         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Three steps. One habit.</h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {[
-                            { step: '01', Icon: BookOpen, title: 'Add what you learned', desc: 'Drop in a topic — a lecture, a concept, anything. Memora breaks it into the units you actually need to know.' },
-                            { step: '02', Icon: BrainCircuit, title: 'Get quizzed on it', desc: 'AI generates questions calibrated to your level. The more you practice, the sharper the questions get.' },
-                            { step: '03', Icon: TrendingUp, title: 'Track what\u2019s slipping', desc: 'See exactly which units need work and when to revisit them. No guessing, no wasted revision time.' },
+                            { step: '01', Icon: BookOpen, title: 'Add what you learned', desc: 'Name a topic — a course module, a concept, a chapter. Memora maps it into the specific knowledge units you need to retain it. Not lessons. Building blocks.' },
+                            { step: '02', Icon: BrainCircuit, title: 'Get quizzed intelligently', desc: 'Questions are calibrated to your starting level and get sharper as you improve. The more you practice, the more precisely Memora knows what to test you on.' },
+                            { step: '03', Icon: TrendingUp, title: 'See exactly what\'s slipping', desc: 'Every unit gets a score. You see what\'s strong, what\'s weak, and what needs a revisit — before an exam or interview makes it obvious.' },
                         ].map((item) => (
                             <div
                                 key={item.step}
@@ -271,7 +271,7 @@ export function LandingPage() {
                         <span className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--accent)' }}>Features</span>
                         <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Built around how memory actually works.</h2>
                         <p className="text-base leading-relaxed max-w-lg" style={{ color: 'var(--text-muted)' }}>
-                            No flashcard decks to maintain. No schedules to follow. Just practice when you&apos;re ready and let the system do the rest.
+                            No decks to build. No schedules to manage. Just test yourself on what you've learned and let the gaps surface.
                         </p>
                         <div className="flex gap-12 pt-4">
                             <div>
@@ -288,10 +288,11 @@ export function LandingPage() {
                     {/* Right — 2×2 feature grid */}
                     <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {[
-                            { Icon: RefreshCw, title: 'Spaced Repetition', desc: 'Questions resurface at the right time, not randomly.' },
-                            { Icon: Sparkles, title: 'AI Quizzes', desc: 'Generated from your topics, not copied from a question bank.' },
-                            { Icon: BarChart2, title: 'Unit Tracking', desc: 'Every unit has a score. You always know where you stand.' },
-                            { Icon: Target, title: 'Topic Score', desc: 'One number per topic that reflects your real performance over time.' },
+                            { Icon: RefreshCw, title: 'Weak-First Quizzing', desc: 'Memora doesn\'t quiz you randomly. It finds the units you keep getting wrong and drills those harder — so your weak spots close instead of compound.' },
+                            { Icon: BookOpen, title: 'Deep Dive on Any Unit', desc: 'Struggling with a specific unit? Go deep — get an explanation, a worked example, a mini-check, and a targeted unit test. One flow that actually repairs the gap, not just flags it.' },
+                            { Icon: BrainCircuit, title: 'Code While You Quiz', desc: 'For technical topics, Memora generates real coding challenges inside the quiz. Write and run code against test cases — not just pick an answer.' },
+                            { Icon: BarChart2, title: 'Unit-Level Scoring', desc: 'Every building block of a topic is scored separately. You always know which units you own and which ones are still shaky.' },
+                            { Icon: Target, title: 'Topic Mastery Score', desc: 'One honest number per topic — weighted by your recent challenge performance and unit scores. Not a streak. Not XP. An actual signal of what you retain.' },
                         ].map((f) => (
                             <div
                                 key={f.title}
@@ -310,6 +311,27 @@ export function LandingPage() {
                                 <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>{f.desc}</p>
                             </div>
                         ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ──── Final CTA ──── */}
+            <section className="px-6 lg:px-20 py-24 text-center" style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)' }}>
+                <div className="max-w-2xl mx-auto flex flex-col items-center gap-8">
+                    <h2 className="text-4xl font-bold tracking-tight">Stop reviewing. Start retaining.</h2>
+                    <p className="text-xl" style={{ color: 'var(--text-muted)' }}>The learning already happened. Memora makes sure it stays.</p>
+                    <div className="flex flex-col items-center gap-3">
+                        <Link
+                            href="/login"
+                            className="flex min-w-[200px] cursor-pointer items-center justify-center h-14 px-8 text-base font-bold text-white transition-all"
+                            style={{
+                                background: 'var(--accent)',
+                                borderRadius: '9999px',
+                            }}
+                        >
+                            Add your first topic — free
+                        </Link>
+                        <span className="text-sm" style={{ color: 'var(--text-muted)' }}>Takes 2 minutes. No card required.</span>
                     </div>
                 </div>
             </section>
@@ -336,7 +358,7 @@ export function LandingPage() {
                         ))}
                     </div>
                 </div>
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>© 2024 Memora Inc. All rights reserved.</p>
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>© 2025 Memora Inc. All rights reserved.</p>
             </footer>
 
             {/* Keyframes for spin animation */}

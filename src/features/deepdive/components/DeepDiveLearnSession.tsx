@@ -121,8 +121,16 @@ function SessionContent() {
 // ─── Step 1 — Key Idea ───────────────────────
 function Step1({ session }: { session: ReturnType<typeof useDeepDiveSession> }) {
     // Error check FIRST — otherwise stepReady=false keeps the skeleton forever
-    if (session.error && !session.keyIdea) {
-        return <div className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>Failed to load. <button onClick={() => window.location.reload()} className="font-bold" style={{ color: 'var(--accent)' }}>Retry</button></div>;
+    if (session.stepErrors.keyIdea && !session.keyIdea) {
+        return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed rounded-xl" style={{ borderColor: 'var(--border)' }}>
+                <p className="font-bold text-sm mb-4" style={{ color: 'var(--danger)' }}>Couldn&apos;t load this step.</p>
+                <div className="flex gap-3">
+                    <button onClick={() => session.retryStep('keyIdea')} className="px-4 py-2 rounded-lg text-sm font-bold border transition-colors">Retry</button>
+                    <button onClick={() => window.history.back()} className="px-4 py-2 rounded-lg text-sm font-bold" style={{ background: 'var(--bg-raised)' }}>Exit Session</button>
+                </div>
+            </motion.div>
+        );
     }
 
     if (!session.stepReady.keyIdea) {
@@ -132,8 +140,9 @@ function Step1({ session }: { session: ReturnType<typeof useDeepDiveSession> }) 
     const kd = session.keyIdea;
     if (!kd) return null;
 
-    // Continue is enabled when next step data is ready
-    const nextReady = kd.codeSnippet ? session.stepReady.example : session.stepReady.miniCheck;
+    const isNextExample = kd.codeSnippet !== null;
+    const nextReady = isNextExample ? (session.stepReady.example || !!session.stepErrors.example) : (session.stepReady.miniCheck || !!session.stepErrors.miniCheck);
+    const nextHasError = isNextExample ? !!session.stepErrors.example : !!session.stepErrors.miniCheck;
 
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col flex-1">
@@ -165,7 +174,9 @@ function Step1({ session }: { session: ReturnType<typeof useDeepDiveSession> }) 
                     className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-[0.98] disabled:opacity-50"
                     style={{ background: 'var(--accent)' }}
                 >
-                    {!nextReady ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</> : <>Continue <ChevronRight className="w-4 h-4" /></>}
+                    {!nextReady ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</> 
+                     : nextHasError ? <>Skip &rarr;</> 
+                     : <>Continue <ChevronRight className="w-4 h-4" /></>}
                 </button>
             </div>
         </motion.div>
@@ -174,11 +185,24 @@ function Step1({ session }: { session: ReturnType<typeof useDeepDiveSession> }) 
 
 // ─── Step 2 — Example Breakdown ───────────────
 function Step2({ session }: { session: ReturnType<typeof useDeepDiveSession> }) {
+    if (session.stepErrors.example && !session.example) {
+        return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed rounded-xl mt-8" style={{ borderColor: 'var(--border)' }}>
+                <p className="font-bold text-sm mb-4" style={{ color: 'var(--danger)' }}>Couldn&apos;t load the code breakdown.</p>
+                <div className="flex gap-3">
+                    <button onClick={() => session.retryStep('example')} className="px-4 py-2 rounded-lg text-sm font-bold border transition-colors hover:bg-bg-raised">Retry</button>
+                    <button onClick={session.advanceToStep3} className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90" style={{ background: 'var(--accent)' }}>Skip &rarr;</button>
+                </div>
+            </motion.div>
+        );
+    }
+
     if (!session.stepReady.example || !session.example) {
         return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1"><SkeletonContent /></motion.div>;
     }
 
-    const nextReady = session.stepReady.miniCheck;
+    const nextReady = session.stepReady.miniCheck || !!session.stepErrors.miniCheck;
+    const nextHasError = !!session.stepErrors.miniCheck;
 
     return (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col flex-1">
@@ -201,7 +225,9 @@ function Step2({ session }: { session: ReturnType<typeof useDeepDiveSession> }) 
                     className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.01] disabled:opacity-50"
                     style={{ background: 'var(--accent)' }}
                 >
-                    {!nextReady ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</> : <>Continue <ChevronRight className="w-4 h-4" /></>}
+                    {!nextReady ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</> 
+                     : nextHasError ? <>Skip &rarr;</> 
+                     : <>Continue <ChevronRight className="w-4 h-4" /></>}
                 </button>
             </div>
         </motion.div>
@@ -212,6 +238,18 @@ function Step2({ session }: { session: ReturnType<typeof useDeepDiveSession> }) 
 function Step3({ session }: { session: ReturnType<typeof useDeepDiveSession> }) {
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [isAnswered, setIsAnswered] = useState(false);
+
+    if (session.stepErrors.miniCheck && !session.miniCheck) {
+        return (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1 flex flex-col items-center justify-center text-center p-8 border border-dashed rounded-xl mt-8" style={{ borderColor: 'var(--border)' }}>
+                <p className="font-bold text-sm mb-4" style={{ color: 'var(--danger)' }}>Couldn&apos;t load the mini quiz.</p>
+                <div className="flex gap-3">
+                    <button onClick={() => session.retryStep('miniCheck')} className="px-4 py-2 rounded-lg text-sm font-bold border transition-colors hover:bg-bg-raised">Retry</button>
+                    <button onClick={session.advanceToStep4} className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90" style={{ background: 'var(--accent)' }}>Skip &rarr;</button>
+                </div>
+            </motion.div>
+        );
+    }
 
     if (!session.stepReady.miniCheck || !session.miniCheck) {
         return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1"><SkeletonContent /></motion.div>;

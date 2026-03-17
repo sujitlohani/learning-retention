@@ -31,14 +31,31 @@ export interface AIGeneratedQuestion {
     topicId: string;
     unitId: string;
     unitName?: string;
-    type: 'mcq' | 'short-answer';
+    type: 'mcq' | 'short-answer' | 'coding';
     difficulty: 'beginner' | 'intermediate' | 'expert';
     question: string;
+    
+    // MCQ fields
     options?: string[];
+    
+    // General fields
     correctAnswer: string;
     explanation: string;
     keywords: string[];
+    
+    // Short answer fields
     acceptableAnswers?: string[];
+    
+    // Coding fields
+    language?: 'javascript' | 'python';
+    starterCode?: string;
+    testCases?: {
+        input: string;
+        expectedOutput: string;
+        isHidden: boolean;
+    }[];
+    hints?: string[];
+    
     validationScore: number;
     aiGenerated: boolean;
     createdAt: string;

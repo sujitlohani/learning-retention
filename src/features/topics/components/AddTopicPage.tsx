@@ -2,21 +2,15 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, Lightbulb, Sparkles, Calendar, Clock, CheckCircle2, Loader2, BookOpen, FileText, Video, Users, Globe } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import { cn } from '@/src/lib/utils';
-import { useTopicWizard, sources } from '@/src/features/topics/hooks/useTopicWizard';
+import { useTopicWizard } from '@/src/features/topics/hooks/useTopicWizard';
 import { MemoraMark } from '@/src/components/MemoraLogo';
 
-const sourceIcons: Record<string, typeof BookOpen> = {
-    book: BookOpen,
-    article: FileText,
-    video: Video,
-    course: Users,
-    web: Globe,
-    other: Lightbulb,
-};
-
 export function AddTopicPage() {
-    const w = useTopicWizard();
+    const searchParams = useSearchParams();
+    const initialName = searchParams.get('name') || '';
+    const w = useTopicWizard(initialName);
 
     const variants = {
         enter: (direction: number) => ({ x: direction > 0 ? 300 : -300, opacity: 0 }),
@@ -41,21 +35,32 @@ export function AddTopicPage() {
                             </p>
                         </div>
                         <div className="w-full max-w-md space-y-6">
-                            <input
-                                autoFocus
-                                value={w.topicName}
-                                onChange={(e) => w.setTopicName(e.target.value)}
-                                placeholder="e.g., Closures in JavaScript"
-                                className="w-full h-16 text-xl px-6 rounded-md border-2 border-border bg-bg-surface focus:border-accent focus:outline-none transition-colors"
-                                onKeyDown={(e) => e.key === 'Enter' && w.topicName.trim() && w.handleCaptureContinue()}
-                            />
+                            <div className="space-y-2">
+                                <input
+                                    autoFocus
+                                    value={w.topicName}
+                                    onChange={(e) => w.setTopicName(e.target.value)}
+                                    placeholder="e.g., Closures in JavaScript"
+                                    className="w-full h-16 text-xl px-6 rounded-md border-2 border-border bg-bg-surface focus:border-accent focus:outline-none transition-colors"
+                                    onKeyDown={(e) => e.key === 'Enter' && w.topicName.trim() && w.handleCaptureContinue()}
+                                />
+                                {w.correctedName && (
+                                    <p className="text-sm font-medium px-1" style={{ color: 'var(--accent)' }}>
+                                        Corrected to: {w.correctedName}
+                                    </p>
+                                )}
+                            </div>
                             <button
-                                disabled={!w.topicName.trim()}
+                                disabled={!w.topicName.trim() || w.isCorrectingName}
                                 className="w-full h-14 text-lg rounded-full font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-40"
                                 style={{ background: 'var(--accent)', color: '#fff' }}
                                 onClick={w.handleCaptureContinue}
                             >
-                                Continue <ArrowRight className="w-5 h-5" />
+                                {w.isCorrectingName ? (
+                                    <><Loader2 className="w-5 h-5 animate-spin" /> Checking...</>
+                                ) : (
+                                    <>Continue <ArrowRight className="w-5 h-5" /></>
+                                )}
                             </button>
                         </div>
                     </div>
@@ -83,17 +88,18 @@ export function AddTopicPage() {
                                 { id: 'expert' as const, label: 'Expert', desc: '"I\'m experienced with this topic"' },
                             ].map((lvl) => {
                                 const isExpanded = w.level === lvl.id;
+                                const isDisabled = w.existingLevels.includes(lvl.id);
 
                                 return (
                                     <div key={lvl.id} className="w-full">
                                         <button
-                                            onClick={() => w.toggleLevelSelect(lvl.id)}
-                                            disabled={w.isLoadingPreviews}
+                                            onClick={() => !isDisabled && w.toggleLevelSelect(lvl.id)}
+                                            disabled={w.isLoadingPreviews || isDisabled}
                                             className={cn(
                                                 "w-full p-6 rounded-md border-2 transition-all text-left flex items-center justify-between",
                                                 "hover:border-border",
                                                 isExpanded ? "border-border" : "border-border/30",
-                                                w.isLoadingPreviews && "opacity-80 cursor-wait"
+                                                (w.isLoadingPreviews || isDisabled) && "opacity-50 cursor-not-allowed"
                                             )}
                                             style={{ background: isExpanded ? 'var(--bg-raised)' : 'var(--bg-surface)' }}
                                         >
@@ -105,7 +111,12 @@ export function AddTopicPage() {
                                                     {isExpanded && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                                                 </div>
                                                 <div>
-                                                    <div className="text-xl font-bold">{lvl.label}</div>
+                                                    <div className="text-xl font-bold flex items-center gap-2">
+                                                        {lvl.label}
+                                                        {isDisabled && (
+                                                            <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>Already exists</span>
+                                                        )}
+                                                    </div>
                                                     <div className="text-sm text-muted-foreground">{lvl.desc}</div>
                                                 </div>
                                             </div>
@@ -252,92 +263,14 @@ export function AddTopicPage() {
                             disabled={w.isLoadingFamiliarity}
                             className="w-full h-14 text-lg rounded-full font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-40"
                             style={{ background: 'var(--accent)', color: '#fff' }}
-                            onClick={w.handleContinueFromFamiliarity}
-                        >
-                            Continue <ArrowRight className="w-5 h-5" />
-                        </button>
-                    </div>
-                );
-
-            case 'source':
-                return (
-                    <div className="flex flex-col items-center text-center space-y-12 max-w-xl mx-auto">
-                        <div className="space-y-6">
-                            <div className="mx-auto w-16 h-16 rounded-md flex items-center justify-center" style={{ background: 'var(--accent-light)' }}>
-                                <Lightbulb className="w-8 h-8" style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Where did you learn this?</h2>
-                            <p className="text-xl text-muted-foreground font-light">Optional, but helps track your learning sources.</p>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4 w-full max-w-md">
-                            {sources.map((src) => {
-                                const Icon = sourceIcons[src.id] || Lightbulb;
-                                return (
-                                    <button
-                                        key={src.id}
-                                        onClick={() => w.handleSourceSelect(src.id)}
-                                        className={cn(
-                                            "p-6 rounded-md border-2 transition-all hover:border-border",
-                                            w.source === src.id ? "border-border" : "border-border/30"
-                                        )}
-                                        style={{ background: w.source === src.id ? 'var(--bg-raised)' : 'var(--bg-surface)' }}
-                                    >
-                                        <Icon className="w-6 h-6 mx-auto mb-2" style={{ color: 'var(--accent)' }} />
-                                        <div className="text-xs font-medium">{src.label}</div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <button
-                            className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-                            onClick={() => w.goToStep('confirmation')}
-                        >
-                            Skip this step
-                        </button>
-                    </div>
-                );
-
-            case 'confirmation': {
-                const selectedCount = w.subUnits.length;
-
-                return (
-                    <div className="flex flex-col items-center text-center space-y-12 max-w-xl mx-auto">
-                        <div className="space-y-6">
-                            <div className="mx-auto w-16 h-16 rounded-md flex items-center justify-center" style={{ background: 'var(--accent-light)' }}>
-                                <Sparkles className="w-8 h-8" style={{ color: 'var(--accent)' }} />
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Your Learning Plan</h2>
-                            <p className="text-xl text-muted-foreground font-light">AI will generate your personalized schedule and quiz questions.</p>
-                        </div>
-                        <div className="w-full max-w-md space-y-4">
-                            {[
-                                { label: 'Topic', value: w.topicName },
-                                { label: 'Level', value: w.level ? w.level.charAt(0).toUpperCase() + w.level.slice(1) : '' },
-                                { label: 'Units', value: `${selectedCount} selected` },
-                            ].map((item, idx) => (
-                                <motion.div
-                                    key={item.label}
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.1 }}
-                                    className="flex items-center justify-between p-4 rounded-md border-l-4"
-                                    style={{ borderLeftColor: 'var(--accent)', background: 'var(--bg-raised)' }}
-                                >
-                                    <span className="text-sm text-muted-foreground font-medium">{item.label}</span>
-                                    <span className="font-semibold">{item.value}</span>
-                                </motion.div>
-                            ))}
-                        </div>
-                        <button
-                            className="w-full max-w-xs h-14 text-lg rounded-full font-semibold flex items-center justify-center gap-2"
-                            style={{ background: 'var(--accent)', color: '#fff' }}
                             onClick={w.submitTopic}
                         >
                             Generate & Save <Sparkles className="w-5 h-5" />
                         </button>
                     </div>
                 );
-            }
+
+
 
             case 'generating':
                 return (
@@ -418,7 +351,7 @@ export function AddTopicPage() {
             {/* Step progress dots */}
             {!['generating', 'exit'].includes(w.currentStep) && (
                 <div className="absolute top-8 left-1/2 -translate-x-1/2 flex gap-2">
-                    {['capture', 'level', 'familiarity', 'source', 'confirmation'].map((step) => (
+                    {['capture', 'level', 'familiarity'].map((step) => (
                         <div
                             key={step}
                             className="w-2 h-2 rounded-full transition-all"
@@ -455,6 +388,16 @@ export function AddTopicPage() {
                         <p className="text-sm text-muted-foreground">
                             "{w.duplicateTopic.name}" already exists with {w.duplicateTopic.units.length} units.
                         </p>
+                        {w.existingLevels.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                                {w.existingLevels.map(lvl => (
+                                    <span key={lvl} className="text-xs font-medium px-2 py-0.5 rounded-full capitalize" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>
+                                        {lvl}
+                                    </span>
+                                ))}
+                                <span className="text-xs text-muted-foreground self-center ml-1">already added</span>
+                            </div>
+                        )}
                         <div className="flex flex-col gap-2">
                             <button
                                 className="w-full py-2.5 rounded-md font-medium"

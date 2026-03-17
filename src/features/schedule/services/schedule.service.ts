@@ -2,13 +2,14 @@
 // Currently wraps localStorage. Swap to Supabase here only.
 
 import { StudySchedule, ScheduleSession, SessionResult } from '@/src/types/ai';
+import { getUserId } from '@/src/lib/user-store';
 
-const SCHEDULES_KEY = 'learning-retention-schedules';
+const getKey = () => `learning-retention-schedules-${getUserId()}`;
 
 export const scheduleService = {
     getSchedules: (): StudySchedule[] => {
         if (typeof window === 'undefined') return [];
-        const data = localStorage.getItem(SCHEDULES_KEY);
+        const data = localStorage.getItem(getKey());
         if (!data) return [];
         try {
             return JSON.parse(data);
@@ -32,7 +33,7 @@ export const scheduleService = {
         const schedules = scheduleService.getSchedules();
         const filtered = schedules.filter(s => s.topicId !== schedule.topicId);
         filtered.push(schedule);
-        localStorage.setItem(SCHEDULES_KEY, JSON.stringify(filtered));
+        localStorage.setItem(getKey(), JSON.stringify(filtered));
     },
 
     getTodaysSessions: (): { schedule: StudySchedule; session: ScheduleSession }[] => {
@@ -89,7 +90,7 @@ export const scheduleService = {
         session.result = result;
 
         if (typeof window !== 'undefined') {
-            localStorage.setItem(SCHEDULES_KEY, JSON.stringify(schedules));
+            localStorage.setItem(getKey(), JSON.stringify(schedules));
         }
     },
 
@@ -110,6 +111,6 @@ export const scheduleService = {
         if (typeof window === 'undefined') return;
         const schedules = scheduleService.getSchedules();
         const filtered = schedules.filter(s => s.topicId !== topicId);
-        localStorage.setItem(SCHEDULES_KEY, JSON.stringify(filtered));
+        localStorage.setItem(getKey(), JSON.stringify(filtered));
     },
 };

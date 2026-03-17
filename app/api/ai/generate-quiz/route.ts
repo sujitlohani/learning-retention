@@ -7,7 +7,101 @@ import { validateAndFilterQuestions } from '@/src/services/ai/validators/quality
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { topic, unit, unitId, topicId, level, count = 10, subLevel, knowledgeGaps, type, units } = body;
+        const { topic, unit, unitId, topicId, level, count = 10, subLevel, knowledgeGaps, type, units, language } = body;
+
+        // Coding challenge handling
+        if (type === 'coding') {
+            if (!topic || !topicId || !language) {
+                return NextResponse.json({ questions: [], success: false, error: 'Missing required fields for coding challenge' }, { status: 400 });
+            }
+
+            // Using the requested prompt directly from instructions
+            const prompt = `Generate a coding exercise for the topic '${topic}' in ${language}. The exercise must test understanding of this specific topic, not general programming ability. Return ONLY valid JSON with no markdown and NO literal newlines inside strings (use \\n): { "question": string, "language": string, "starterCode": string, "example": string, "testCases": [{ "input": string, "expectedOutput": string, "isHidden": boolean }], "hints": [string, string] }. Rules: starterCode must include a function signature named exactly solution with a comment explaining what to implement. The solution function must always return a value and never use print() or console.log(). testCases must have exactly 3 items — first 2 visible (isHidden: false), last 1 hidden (isHidden: true). Each test input must be a value that can be passed directly to the solution function. expectedOutput must be the string representation of the return value after String() and trim(), NEVER empty. example must be a formatted string showing an Input: and Output: example for clarity. hints must have exactly 2 items. Do not include the solution in starterCode.`;
+
+            console.log('[generate-quiz] Calling HuggingFace for coding challenge', language);
+
+            const response = await callWithRetry({ prompt, maxTokens: 2000, temperature: 0.7 });
+            if (!response.success) {
+                return NextResponse.json({ questions: [], success: false, error: 'AI failed to generate coding challenge' });
+            }
+
+            try {
+                // Ensure it's valid JSON
+                let cleanJson = response.text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                // Sanitize Python triple-quoted strings: """...""" -> "..."
+                cleanJson = cleanJson.replace(/"""([^]*?)"""/g, (_match: string, innerText: string) => {
+                    const escaped = innerText
+                        .replace(/\\/g, '\\\\')
+                        .replace(/"/g, '\\"')
+                        .replace(/\r?\n/g, '\\n');
+                    return `"${escaped}"`;
+                });
+
+                // Sanitize backtick literals: "key": `value block` -> "key": "value\nblock"
+                cleanJson = cleanJson.replace(/:\s*`([\s\S]*?)`/g, (match, innerText) => {
+                    const escaped = innerText
+                        .replace(/\\/g, '\\\\')
+                        .replace(/"/g, '\\"')
+                        .replace(/\r?\n/g, '\\n');
+                    return `: "${escaped}"`;
+                });
+
+                // Sanitize raw newlines inside any remaining JSON strings
+                cleanJson = cleanJson.replace(/"(?:[^"\\]|\\.)*"/g, match => match.replace(/\r?\n/g, '\\n'));
+
+                const data = JSON.parse(cleanJson);
+
+                // If it returns a single question object, wrap it in array
+                const questionsArray = Array.isArray(data) ? data : [data];
+
+                // Map the parsed data directly to QuizQuestion format
+                const now = new Date().toISOString();
+                let formattedQuestions = questionsArray.map((q: any, i: number) => ({
+                    id: `ai-${Date.now()}-${i}`,
+                    topicId,
+                    unitId: 'coding-challenge',
+                    unitName: 'Coding Challenge',
+                    type: 'coding',
+                    difficulty: 'intermediate',
+                    question: q.question,
+                    correctAnswer: 'passed all tests',
+                    explanation: 'Practice makes perfect.',
+                    keywords: [],
+                    language: q.language || language,
+                    starterCode: q.starterCode || '',
+                    example: q.example,
+                    testCases: q.testCases || [],
+                    hints: q.hints || [],
+                    validationScore: 100,
+                    aiGenerated: true,
+                    createdAt: now,
+                }));
+
+                // Reject questions with unsupported asynchronous or random keywords
+                const rejectedKeywords = ['settimeout', 'date', 'async', 'await', 'promise', 'random', 'timestamp'];
+                formattedQuestions = formattedQuestions.filter(q => {
+                    const qText = q.question.toLowerCase();
+                    const codeText = q.starterCode.toLowerCase();
+                    return !rejectedKeywords.some(kw => qText.includes(kw) || codeText.includes(kw));
+                });
+
+                if (formattedQuestions.length < 2) {
+                    console.warn('[generate-quiz] Too few valid coding questions (rejected unsupported sandbox features). Falling back.');
+                    const { getCodingFallbackTemplates } = await import('@/src/lib/coding-templates');
+                    const fallback = getCodingFallbackTemplates(topicId, language);
+                    return NextResponse.json({ questions: fallback, success: true, fallback: true });
+                }
+
+                return NextResponse.json({ questions: formattedQuestions, success: true, fallback: false });
+            } catch (e: any) {
+                console.error('[generate-quiz] Failed to parse coding challenge JSON:', e.message, response.text.slice(0, 150));
+                console.warn('[generate-quiz] Complete JSON parse failure. Falling back to templates.');
+                const { getCodingFallbackTemplates } = await import('@/src/lib/coding-templates');
+                const fallback = getCodingFallbackTemplates(topicId, language);
+                return NextResponse.json({ questions: fallback, success: true, fallback: true });
+            }
+        }
 
         // Synthesis question handling
         if (type === 'synthesis') {

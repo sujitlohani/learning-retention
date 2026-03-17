@@ -16,7 +16,23 @@ export function QuizSessionCard({ attempt, onRetry }: QuizSessionCardProps) {
 
     const topicName = topicsService.getTopicById(attempt.topicId)?.name || 'Unknown Topic';
     const TypeIcon = attempt.type === 'unit-test' ? Target : attempt.type === 'topic-challenge' ? BookOpen : Zap;
-    const typeLabel = attempt.type === 'unit-test' ? 'Unit Test' : attempt.type === 'topic-challenge' ? 'Topic Challenge' : 'Daily';
+    
+    let mainLabel = topicName;
+    let subLabel = `${attempt.totalCount} questions`;
+
+    if (attempt.type === 'unit-test') {
+        const topic = topicsService.getTopicById(attempt.topicId);
+        const unitName = topic?.units.find(u => u.id === attempt.targetUnitId)?.text;
+        mainLabel = unitName ? `${unitName} · Unit Test · ${topicName}` : `Unit Test · ${topicName}`;
+    } else if (attempt.type === 'topic-challenge') {
+        mainLabel = `${topicName} · Topic Challenge`;
+    } else if (attempt.type === 'daily') {
+        mainLabel = `Daily Quiz · ${topicName}`;
+    } else if (attempt.type === 'weak-area') {
+        const topic = topicsService.getTopicById(attempt.topicId);
+        const unitName = topic?.units.find(u => u.id === attempt.targetUnitId)?.text;
+        mainLabel = unitName ? `${unitName} · Weak Area · ${topicName}` : `Weak Area · ${topicName}`;
+    }
     
     let scoreColor = 'var(--danger)';
     if (attempt.score >= 75) scoreColor = 'var(--success)';
@@ -31,8 +47,8 @@ export function QuizSessionCard({ attempt, onRetry }: QuizSessionCardProps) {
                 <div className="flex items-center gap-3">
                     <TypeIcon className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
                     <div>
-                        <div className="text-sm font-bold tracking-tight text-[var(--text-primary)]">{topicName}</div>
-                        <div className="text-xs text-[var(--text-muted)] mt-0.5">{typeLabel} • {attempt.totalCount} questions</div>
+                        <div className="text-sm font-bold tracking-tight text-[var(--text-primary)]">{mainLabel}</div>
+                        <div className="text-xs text-[var(--text-muted)] mt-0.5">{subLabel}</div>
                     </div>
                 </div>
                 <div className="flex items-center gap-4">

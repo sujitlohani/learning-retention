@@ -64,17 +64,42 @@ export function TopicOverview({ topic, onNavigateToUnits }: TopicOverviewProps) 
     }, [topic]);
 
     const { units } = topic;
-    const strongUnits = units.filter(u => u.status === 'strong');
-    const weakUnits = units.filter(u => u.status === 'weak');
-    const practicedUnits = units.filter(u => u.status !== 'neutral');
-    const unattemptedUnits = units.filter(u => u.status === 'neutral');
 
-    // Fix 3 — Unit accuracy data for horizontal bars
-    const unitAccuracies = units.map(u => {
-        const accuracy = quizHistoryService.computeUnitAccuracy(topic.id, u.id);
-        const stats = quizHistoryService.getUnitStats(u.id);
-        return { ...u, accuracy, attempts: stats.attempts };
-    }).sort((a, b) => b.accuracy - a.accuracy); // descending
+    const [unitAccuracies, setUnitAccuracies] = useState<(typeof topic.units[0] & { accuracy: number; attempts: number })[]>([]);
+    const [statCounts, setStatCounts] = useState({ practiced: 0, strong: 0, weak: 0, unattempted: 0 });
+
+    useEffect(() => {
+        const accuracies = topic.units.map(u => {
+            const accuracy = quizHistoryService.computeUnitAccuracy(topic.id, u.id);
+            const stats = quizHistoryService.getUnitStats(topic.id, u.id);
+            return { ...u, accuracy, attempts: stats.attempts };
+        }).sort((a, b) => b.accuracy - a.accuracy);
+        
+        setUnitAccuracies(accuracies);
+
+        const allTopicAttempts = quizHistoryService.getAttemptsByTopicId(topic.id);
+        const attemptedUnitIds = new Set<string>();
+        for (const attempt of allTopicAttempts) {
+            if (attempt.targetUnitId) attemptedUnitIds.add(attempt.targetUnitId);
+            for (const b of attempt.unitBreakdown) {
+                attemptedUnitIds.add(b.unitId);
+            }
+        }
+
+        let un = 0, st = 0, wk = 0, neu = 0;
+        topic.units.forEach(u => {
+            if (!attemptedUnitIds.has(u.id)) {
+                un++;
+            } else {
+                const score = quizHistoryService.computeUnitAccuracy(topic.id, u.id);
+                if (score >= 75) st++;
+                else if (score < 50) wk++;
+                else neu++;
+            }
+        });
+
+        setStatCounts({ practiced: st + wk + neu, strong: st, weak: wk, unattempted: un });
+    }, [topic]);
 
     // Slider units
     const weakestUnits = [...unitAccuracies].sort((a, b) => a.accuracy - b.accuracy).slice(0, 3);
@@ -151,10 +176,10 @@ export function TopicOverview({ topic, onNavigateToUnits }: TopicOverviewProps) 
                 <section>
                     <h2 className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Unit Progress</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <StatCard label="Practiced" value={practicedUnits.length} total={units.length} color="var(--text-primary)" onClick={() => onNavigateToUnits('all')} />
-                        <StatCard label="Strong" value={strongUnits.length} total={units.length} color="var(--success)" onClick={() => onNavigateToUnits('strong')} />
-                        <StatCard label="Weak" value={weakUnits.length} total={units.length} color="var(--danger)" onClick={() => onNavigateToUnits('weak')} />
-                        <StatCard label="Unattempted" value={unattemptedUnits.length} total={units.length} color="var(--text-muted)" onClick={() => onNavigateToUnits('unattempted')} />
+                        <StatCard label="Practiced" value={statCounts.practiced} total={units.length} color="var(--text-primary)" onClick={() => onNavigateToUnits('all')} />
+                        <StatCard label="Strong" value={statCounts.strong} total={units.length} color="var(--success)" onClick={() => onNavigateToUnits('strong')} />
+                        <StatCard label="Weak" value={statCounts.weak} total={units.length} color="var(--danger)" onClick={() => onNavigateToUnits('weak')} />
+                        <StatCard label="Unattempted" value={statCounts.unattempted} total={units.length} color="var(--text-muted)" onClick={() => onNavigateToUnits('unattempted')} />
                     </div>
                 </section>
             </div>
@@ -398,7 +423,10 @@ function InteractiveLineChart({ data }: { data: { date: string; score: number }[
         const cp1y = points[i].y;
         const cp2x = points[i + 1].x - (points[i + 1].x - points[i].x) / 3;
         const cp2y = points[i + 1].y;
-        pathD += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${points[i + 1].x},${points[i + 1].y}`;
+        
+        if (!isNaN(cp1x) && !isNaN(cp1y) && !isNaN(cp2x) && !isNaN(cp2y) && !isNaN(points[i + 1].x) && !isNaN(points[i + 1].y)) {
+            pathD += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${points[i + 1].x},${points[i + 1].y}`;
+        }
     }
 
     // Fill area beneath

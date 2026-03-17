@@ -2,13 +2,14 @@
 // Currently wraps localStorage. Swap to Supabase here only.
 
 import { QuizAttempt } from '@/src/types/ai';
+import { getUserId } from '@/src/lib/user-store';
 
-const STORAGE_KEY = 'learning_loop_quiz_history';
+const getKey = () => `learning_loop_quiz_history-${getUserId()}`;
 
 export const quizHistoryService = {
     getAllHistory: (): QuizAttempt[] => {
         if (typeof window === 'undefined') return [];
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(getKey());
         if (!raw) return [];
         try {
             const parsed = JSON.parse(raw) as QuizAttempt[];
@@ -44,22 +45,22 @@ export const quizHistoryService = {
         if (typeof window === 'undefined') return;
         const history = quizHistoryService.getAllHistory();
         history.push(attempt);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+        localStorage.setItem(getKey(), JSON.stringify(history));
     },
 
     deleteHistoryForTopic: (topicId: string): void => {
         if (typeof window === 'undefined') return;
         const history = quizHistoryService.getAllHistory();
         const filtered = history.filter(h => h.topicId !== topicId);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+        localStorage.setItem(getKey(), JSON.stringify(filtered));
     },
 
     getAttemptsByTopicId: (topicId: string): QuizAttempt[] => {
         return quizHistoryService.getHistoryForTopic(topicId);
     },
 
-    getUnitStats: (unitId: string): { accuracy: number; attempts: number; lastPracticed: string | null } => {
-        const history = quizHistoryService.getAllHistory();
+    getUnitStats: (topicId: string, unitId: string): { accuracy: number; attempts: number; lastPracticed: string | null } => {
+        const history = quizHistoryService.getHistoryForTopic(topicId);
         
         // Find all attempts that cover this unit
         const unitAttempts = history.filter(h => 
@@ -135,25 +136,15 @@ export const quizHistoryService = {
         const history = quizHistoryService.getHistoryForTopic(topicId);
         if (history.length === 0) return [];
 
-        // Group by date (YYYY-MM-DD)
-        const dailyScores: Record<string, { totalScore: number; count: number }> = {};
-
         // Sort ascending by time for chronologial chart
         const sortedHistory = [...history].sort((a, b) => new Date(a.completedAt).getTime() - new Date(b.completedAt).getTime());
+        // Take last 7 sessions
+        const recentHistory = sortedHistory.slice(-7);
 
-        sortedHistory.forEach(attempt => {
-            const dateStr = new Date(attempt.completedAt).toISOString().split('T')[0];
-            if (!dailyScores[dateStr]) {
-                dailyScores[dateStr] = { totalScore: 0, count: 0 };
-            }
-            dailyScores[dateStr].totalScore += attempt.score;
-            dailyScores[dateStr].count += 1;
-        });
-
-        // Convert to array of {date, score} averaging multiple attempts per day
-        return Object.entries(dailyScores).map(([date, data]) => ({
-            date,
-            score: Math.round(data.totalScore / data.count)
+        // Map directly to individual sessions instead of grouping by day
+        return recentHistory.map(attempt => ({
+            date: attempt.completedAt,
+            score: attempt.score
         }));
     },
 

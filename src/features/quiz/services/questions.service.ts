@@ -2,13 +2,14 @@
 // Currently wraps localStorage. Swap to Supabase here only.
 
 import { AIGeneratedQuestion } from '@/src/types/ai';
+import { getUserId } from '@/src/lib/user-store';
 
-const QUESTIONS_KEY = 'learning-retention-questions';
+const getKey = () => `learning-retention-questions-${getUserId()}`;
 
 export const questionsService = {
     getQuestions: (): AIGeneratedQuestion[] => {
         if (typeof window === 'undefined') return [];
-        const data = localStorage.getItem(QUESTIONS_KEY);
+        const data = localStorage.getItem(getKey());
         if (!data) return [];
         try {
             return JSON.parse(data);
@@ -49,21 +50,29 @@ export const questionsService = {
         const newQuestions = questions.filter(q => !existingIds.has(q.id));
         const combined = [...existing, ...newQuestions];
 
-        localStorage.setItem(QUESTIONS_KEY, JSON.stringify(combined));
+        localStorage.setItem(getKey(), JSON.stringify(combined));
     },
 
     deleteQuestionsForTopic: (topicId: string): void => {
         if (typeof window === 'undefined') return;
         const questions = questionsService.getQuestions();
         const filtered = questions.filter(q => q.topicId !== topicId);
-        localStorage.setItem(QUESTIONS_KEY, JSON.stringify(filtered));
+        localStorage.setItem(getKey(), JSON.stringify(filtered));
+    },
+
+    replaceQuestionsForTopic: (topicId: string, newQuestions: AIGeneratedQuestion[]): void => {
+        if (typeof window === 'undefined') return;
+        const questions = questionsService.getQuestions();
+        const filtered = questions.filter(q => q.topicId !== topicId);
+        const combined = [...filtered, ...newQuestions];
+        localStorage.setItem(getKey(), JSON.stringify(combined));
     },
 
     deleteQuestionsForUnit: (topicId: string, unitId: string): void => {
         if (typeof window === 'undefined') return;
         const questions = questionsService.getQuestions();
         const filtered = questions.filter(q => !(q.topicId === topicId && q.unitId === unitId));
-        localStorage.setItem(QUESTIONS_KEY, JSON.stringify(filtered));
+        localStorage.setItem(getKey(), JSON.stringify(filtered));
     },
 
     hasQuestionsForTopic: (topicId: string): boolean => {

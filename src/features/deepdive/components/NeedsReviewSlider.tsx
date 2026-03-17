@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
+import { useQuizSession } from '@/src/features/quiz/hooks/useQuizSession';
 import { computeUnitScore } from '@/src/lib/retention-calculator';
 
 interface WeakUnit {
@@ -17,6 +18,7 @@ interface WeakUnit {
 }
 
 export function NeedsReviewSlider() {
+    const { startQuiz } = useQuizSession();
     const [weakUnits, setWeakUnits] = useState<WeakUnit[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -128,13 +130,13 @@ export function NeedsReviewSlider() {
                         <p className="text-sm font-medium mt-1" style={{ color: 'var(--danger)' }}>Score: {current.score}%</p>
                     </div>
 
-                    <Link 
-                        href={`/deep-dive/learn?topicId=${current.topicId}&unitId=${current.unitId}`}
+                    <button 
+                        onClick={() => startQuiz({ type: 'unit-test', topicId: current.topicId, targetUnitId: current.unitId })}
                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-sm font-bold text-white transition-transform hover:scale-[1.02]"
                         style={{ background: 'var(--danger)' }}
                     >
-                        Deep Dive <ArrowRight className="w-4 h-4" />
-                    </Link>
+                        Start <ArrowRight className="w-4 h-4" />
+                    </button>
                 </motion.div>
             </AnimatePresence>
         </div>

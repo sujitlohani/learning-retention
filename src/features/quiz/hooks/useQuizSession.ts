@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { codeChallengeStore } from '@/src/features/quiz/store/code-challenge-store';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { scheduleService } from '@/src/features/schedule/services/schedule.service';
 import { questionsService } from '@/src/features/quiz/services/questions.service';
@@ -22,12 +23,16 @@ function aiQToQuizQ(q: AIGeneratedQuestion): QuizQuestion {
         unitName: q.unitName,
         level: q.difficulty === 'beginner' ? 'basic' : q.difficulty === 'expert' ? 'pitfall' : 'advanced',
         question: q.question,
-        type: q.type === 'short-answer' ? 'short-answer' : 'mcq',
+        type: q.type === 'short-answer' ? 'short-answer' : q.type === 'coding' ? 'coding' : 'mcq',
         options: q.options,
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
         keywords: q.keywords,
         acceptableAnswers: q.acceptableAnswers,
+        language: q.language,
+        starterCode: q.starterCode,
+        testCases: q.testCases,
+        hints: q.hints,
     };
 }
 
@@ -56,6 +61,7 @@ function evaluateShortAnswer(answer: string, question: QuizQuestion): boolean {
 
 export function useQuizSession(topicId?: string | null, sessionId?: string | null, unitId?: string | null) {
     const router = useRouter();
+    const pathname = usePathname();
 
     const [topic, setTopic] = useState<Topic | null>(null);
     const [phase, setPhase] = useState<QuizPhase>('quiz');
@@ -89,7 +95,22 @@ export function useQuizSession(topicId?: string | null, sessionId?: string | nul
         setTopic(foundTopic);
         let loadedQuestions: QuizQuestion[] = [];
 
-        if (sessionId) {
+        if (pathname?.endsWith('/code-challenge')) {
+            const storeQuestions = codeChallengeStore.getQuestions();
+            if (storeQuestions && storeQuestions.length > 0) {
+                loadedQuestions = storeQuestions.map(aiQToQuizQ);
+            }
+        } else if (sessionId && sessionId.startsWith('coding-challenge-')) {
+            const data = sessionStorage.getItem(sessionId);
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    loadedQuestions = parsed.map(aiQToQuizQ);
+                } catch (e) {
+                    console.error('Failed to parse coding challenge data', e);
+                }
+            }
+        } else if (sessionId) {
             const schedule = scheduleService.getScheduleForTopic(foundTopic.id);
             if (schedule) {
                 const session = schedule.sessions.find(s => s.id === sessionId);
@@ -104,9 +125,7 @@ export function useQuizSession(topicId?: string | null, sessionId?: string | nul
                     }
                 }
             }
-        }
-
-        if (loadedQuestions.length === 0) {
+        } else {
             const aiQuestions = unitId
                 ? questionsService.getQuestionsForUnit(foundTopic.id, unitId)
                 : questionsService.getQuestionsForTopic(foundTopic.id);
@@ -143,6 +162,8 @@ export function useQuizSession(topicId?: string | null, sessionId?: string | nul
             isCorrect = evaluateShortAnswer(answer, question);
         } else if (question.type === 'card') {
             isCorrect = answer === 'correct';
+        } else if (question.type === 'coding') {
+            isCorrect = answer === 'passed all tests';
         }
 
         if (isCorrect) {

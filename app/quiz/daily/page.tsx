@@ -96,8 +96,8 @@ export default function DailyQuizPage() {
             const allQMap = new Map(allQ.map(q => [q.id, q]));
 
             const reviewPool = uniqueWrongVals
-               .map(wq => allQMap.get(wq.questionId))
-               .filter(Boolean) as AIGeneratedQuestion[];
+                .map(wq => allQMap.get(wq.questionId))
+                .filter(q => q && q.type !== 'coding') as AIGeneratedQuestion[];
 
             const shuffledReview = reviewPool.sort(() => Math.random() - 0.5);
             const selectedReviewAI = shuffledReview.slice(0, 5);

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { authService } from '@/src/features/auth/services/auth.service';
+import { useUser, useClerk } from '@clerk/nextjs';
+import { setUserId } from '@/src/lib/user-store';
 
 interface AuthContextType {
     isAuthenticated: boolean;
@@ -20,50 +21,65 @@ const AuthContext = createContext<AuthContextType>({
 
 export const useAuth = () => useContext(AuthContext);
 
+function isDemoActive(): boolean {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('memora-demo-active') === 'true';
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const { user, isLoaded } = useUser();
+    const { signOut } = useClerk();
     const router = useRouter();
     const pathname = usePathname();
 
-    useEffect(() => {
-        setIsLoading(false);
-    }, []);
+    // Read demo state synchronously — no useState lag
+    const isDemoUser = isDemoActive();
+    const isAuthenticated = !!user || isDemoUser;
+    const isLoading = !isLoaded;
 
+    // Set userId for localStorage scoping
+    useEffect(() => {
+        if (!isLoaded) return;
+        if (user?.id) {
+            setUserId(user.id);
+        } else if (isDemoUser) {
+            setUserId('demo');
+        } else {
+            setUserId('anonymous');
+        }
+    }, [isLoaded, user, isDemoUser]);
+
+    // Minimal redirect logic — only redirect demo/authed users away from /login
     useEffect(() => {
         if (isLoading) return;
 
-        if (!isAuthenticated && pathname !== '/login' && pathname !== '/') {
-            router.push('/login');
-        } else if (isAuthenticated) {
-            const hasCompletedOnboarding = authService.hasCompletedOnboarding();
-
-            if (pathname === '/login') {
-                router.push(hasCompletedOnboarding ? '/' : '/onboarding');
-            } else if (pathname === '/onboarding' && hasCompletedOnboarding) {
-                router.push('/');
-            } else if (pathname !== '/onboarding' && !hasCompletedOnboarding) {
-                router.push('/onboarding');
-            }
+        if (isAuthenticated && pathname === '/login') {
+            router.push('/');
         }
     }, [isAuthenticated, isLoading, pathname, router]);
 
     const login = () => {
-        setIsAuthenticated(true);
-        router.push('/');
-    };
-
-    const logout = () => {
-        setIsAuthenticated(false);
         router.push('/login');
     };
 
+    const logout = useCallback(async () => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('memora-demo-active');
+        }
+        if (user) {
+            await signOut({ redirectUrl: '/' });
+        } else {
+            // Demo user — just reload to landing
+            router.push('/');
+            router.refresh();
+        }
+    }, [user, signOut, router]);
+
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
+            <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg-base)' }}>
                 <div className="flex flex-col items-center gap-3">
-                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm text-muted-foreground">Loading...</span>
+                    <div className="w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
                 </div>
             </div>
         );

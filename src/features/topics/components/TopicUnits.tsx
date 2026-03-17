@@ -19,6 +19,29 @@ export function TopicUnits({ topic, initialFilter, onFilterConsumed }: TopicUnit
     const { startQuiz } = useQuizSession();
     const [filter, setFilter] = useState<FilterType>('all');
     const [searchQuery, setSearchQuery] = useState('');
+    
+    const [computedUnits, setComputedUnits] = useState<(typeof topic.units[0] & { computedStatus: string, computedScore: number, attempts: number })[]>([]);
+
+    useEffect(() => {
+        const stats = topic.units.map(u => {
+            const historyStats = quizHistoryService.getUnitStats(topic.id, u.id);
+            const score = quizHistoryService.computeUnitAccuracy(topic.id, u.id);
+            
+            let status = 'neutral';
+            if (historyStats.attempts > 0) {
+                if (score >= 75) status = 'strong';
+                else if (score < 50) status = 'weak';
+            }
+
+            return {
+                ...u,
+                computedStatus: status,
+                computedScore: score,
+                attempts: historyStats.attempts
+            };
+        });
+        setComputedUnits(stats);
+    }, [topic]);
 
     useEffect(() => {
         if (initialFilter) {
@@ -31,11 +54,11 @@ export function TopicUnits({ topic, initialFilter, onFilterConsumed }: TopicUnit
         startQuiz({ type: 'unit-test', topicId: topic.id, targetUnitId: unitId });
     };
 
-    let filteredUnits = topic.units;
+    let filteredUnits = computedUnits;
     
-    if (filter === 'weak') filteredUnits = filteredUnits.filter(u => u.status === 'weak');
-    if (filter === 'strong') filteredUnits = filteredUnits.filter(u => u.status === 'strong');
-    if (filter === 'unattempted') filteredUnits = filteredUnits.filter(u => u.status === 'neutral');
+    if (filter === 'weak') filteredUnits = filteredUnits.filter(u => u.computedStatus === 'weak');
+    if (filter === 'strong') filteredUnits = filteredUnits.filter(u => u.computedStatus === 'strong');
+    if (filter === 'unattempted') filteredUnits = filteredUnits.filter(u => u.attempts === 0);
 
     if (searchQuery.trim() !== '') {
         const lowerQ = searchQuery.toLowerCase();
@@ -90,17 +113,14 @@ export function TopicUnits({ topic, initialFilter, onFilterConsumed }: TopicUnit
                         </div>
                     ) : (
                         filteredUnits.map(unit => {
+                            const { computedStatus, computedScore: score, attempts } = unit;
+                            
                             let statusColor = 'var(--text-muted)';
-                            if (unit.status === 'weak') {
+                            if (computedStatus === 'weak') {
                                 statusColor = 'var(--danger)';
-                            } else if (unit.status === 'strong') {
+                            } else if (computedStatus === 'strong') {
                                 statusColor = 'var(--success)';
                             }
-
-                            // Compute score via service
-                            const stats = quizHistoryService.getUnitStats(unit.id);
-                            const attempts = stats.attempts;
-                            const score = quizHistoryService.computeUnitAccuracy(topic.id, unit.id);
                             
                             let scoreColor = 'var(--text-muted)';
                             if (attempts > 0) {
@@ -121,11 +141,11 @@ export function TopicUnits({ topic, initialFilter, onFilterConsumed }: TopicUnit
                                             className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md"
                                             style={{
                                                 color: statusColor,
-                                                backgroundColor: unit.status === 'neutral' ? 'var(--bg-raised)' : `${statusColor}20`,
-                                                border: `1px solid ${unit.status === 'neutral' ? 'var(--border)' : statusColor}40`
+                                                backgroundColor: computedStatus === 'neutral' ? 'var(--bg-raised)' : `${statusColor}20`,
+                                                border: `1px solid ${computedStatus === 'neutral' ? 'var(--border)' : statusColor}40`
                                             }}
                                         >
-                                            {unit.status}
+                                            {attempts === 0 ? 'neutral' : computedStatus}
                                         </span>
                                     </div>
                                     <div className="col-span-3 flex justify-center flex-col items-center">

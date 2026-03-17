@@ -8,18 +8,7 @@ import { questionsService } from '@/src/features/quiz/services/questions.service
 import { timeframeToDays } from '@/src/lib/schedule-calculator';
 import { Topic, Unit } from '@/src/types';
 
-export type WizardStep = 'capture' | 'level' | 'familiarity' | 'source' | 'confirmation' | 'generating' | 'exit';
-
-export const sources = [
-    { id: 'book', label: 'Book' },
-    { id: 'article', label: 'Article' },
-    { id: 'video', label: 'Video' },
-    { id: 'course', label: 'Course' },
-    { id: 'web', label: 'Web' },
-    { id: 'other', label: 'Other' },
-];
-
-
+export type WizardStep = 'capture' | 'level' | 'familiarity' | 'generating' | 'exit';
 
 export interface SubUnit {
     id: string;
@@ -28,7 +17,7 @@ export interface SubUnit {
     order?: number;
 }
 
-export function useTopicWizard() {
+export function useTopicWizard(initialName: string = '') {
     const router = useRouter();
 
     // Step tracking
@@ -36,9 +25,8 @@ export function useTopicWizard() {
     const [direction, setDirection] = useState(0);
 
     // Form state
-    const [topicName, setTopicName] = useState('');
+    const [topicName, setTopicName] = useState(initialName);
     const [level, setLevel] = useState<'beginner' | 'intermediate' | 'expert' | null>(null);
-    const [source, setSource] = useState<string | null>(null);
 
     // Units
     const [subUnits, setSubUnits] = useState<SubUnit[]>([]);
@@ -56,6 +44,11 @@ export function useTopicWizard() {
     // Duplicate detection
     const [duplicateTopic, setDuplicateTopic] = useState<Topic | null>(null);
     const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+    const [existingLevels, setExistingLevels] = useState<string[]>([]);
+
+    // Topic name correction
+    const [correctedName, setCorrectedName] = useState<string | null>(null);
+    const [isCorrectingName, setIsCorrectingName] = useState(false);
 
     // Generation
     const [createdTopicId, setCreatedTopicId] = useState<string | null>(null);
@@ -70,27 +63,58 @@ export function useTopicWizard() {
 
     const goBack = useCallback(() => {
         setDirection(-1);
-        const stepOrder: WizardStep[] = ['capture', 'level', 'familiarity', 'source', 'confirmation'];
+        const stepOrder: WizardStep[] = ['capture', 'level', 'familiarity'];
         const currentIndex = stepOrder.indexOf(currentStep);
         if (currentIndex > 0) {
             setCurrentStep(stepOrder[currentIndex - 1]);
         }
     }, [currentStep]);
 
-    // Step 1: Capture — check for duplicates, then pre-fetch concepts
+    // Step 1: Capture — check for duplicates, correct name, then pre-fetch concepts
     const handleCaptureContinue = useCallback(async () => {
         if (!topicName.trim()) return;
 
-        const isDuplicate = topicsService.checkDuplicateName(topicName.trim());
-        if (isDuplicate) {
-            const topics = topicsService.getTopics();
-            const dup = topics.find(t => t.name.toLowerCase() === topicName.trim().toLowerCase());
-            if (dup) {
-                setDuplicateTopic(dup);
+        // Check for duplicates at ANY level
+        const allTopics = topicsService.getTopics();
+        const dupsAtAnyLevel = allTopics.filter(t => t.name.toLowerCase() === topicName.trim().toLowerCase());
+        
+        if (dupsAtAnyLevel.length > 0) {
+            // Track which levels already exist
+            const takenLevels = dupsAtAnyLevel.map(t => t.level);
+            setExistingLevels(takenLevels);
+            
+            // If ALL 3 levels taken, show dialog with first match
+            if (takenLevels.length >= 3) {
+                setDuplicateTopic(dupsAtAnyLevel[0]);
                 setShowDuplicateDialog(true);
                 return;
             }
+            
+            // If only some levels taken, allow continuing but filter in level step
+            // If user didn't explicitly want a different level, show dialog
+            setDuplicateTopic(dupsAtAnyLevel[0]);
+            setShowDuplicateDialog(true);
+            return;
         }
+
+        // Correct topic name typos via AI
+        setCorrectedName(null);
+        setIsCorrectingName(true);
+        try {
+            const res = await fetch('/api/ai/fix-topic-name', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: topicName.trim() }),
+            });
+            const data = await res.json();
+            if (data.success && data.corrected && data.corrected.toLowerCase() !== topicName.trim().toLowerCase()) {
+                setCorrectedName(data.corrected);
+                setTopicName(data.corrected);
+            }
+        } catch {
+            // silent — use original name
+        }
+        setIsCorrectingName(false);
 
         goToStep('level');
 
@@ -117,7 +141,7 @@ export function useTopicWizard() {
 
         setLevelPreviews(results);
         setIsLoadingPreviews(false);
-    }, [topicName, goToStep]);
+    }, [topicName, goToStep, setTopicName]);
 
     // Step 2: Level — toggle accordion
     const toggleLevelSelect = useCallback((selectedLevel: 'beginner' | 'intermediate' | 'expert') => {
@@ -187,9 +211,6 @@ export function useTopicWizard() {
         );
     }, []);
 
-    const handleContinueFromFamiliarity = useCallback(() => {
-        goToStep('source');
-    }, [goToStep]); // Step 5: Source
     const addSubUnit = useCallback(() => {
         if (!newUnitInput.trim()) return;
         const newId = Math.random().toString(36).substr(2, 9);
@@ -198,18 +219,10 @@ export function useTopicWizard() {
         setNewUnitInput('');
     }, [newUnitInput, subUnits]);
 
-
-
-    // Step 5: Source
-    const handleSourceSelect = useCallback((id: string) => {
-        setSource(id);
-        setTimeout(() => goToStep('confirmation'), 800);
-    }, [goToStep]);
-
     // Duplicate handling
     const handleContinueExisting = useCallback(() => {
         if (duplicateTopic) {
-            router.push(`/learn/${duplicateTopic.id}`);
+            router.push(`/topics/${duplicateTopic.id}`);
         }
     }, [duplicateTopic, router]);
 
@@ -222,7 +235,6 @@ export function useTopicWizard() {
             setShowDuplicateDialog(false);
             setLevel(null);
             setSubUnits([]);
-            setSource(null);
             setCreatedTopicId(null);
             setFamiliarityStatements([]);
             setCheckedStatements([]);
@@ -234,7 +246,7 @@ export function useTopicWizard() {
         if (!topicName || !level) return;
 
         goToStep('generating');
-        setGenerationStatus('Creating your study plan...');
+        setGenerationStatus('Setting up your topic...');
         setGenerationProgress(10);
 
         const initialUnits: Unit[] = subUnits.map(su => ({
@@ -270,39 +282,52 @@ export function useTopicWizard() {
 
         topicsService.saveTopic(newTopic);
         setCreatedTopicId(newTopic.id);
+        setGenerationProgress(30);
+
+        // Fire description + quiz generation in parallel
+        setGenerationStatus('Setting up your topic...');
+
+        const descriptionPromise = fetch('/api/ai/generate-description', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic: topicName, level, units: initialUnits.map(u => ({ name: u.text, id: u.id })) }),
+        }).then(r => r.json()).catch(() => null);
+
+        // Generate quiz for all units in parallel
+        const quizPromises = initialUnits.map(u =>
+            fetch('/api/ai/generate-quiz', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: topicName,
+                    unit: u.text,
+                    unitId: u.id,
+                    topicId: newTopic.id,
+                    level,
+                    subLevel,
+                    knowledgeGaps,
+                    count: 5,
+                }),
+            }).then(r => r.json()).catch(() => null)
+        );
+
         setGenerationProgress(50);
 
-        // Generate quiz questions for each unit
-        setGenerationStatus('Generating quiz questions...');
-        for (let i = 0; i < initialUnits.length; i++) {
-            const u = initialUnits[i];
-            const progress = 50 + Math.round(((i + 1) / initialUnits.length) * 45);
-            setGenerationStatus(`Generating questions for "${u.text}"... (${i + 1}/${initialUnits.length})`);
+        const [descData, ...quizResults] = await Promise.all([descriptionPromise, ...quizPromises]);
 
-            try {
-                const quizResponse = await fetch('/api/ai/generate-quiz', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        topic: topicName,
-                        unit: u.text,
-                        unitId: u.id,
-                        topicId: newTopic.id,
-                        level,
-                        subLevel,
-                        knowledgeGaps,
-                        count: 10,
-                    }),
-                });
-                const quizData = await quizResponse.json();
+        // Save description if available
+        if (descData?.success && descData.description) {
+            newTopic.description = descData.description;
+            if (descData.useCases) newTopic.useCases = descData.useCases;
+            topicsService.saveTopic(newTopic);
+        }
 
-                if (quizData.success && quizData.questions.length > 0) {
-                    questionsService.saveQuestions(quizData.questions);
-                }
-            } catch (e) {
-                console.error(`Quiz generation failed for ${u.text}:`, e);
-            }
-            setGenerationProgress(progress);
+        // Save quiz questions
+        const allNewQuestions = quizResults
+            .filter(r => r?.success && r.questions?.length > 0)
+            .flatMap(r => r.questions);
+        if (allNewQuestions.length > 0) {
+            questionsService.saveQuestions(allNewQuestions);
         }
 
         setGenerationProgress(100);
@@ -331,7 +356,6 @@ export function useTopicWizard() {
         topicName,
         setTopicName,
         level,
-        source,
 
         // Units
         subUnits,
@@ -348,6 +372,11 @@ export function useTopicWizard() {
         duplicateTopic,
         showDuplicateDialog,
         setShowDuplicateDialog,
+        existingLevels,
+
+        // Name correction
+        correctedName,
+        isCorrectingName,
 
         // Generation
         createdTopicId,
@@ -361,9 +390,7 @@ export function useTopicWizard() {
         toggleLevelSelect,
         handleContinueFromLevel,
         toggleFamiliarityStatement,
-        handleContinueFromFamiliarity,
         addSubUnit,
-        handleSourceSelect,
         handleContinueExisting,
         handleStartFresh,
         submitTopic,

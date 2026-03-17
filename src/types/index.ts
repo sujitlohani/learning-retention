@@ -33,12 +33,20 @@ export type QuizQuestion = {
     unitName?: string;
     level?: 'basic' | 'advanced' | 'pitfall';
     question: string;
-    type: 'mcq' | 'card' | 'short-answer';
+    type: 'mcq' | 'card' | 'short-answer' | 'coding';
     options?: string[];
     correctAnswer: string;
     explanation?: string;
     keywords?: string[];
     acceptableAnswers?: string[];
+    language?: 'javascript' | 'python';
+    starterCode?: string;
+    testCases?: {
+        input: string;
+        expectedOutput: string;
+        isHidden: boolean;
+    }[];
+    hints?: string[];
 };
 
 export type QuizResult = {

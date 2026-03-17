@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/src/features/auth/hooks/useAuth';
+import { useUser } from '@clerk/nextjs';
 import { ThemeToggle } from '@/src/components/theme/ThemeToggle';
 import { MemoraLogo, MemoraMark } from '@/src/components/MemoraLogo';
 import { cn } from '@/src/lib/utils';
@@ -26,10 +27,11 @@ const navItems = [
 export function Sidebar() {
     const pathname = usePathname();
     const { logout, isAuthenticated } = useAuth();
+    const { user } = useUser();
     const [mobileOpen, setMobileOpen] = useState(false);
 
     // Hide on immersive routes and root landing page
-    const hideOnRoutes = ['/login', '/onboarding', '/add-topic'];
+    const hideOnRoutes = ['/login', '/onboarding', '/add-topic', '/quiz/daily'];
     const shouldHide = hideOnRoutes.includes(pathname) ||
         pathname.startsWith('/learn/') ||
         (pathname === '/' && !isAuthenticated);
@@ -115,6 +117,11 @@ export function Sidebar() {
                     <LogOut className="w-4 h-4 shrink-0" />
                     {!collapsed && 'Logout'}
                 </button>
+                {!collapsed && user && (
+                    <div className="px-3 pt-2 text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                        {user.firstName || user.primaryEmailAddress?.emailAddress}
+                    </div>
+                )}
             </div>
         </div>
     );

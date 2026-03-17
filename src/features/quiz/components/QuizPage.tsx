@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle2, XCircle, Brain, Trophy, Plus, LogOut, Loader2
 import { cn } from '@/src/lib/utils';
 import { useQuizSession } from '@/src/features/quiz/hooks/useQuizSession';
 import { useParams, useSearchParams } from 'next/navigation';
+import { CodingCanvas } from './CodingCanvas';
 
 export function QuizPage() {
     const params = useParams();
@@ -145,9 +146,14 @@ export function QuizPage() {
                 <div className="max-w-screen-xl mx-auto px-6 h-16 flex items-center justify-between relative">
                     <div className="flex items-center gap-3 max-w-[40%]">
                         <BookOpen className="w-5 h-5 shrink-0 hidden md:block" style={{ color: 'var(--accent)' }} />
-                        <h2 className="text-sm md:text-base font-bold truncate">
+                        <h2 className="text-sm md:text-base font-bold flex items-center gap-2 truncate">
                             <span className="opacity-60 hidden md:inline">[{q.topic?.name}] · </span>
                             <span>{question.unitName || 'General'}</span>
+                            {question.type === 'coding' && question.language && (
+                                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider hidden sm:inline-block" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>
+                                    {question.language}
+                                </span>
+                            )}
                         </h2>
                     </div>
 
@@ -334,6 +340,16 @@ export function QuizPage() {
                                         )}
                                     </div>
                                 )}
+                            </div>
+                        )}
+
+                        {/* Coding Canvas */}
+                        {question.type === 'coding' && (
+                            <div className="space-y-4">
+                                <CodingCanvas 
+                                    question={question as any} 
+                                    onAnswer={(isCorrect) => q.handleAnswer(isCorrect ? 'passed all tests' : 'failed tests')} 
+                                />
                             </div>
                         )}
 

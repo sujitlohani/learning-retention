@@ -165,22 +165,29 @@ function AIInsightCard({ allAttempts }: { allAttempts: QuizAttempt[] }) {
 
     // Default unit on topic change
     useEffect(() => {
-        if (units.length > 0) setSelectedUnitId(units[0].id);
+        if (units.length > 0) setSelectedUnitId('entire-topic');
         else setSelectedUnitId('');
     }, [selectedTopicId, units]);
 
     const selectedUnit = units.find(u => u.id === selectedUnitId);
 
     const generateInsight = async () => {
-        if (!selectedTopicId || !selectedUnitId || !selectedUnit) return;
+        if (!selectedTopicId || !selectedUnitId) return;
         setLoading(true);
         setError(false);
 
-        const accuracy = computeUnitScore(selectedTopicId, selectedUnitId, allAttempts);
-        const unitName = selectedUnit.text || '';
         const topicName = selectedTopic?.name || '';
+        let prompt = '';
 
-        const prompt = `A student is struggling with the unit '${unitName}' from topic '${topicName}'. Their accuracy on this unit is ${Math.round(accuracy)}%. Return ONLY valid JSON with no markdown: { "diagnosis": string, "confusions": string[] } — diagnosis is one sentence identifying the root cause of their struggle. confusions is an array of 2–3 short phrases describing the specific sub-concepts they are most likely misunderstanding. Be specific to this unit, not generic.`;
+        if (selectedUnitId === 'entire-topic') {
+            const overallAccuracy = selectedTopic ? selectedTopic.units.reduce((acc, u) => acc + computeUnitScore(selectedTopic.id, u.id, allAttempts), 0) / selectedTopic.units.length : 0;
+            prompt = `A student is struggling with the overall topic '${topicName}'. Their overall accuracy on this topic is ${Math.round(overallAccuracy)}%. Return ONLY valid JSON with no markdown: { "diagnosis": string, "confusions": string[] } — diagnosis is one sentence identifying the root cause of their struggle across the topic. confusions is an array of 2–3 short phrases describing the specific high-level concepts they are most likely misunderstanding overall. Be specific to this topic, not generic.`;
+        } else {
+            if (!selectedUnit) return;
+            const accuracy = computeUnitScore(selectedTopicId, selectedUnitId, allAttempts);
+            const unitName = selectedUnit.text || '';
+            prompt = `A student is struggling with the unit '${unitName}' from topic '${topicName}'. Their accuracy on this unit is ${Math.round(accuracy)}%. Return ONLY valid JSON with no markdown: { "diagnosis": string, "confusions": string[] } — diagnosis is one sentence identifying the root cause of their struggle. confusions is an array of 2–3 short phrases describing the specific sub-concepts they are most likely misunderstanding. Be specific to this unit, not generic.`;
+        }
 
         try {
             const res = await fetch('/api/ai/generate-insights', {
@@ -214,7 +221,7 @@ function AIInsightCard({ allAttempts }: { allAttempts: QuizAttempt[] }) {
 
             {result ? (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-                    <div className="text-sm font-bold">Why you might be struggling with {selectedUnit?.text || 'this unit'}</div>
+                    <div className="text-sm font-bold">Why you might be struggling with {selectedUnitId === 'entire-topic' ? 'this topic' : (selectedUnit?.text || 'this unit')}</div>
                     <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>{result.diagnosis}</p>
 
                     {result.confusions && result.confusions.length > 0 && (
@@ -232,11 +239,15 @@ function AIInsightCard({ allAttempts }: { allAttempts: QuizAttempt[] }) {
                     )}
 
                     <Link
-                        href={`/deep-dive/learn?unitId=${selectedUnitId}&topicId=${selectedTopicId}`}
+                        href={selectedUnitId === 'entire-topic' ? `/topics/${selectedTopicId}` : `/deep-dive/learn?unitId=${selectedUnitId}&topicId=${selectedTopicId}`}
                         className="flex items-center justify-center gap-2 w-full py-2.5 rounded-md text-xs font-bold text-white transition-transform hover:scale-[1.02]"
                         style={{ background: 'var(--accent)' }}
                     >
-                        <Microscope className="w-3.5 h-3.5" /> Deep Dive Concept <ArrowRight className="w-3.5 h-3.5" />
+                        {selectedUnitId === 'entire-topic' ? (
+                            <><Microscope className="w-3.5 h-3.5" /> View Topic Details <ArrowRight className="w-3.5 h-3.5" /></>
+                        ) : (
+                            <><Microscope className="w-3.5 h-3.5" /> Deep Dive Concept <ArrowRight className="w-3.5 h-3.5" /></>
+                        )}
                     </Link>
 
                     <button onClick={resetCard} className="text-xs font-medium w-full text-center transition-colors hover:underline" style={{ color: 'var(--text-muted)' }}>
@@ -272,6 +283,7 @@ function AIInsightCard({ allAttempts }: { allAttempts: QuizAttempt[] }) {
                             className="w-full text-xs font-bold px-3 py-2 rounded-md border"
                             style={{ background: 'var(--bg-raised)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
                         >
+                            <option value="entire-topic">Entire Topic</option>
                             {units.map(u => <option key={u.id} value={u.id}>{u.text}</option>)}
                         </select>
                     </div>

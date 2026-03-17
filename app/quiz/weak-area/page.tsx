@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -46,7 +46,7 @@ function evaluateShortAnswer(answer: string, question: QuizQuestion): boolean {
 
 type DailyQuizQuestion = QuizQuestion & { topicId: string };
 
-export default function WeakAreaQuizPage() {
+function WeakAreaQuizContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const targetTopicId = searchParams.get('topicId');
@@ -511,5 +511,17 @@ export default function WeakAreaQuizPage() {
                 </AnimatePresence>
             </div>
         </div>
+    );
+}
+
+export default function WeakAreaQuizPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center font-display" style={{ background: 'var(--bg-base)' }}>
+                <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--accent)' }} />
+            </div>
+        }>
+            <WeakAreaQuizContent />
+        </Suspense>
     );
 }
