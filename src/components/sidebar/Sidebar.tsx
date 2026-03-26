@@ -12,6 +12,7 @@ import {
     Activity,
     BookOpen,
     Brain,
+    Code2,
     LogOut,
     Menu,
     X
@@ -22,6 +23,7 @@ const navItems = [
     { href: '/', label: 'Home', icon: Home },
     { href: '/knowledge-base', label: 'Knowledge Base', icon: BookOpen },
     { href: '/deep-dive', label: 'Deep Dive', icon: Brain },
+    { href: '/classroom', label: 'Classroom', icon: Code2 },
 ];
 
 export function Sidebar() {
@@ -209,7 +211,7 @@ export function Sidebar() {
                                         borderRadius: '0 var(--radius-sm) var(--radius-sm) 0',
                                         background: isActive ? 'var(--accent-light)' : 'transparent',
                                     }}
-                                    title={item.label || 'Deep Dive'}
+                                    title={item.label}
                                 >
                                     {isActive && (
                                         <div
@@ -223,7 +225,7 @@ export function Sidebar() {
                                         <IconComponent className="w-4 h-4 shrink-0" />
                                     )}
                                     <span className="opacity-0 group-hover:opacity-100 transition-opacity" style={{ transitionDuration: 'var(--duration-base)' }}>
-                                        {item.label || 'Deep Dive'}
+                                        {item.label}
                                     </span>
                                 </Link>
                             );
