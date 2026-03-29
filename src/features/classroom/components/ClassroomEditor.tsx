@@ -5,8 +5,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, CheckCircle2, XCircle, Lightbulb, RotateCcw, Eye, EyeOff, Loader2, Sparkles } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
-import { ClassroomQuestion, ClassroomLanguage } from '@/src/lib/classroom-question-bank';
-import { runJavaScript } from '@/src/lib/code-runner';
+import { ClassroomQuestion, ClassroomLanguage } from '@/src/types/classroom';
 
 interface TestResult {
   input: string;
@@ -245,7 +244,7 @@ Give brief, constructive feedback in 2-3 sentences. Focus on: correctness, effic
             <div className="w-3 h-3 rounded-full bg-green-500/70" />
           </div>
           <span className="text-xs font-mono ml-2" style={{ color: 'var(--text-muted)' }}>
-            solution.{language === 'javascript' ? 'js' : language === 'typescript' ? 'ts' : language === 'python' ? 'py' : language === 'java' ? 'java' : language === 'cpp' ? 'cpp' : language === 'go' ? 'go' : language === 'rust' ? 'rs' : 'c'}
+            solution.{language === 'javascript' ? 'js' : language === 'typescript' ? 'ts' : language === 'python' ? 'py' : language === 'java' ? 'java' : language === 'cpp' ? 'cpp' : 'c'}
           </span>
         </div>
         <div className="flex items-center gap-2">

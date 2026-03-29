@@ -1,9 +1,10 @@
-// src/lib/classroom-question-bank.ts
-
+// ============================================================
+// FILE: src/lib/classroom-question-bank.ts
 
 import { ClassroomQuestion, ClassroomLanguage, ClassroomDifficulty, ClassroomLanguageMeta } from '@/src/types/classroom';
 
-export type { ClassroomQuestion, ClassroomLanguage, ClassroomDifficulty };
+export type { ClassroomQuestion, ClassroomLanguage, ClassroomDifficulty, Difficulty } from '@/src/types/classroom';
+export type { ClassroomProgress } from '@/src/types/classroom';
 
 export const CLASSROOM_LANGUAGES: ClassroomLanguageMeta[] = [
   { id: 'javascript', label: 'JavaScript', extension: 'js' },
@@ -15,7 +16,6 @@ export const CLASSROOM_LANGUAGES: ClassroomLanguageMeta[] = [
 ];
 
 export const classroomQuestions: ClassroomQuestion[] = [
-  // ── EASY ──────────────────────────────────────────────────────────────────
   {
     id: 'two-sum',
     title: 'Two Sum',
@@ -35,10 +35,10 @@ Output: [1,2]
     category: 'Arrays & Hashing',
     tags: ['array', 'hash-map'],
     hints: [
-      'A brute force O(n²) loop works. Can you do it in one pass?',
-      'Use a hash map: for each number, check if (target − number) is already stored.',
+      'A brute force O(n²) works. Can you do it in one pass?',
+      'Use a hash map — for each number check if (target − number) is already stored.',
     ],
-    explanation: 'Hash map approach: store each number as you go, check if complement already exists. O(n) time.',
+    explanation: 'Hash map approach: store each number as you go, check if complement exists. O(n) time.',
     testCases: [
       { input: '[2,7,11,15], 9', expectedOutput: '[0,1]' },
       { input: '[3,2,4], 6',     expectedOutput: '[1,2]' },
@@ -80,10 +80,10 @@ Output: "dlrow"
     category: 'Strings',
     tags: ['string', 'two-pointers'],
     hints: [
-      'Two pointers: one at the start, one at the end — swap and move inward.',
+      'Use two pointers — one at start, one at end — swap and move inward.',
       'In Python you can use slice syntax [::-1].',
     ],
-    explanation: 'Swap characters from both ends moving toward the center. O(n) time, O(1) extra space.',
+    explanation: 'Swap characters from both ends moving toward the center. O(n) time.',
     testCases: [
       { input: '"hello"', expectedOutput: 'olleh' },
       { input: '"world"', expectedOutput: 'dlrow' },
@@ -111,12 +111,7 @@ Output: "dlrow"
     title: 'Fibonacci Number',
     description: `Return the **nth Fibonacci number** where F(0) = 0 and F(1) = 1.
 
-**Example 1:**
-\`\`\`
-Input: n = 5
-Output: 5   (0,1,1,2,3,5)
-\`\`\`
-**Example 2:**
+**Example:**
 \`\`\`
 Input: n = 10
 Output: 55
@@ -151,8 +146,6 @@ Output: 55
       cpp:        `int fib(int n){\n    if(n<=1)return n;\n    int a=0,b=1;\n    for(int i=2;i<=n;i++){int c=a+b;a=b;b=c;}\n    return b;\n}`,
     },
   },
-
-  // ── MEDIUM ────────────────────────────────────────────────────────────────
   {
     id: 'valid-palindrome',
     title: 'Valid Palindrome',
@@ -172,8 +165,8 @@ Output: false
     category: 'Strings',
     tags: ['string', 'two-pointers'],
     hints: [
-      'First strip non-alphanumeric characters and lowercase everything.',
-      'Then compare it to its reverse — or use two pointers from both ends.',
+      'Strip non-alphanumeric characters and lowercase everything first.',
+      'Then compare it to its reverse, or use two pointers from both ends.',
     ],
     explanation: 'Clean the string to alphanumeric lowercase, then check if it equals its reverse.',
     testCases: [
@@ -201,7 +194,7 @@ Output: false
   {
     id: 'binary-search',
     title: 'Binary Search',
-    description: `Given a **sorted** array of integers and a target, return the index of the target or \`-1\` if not found. Must run in **O(log n)**.
+    description: `Given a **sorted** array and a target, return the index or \`-1\` if not found. Must run in **O(log n)**.
 
 **Example 1:**
 \`\`\`
@@ -217,10 +210,10 @@ Output: -1
     category: 'Binary Search',
     tags: ['binary-search', 'array'],
     hints: [
-      'Keep a left and right pointer. Calculate mid = (left + right) / 2.',
-      'If nums[mid] < target, search the right half. Otherwise search the left.',
+      'Keep left and right pointers. Calculate mid = (left + right) / 2.',
+      'If nums[mid] < target search right half. Otherwise search left.',
     ],
-    explanation: 'Classic binary search: halve the search range each iteration. O(log n) time.',
+    explanation: 'Classic binary search — halve the search range each iteration. O(log n).',
     testCases: [
       { input: '[-1,0,3,5,9,12], 9',  expectedOutput: '4'  },
       { input: '[-1,0,3,5,9,12], 2',  expectedOutput: '-1' },
@@ -243,12 +236,10 @@ Output: -1
       cpp:        `int search(vector<int>&nums,int t){\n    int lo=0,hi=nums.size()-1;\n    while(lo<=hi){int m=(lo+hi)/2;if(nums[m]==t)return m;if(nums[m]<t)lo=m+1;else hi=m-1;}\n    return -1;\n}`,
     },
   },
-
-  // ── HARD ──────────────────────────────────────────────────────────────────
   {
     id: 'max-subarray',
     title: 'Maximum Subarray',
-    description: `Given an integer array, find the **subarray with the largest sum** and return that sum.
+    description: `Find the **subarray with the largest sum** and return that sum.
 
 **Example 1:**
 \`\`\`
@@ -264,7 +255,7 @@ Output: 23
     category: 'Dynamic Programming',
     tags: ['array', 'dp', "kadane's"],
     hints: [
-      "Kadane's Algorithm: keep a running sum. If it goes negative, reset to 0.",
+      "Kadane's Algorithm: keep a running sum. If it goes negative, reset to current element.",
       'Track the global maximum separately as you iterate.',
     ],
     explanation: "Kadane's algorithm: O(n) single pass, track local and global max.",
@@ -292,4 +283,5 @@ Output: 23
   },
 ];
 
+export const CATEGORIES = [...new Set(classroomQuestions.map(q => q.category))];
 export const DIFFICULTIES: ClassroomDifficulty[] = ['easy', 'medium', 'hard'];
