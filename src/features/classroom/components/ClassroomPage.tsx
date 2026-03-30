@@ -33,6 +33,23 @@ const DIFF_CONFIG: Record<ClassroomDifficulty, { label: string; desc: string; co
   hard:   { label: 'Advanced',     desc: 'Complex algorithms that push your limits',             color: 'var(--danger)'  },
 };
 
+// ─── Helper: count solved per language using submissions ──────────────────────
+// Uses submissions (which store language) instead of solvedIds (which don't)
+function getSolvedForLang(progress: ReturnType<typeof useClassroom>['progress'], langId: string): number {
+  return progress.submissions?.filter(s => s.language === langId && s.passed).length ?? 0;
+}
+
+// Same but filtered by difficulty too (for LevelStep)
+function getSolvedForLangAndDiff(
+  progress: ReturnType<typeof useClassroom>['progress'],
+  langId: string,
+  questionIds: string[]
+): number {
+  return progress.submissions?.filter(
+    s => s.language === langId && s.passed && questionIds.includes(s.questionId)
+  ).length ?? 0;
+}
+
 // Smart argument parser
 function parseArgs(input: string): unknown[] {
   if (!input?.trim()) return [];
@@ -142,14 +159,15 @@ function OverallResult({ results, questions, onBack }: { results: QuestionResult
   );
 }
 
-// ─── Language Step with "Your Progress" section ───────────────────────────────
+// ─── Language Step ────────────────────────────────────────────────────────────
 
 function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage) => void; progress: ReturnType<typeof useClassroom>['progress'] }) {
-  // Languages that have at least 1 solved question
-  const activeLanguages = CLASSROOM_LANGUAGES.filter(lang => {
-    const solved = progress.solvedIds.filter(id => classroomQuestions.find(q => q.id === id && !!q.starterCode[lang.id as ClassroomLanguage])).length;
-    return solved > 0;
-  });
+  const total = classroomQuestions.length;
+
+  // Only show "Your Progress" for languages where user has actually solved something in THAT language
+  const activeLanguages = CLASSROOM_LANGUAGES.filter(lang =>
+    getSolvedForLang(progress, lang.id) > 0
+  );
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
@@ -166,13 +184,13 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
         )}
       </div>
 
-      {/* Language grid */}
+      {/* Language grid — uses per-language submission count */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {CLASSROOM_LANGUAGES.map((lang, i) => {
           const cfg = LANG_CONFIG[lang.id as ClassroomLanguage];
-          const total = classroomQuestions.filter(q => !!q.starterCode[lang.id as ClassroomLanguage]).length;
-          const solved = progress.solvedIds.filter(id => classroomQuestions.find(q => q.id === id && !!q.starterCode[lang.id as ClassroomLanguage])).length;
-          const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+          const langTotal = classroomQuestions.filter(q => !!q.starterCode[lang.id as ClassroomLanguage]).length;
+          const solved = getSolvedForLang(progress, lang.id); // ← FIX: per-language count
+          const pct = langTotal > 0 ? Math.round((solved / langTotal) * 100) : 0;
           return (
             <motion.button key={lang.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
               onClick={() => onSelect(lang.id as ClassroomLanguage)}
@@ -188,7 +206,7 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
               </div>
               <div className="w-full space-y-1">
                 <div className="flex justify-between text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>
-                  <span>{solved}/{total} solved</span><span>{pct}%</span>
+                  <span>{solved}/{langTotal} solved</span><span>{pct}%</span>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
                   <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : cfg.color }} />
@@ -199,16 +217,16 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
         })}
       </div>
 
-      {/* Your Progress — shown only if user has solved at least one question */}
+      {/* Your Progress — only shows for languages user has actually used */}
       {activeLanguages.length > 0 && (
         <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-10 space-y-3">
           <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your progress</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {activeLanguages.map(lang => {
               const cfg = LANG_CONFIG[lang.id as ClassroomLanguage];
-              const total = classroomQuestions.filter(q => !!q.starterCode[lang.id as ClassroomLanguage]).length;
-              const solved = progress.solvedIds.filter(id => classroomQuestions.find(q => q.id === id && !!q.starterCode[lang.id as ClassroomLanguage])).length;
-              const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
+              const langTotal = classroomQuestions.filter(q => !!q.starterCode[lang.id as ClassroomLanguage]).length;
+              const solved = getSolvedForLang(progress, lang.id); // ← FIX: per-language count
+              const pct = langTotal > 0 ? Math.round((solved / langTotal) * 100) : 0;
               const easyTotal = classroomQuestions.filter(q => q.difficulty === 'easy' && !!q.starterCode[lang.id as ClassroomLanguage]).length;
               const levelLabel = easyTotal > 0 ? 'beginner' : 'intermediate';
               return (
@@ -218,7 +236,7 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
                       <h3 className="font-semibold text-[15px]" style={{ color: 'var(--text-primary)' }}>{lang.label}</h3>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{total} problems · {levelLabel}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{langTotal} problems · {levelLabel}</p>
                     </div>
                     <div className="text-3xl font-bold shrink-0 ml-2" style={{ color: pct === 100 ? 'var(--success)' : cfg.color }}>{pct}</div>
                   </div>
@@ -257,7 +275,8 @@ function LevelStep({ language, onSelect, onBack, progress }: { language: Classro
           const d = DIFF_CONFIG[diff];
           const qs = classroomQuestions.filter(q => q.difficulty === diff && !!q.starterCode[language]);
           const total = qs.length;
-          const solved = qs.filter(q => progress.solvedIds.includes(q.id)).length;
+          // ← FIX: count solved by matching language AND questionId from submissions
+          const solved = getSolvedForLangAndDiff(progress, language, qs.map(q => q.id));
           const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
           return (
             <motion.button key={diff} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
@@ -345,7 +364,6 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
     setIsRunning(true); setTestResults(null); setError(''); setAiReview('');
     try {
       if (isJsLang) {
-        // Run JS/TS in browser
         const res: TestResult[] = [];
         for (const tc of question.testCases) {
           try {
@@ -365,7 +383,6 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
         }
         setTestResults(res);
       } else {
-        // For non-JS languages: try AI evaluation (works on Vercel), show expected for self-check if it fails
         setIsReviewing(true);
         try {
           const r = await fetch('/api/ai/review', {
@@ -379,13 +396,12 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
             setAiReview(reason);
             setTestResults(question.testCases.map(tc => ({ input: tc.input, expected: tc.expectedOutput, actual: passed ? tc.expectedOutput : '?', passed })));
           } else {
-            // API not available (localhost) — show expected for self-check
             setTestResults(question.testCases.map(tc => ({ input: tc.input, expected: tc.expectedOutput, actual: '?', passed: false })));
-            setError(`AI evaluation requires an internet connection. Compare your output to the expected values above.`);
+            setError('AI evaluation requires an internet connection. Compare your output to the expected values above.');
           }
         } catch {
           setTestResults(question.testCases.map(tc => ({ input: tc.input, expected: tc.expectedOutput, actual: '?', passed: false })));
-          setError(`AI evaluation requires an internet connection. Compare your output to the expected values above.`);
+          setError('AI evaluation requires an internet connection. Compare your output to the expected values above.');
         }
         setIsReviewing(false);
       }
@@ -411,7 +427,8 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
   };
 
   const allPassed = testResults?.every(r => r.passed) ?? false;
-  const isSolved = progress.solvedIds.includes(question.id);
+  // ← FIX: check solved for this specific language
+  const isSolved = progress.submissions?.some(s => s.questionId === question.id && s.language === language && s.passed) ?? false;
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
@@ -433,10 +450,14 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
         <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)' }}>Code Challenge</div>
         <div className="text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>Question {questionIdx + 1} of {totalQuestions}</div>
         <div className="flex gap-1.5">
-          {questions.map((q, i) => (
-            <div key={q.id} className="w-2.5 h-2.5 rounded-full transition-all"
-              style={{ background: i === questionIdx ? 'var(--accent)' : progress.solvedIds.includes(q.id) ? 'var(--success)' : 'var(--bg-raised)', border: i === questionIdx ? 'none' : '1.5px solid var(--border)' }} />
-          ))}
+          {questions.map((q, i) => {
+            // ← FIX: dot is green only if solved in this specific language
+            const qSolved = progress.submissions?.some(s => s.questionId === q.id && s.language === language && s.passed) ?? false;
+            return (
+              <div key={q.id} className="w-2.5 h-2.5 rounded-full transition-all"
+                style={{ background: i === questionIdx ? 'var(--accent)' : qSolved ? 'var(--success)' : 'var(--bg-raised)', border: i === questionIdx ? 'none' : '1.5px solid var(--border)' }} />
+            );
+          })}
         </div>
       </div>
 
