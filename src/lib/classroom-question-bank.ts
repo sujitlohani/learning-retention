@@ -1,4 +1,4 @@
-// ============================================================
+
 // FILE: src/lib/classroom-question-bank.ts
 
 // Purpose: All coding questions for the Classroom feature.

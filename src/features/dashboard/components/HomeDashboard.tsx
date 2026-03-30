@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowRight, Flame, ClipboardList, CheckCircle2, BarChart3, AlertTriangle, Target, RefreshCw, X as XIcon, BookOpen, Plus, Search, Zap } from 'lucide-react';
+import { ArrowRight, Flame, ClipboardList, CheckCircle2, BarChart3, AlertTriangle, Target, RefreshCw, X as XIcon, BookOpen, Plus, Search, Zap, Code2 } from 'lucide-react';
 import { topicsService } from '@/src/features/topics/services/topics.service';
 import { Topic } from '@/src/types';
 import { quizHistoryService } from '@/src/features/quiz/services/quiz-history.service';
 import { checkThresholds, Recommendation, computeOverallMastery, scoreTopicPriority } from '@/src/lib/retention-calculator';
 import { QuizAttempt } from '@/src/types/ai';
+import { classroomService } from '@/src/features/classroom/services/classroom.service';
+import { classroomQuestions } from '@/src/lib/classroom-question-bank';
 
 function getGreeting(): string {
     const hour = new Date().getHours();
@@ -62,6 +64,13 @@ export function HomeDashboard() {
         setAllAttempts(quizHistoryService.getAllAttempts());
     }, []);
 
+    // Classroom stats
+    const [classroomProgress] = useState(() => classroomService.getProgress());
+    const classroomSolved = classroomProgress.solvedIds.length;
+    const classroomTotal = classroomQuestions.length;
+    const classroomPct = classroomTotal > 0 ? Math.round((classroomSolved / classroomTotal) * 100) : 0;
+    const suggestedProblem = classroomQuestions.find(q => !classroomProgress.solvedIds.includes(q.id));
+
     const streak = useMemo(() => computeStreak(allAttempts), [allAttempts]);
     const totalSessions = allAttempts.length;
     const overallMastery = useMemo(() => topics.length > 0 ? Math.round(computeOverallMastery(topics, allAttempts)) : -1, [topics, allAttempts]);
@@ -91,7 +100,6 @@ export function HomeDashboard() {
     const visibleRecs = recommendations.filter((_, i) => !dismissedRecs.has(i));
     const hasTopics = topics.length > 0;
 
-    // Change 4: Suggestion pills — real topics (max 3, most recently practiced) or static fallback
     const suggestionPills = useMemo(() => {
         if (topics.length === 0) return STATIC_PILLS;
         const sorted = [...topics].sort((a, b) => {
@@ -135,7 +143,7 @@ export function HomeDashboard() {
                 </div>
             </motion.div>
 
-            {/* ── 2. Add Topic Section: Warm Input Block (Change 1) ── */}
+            {/* ── 2. Add Topic Section ── */}
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -150,8 +158,6 @@ export function HomeDashboard() {
                 <h2 className="text-lg font-bold text-center mb-5" style={{ color: 'var(--text-primary)' }}>
                     What do you want to learn?
                 </h2>
-
-                {/* Search input row */}
                 <div className="relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5" style={{ color: 'var(--text-muted)' }} />
                     <input
@@ -176,8 +182,6 @@ export function HomeDashboard() {
                         <Plus className="w-4 h-4" />
                     </button>
                 </div>
-
-                {/* Suggestion pills (Change 4 — real data or static) */}
                 <div className="flex flex-wrap gap-2 mt-4 justify-center">
                     {suggestionPills.map((pill) => (
                         <button
@@ -189,7 +193,6 @@ export function HomeDashboard() {
                                 border: '1px solid var(--border)',
                                 borderRadius: '20px',
                                 color: 'var(--text-muted)',
-                                transitionDuration: 'var(--duration-fast)',
                             }}
                             onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
@@ -200,24 +203,16 @@ export function HomeDashboard() {
                 </div>
             </motion.div>
 
-            {/* ── 3. Daily Quiz Card (Change 2 — elevated) ── */}
+            {/* ── 3. Daily Quiz Card ── */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
                 {hasTopics ? (
                     <Link href="/quiz/daily">
                         <div className="p-6 text-white relative overflow-hidden group cursor-pointer transition-all" style={{ background: 'linear-gradient(135deg, #3730A3 0%, #4338CA 40%, #5B4FE8 100%)', borderRadius: 'var(--radius-md)' }}>
-                            {/* DAILY QUIZ badge (Change 2) */}
                             <div className="mb-4">
-                                <span
-                                    className="text-[10px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full"
-                                    style={{
-                                        color: 'rgba(255,255,255,0.7)',
-                                        border: '1px solid rgba(255,255,255,0.3)',
-                                    }}
-                                >
+                                <span className="text-[10px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full" style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.3)' }}>
                                     Daily Quiz
                                 </span>
                             </div>
-
                             <div className="flex items-center justify-between gap-4">
                                 <div>
                                     <div className="text-xl font-bold">Ready when you are</div>
@@ -234,22 +229,14 @@ export function HomeDashboard() {
                 ) : (
                     <div className="p-6 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #3730A3 0%, #4338CA 40%, #5B4FE8 100%)', borderRadius: 'var(--radius-md)', opacity: 0.6 }}>
                         <div className="mb-4">
-                            <span
-                                className="text-[10px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full"
-                                style={{
-                                    color: 'rgba(255,255,255,0.7)',
-                                    border: '1px solid rgba(255,255,255,0.3)',
-                                }}
-                            >
+                            <span className="text-[10px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full" style={{ color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.3)' }}>
                                 Daily Quiz
                             </span>
                         </div>
                         <div className="flex items-center justify-between gap-4">
                             <div>
                                 <div className="text-xl font-bold">Daily Quiz</div>
-                                <div className="text-sm text-white/70 mt-1">
-                                    Add a topic to start your daily practice
-                                </div>
+                                <div className="text-sm text-white/70 mt-1">Add a topic to start your daily practice</div>
                             </div>
                             <div className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold shrink-0 opacity-50 cursor-not-allowed" style={{ background: '#fff', color: '#4338CA' }}>
                                 <Zap className="w-4 h-4" /> Start
@@ -284,7 +271,83 @@ export function HomeDashboard() {
                 </div>
             </motion.div>
 
-            {/* ── 5. Recommendations (compact, single-row) ── */}
+            {/* ── 4b. Classroom Card ── */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.18 }}
+                className="rounded-xl border overflow-hidden"
+                style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)' }}
+            >
+                <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+                    <div className="flex items-center gap-2">
+                        <Code2 className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                            Classroom
+                        </span>
+                    </div>
+                    <Link href="/classroom" className="text-xs font-bold transition-opacity hover:opacity-70" style={{ color: 'var(--accent)' }}>
+                        Open →
+                    </Link>
+                </div>
+                <div className="p-4 flex items-center gap-4">
+                    {/* Score */}
+                    <div className="shrink-0 text-center w-16">
+                        <div className="text-2xl font-black" style={{ color: classroomPct === 100 ? 'var(--success)' : 'var(--accent)' }}>
+                            {classroomPct}%
+                        </div>
+                        <div className="text-[10px] font-bold leading-tight" style={{ color: 'var(--text-muted)' }}>
+                            {classroomSolved}/{classroomTotal} solved
+                        </div>
+                    </div>
+                    {/* Divider */}
+                    <div className="w-px h-10 shrink-0" style={{ background: 'var(--border)' }} />
+                    {/* Suggested problem */}
+                    <div className="flex-1 min-w-0">
+                        {suggestedProblem ? (
+                            <>
+                                <div className="text-[10px] font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>
+                                    Next challenge
+                                </div>
+                                <div className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                                    {suggestedProblem.title}
+                                </div>
+                                <div className="text-[11px] capitalize mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                                    {suggestedProblem.difficulty} · {suggestedProblem.category}
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-sm font-bold" style={{ color: 'var(--success)' }}>
+                                🎉 All problems solved!
+                            </div>
+                        )}
+                    </div>
+                    {/* CTA */}
+                    {suggestedProblem && (
+                        <Link
+                            href="/classroom"
+                            className="shrink-0 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:opacity-90"
+                            style={{ background: 'var(--accent)' }}
+                        >
+                            Practice
+                        </Link>
+                    )}
+                </div>
+                {/* Progress bar */}
+                <div className="px-4 pb-3">
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
+                        <div
+                            className="h-full rounded-full transition-all duration-700"
+                            style={{
+                                width: `${classroomPct}%`,
+                                background: classroomPct === 100 ? 'var(--success)' : 'var(--accent)',
+                            }}
+                        />
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* ── 5. Recommendations ── */}
             {visibleRecs.length > 0 && (
                 <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
                     <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Suggested for you</h2>
@@ -322,7 +385,7 @@ export function HomeDashboard() {
                 </motion.section>
             )}
 
-            {/* ── 6. Your Topics (no dashed add-card — Change 3) ── */}
+            {/* ── 6. Your Topics ── */}
             {hasTopics && (
                 <motion.section className="space-y-3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.25 }}>
                     <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your topics</h2>

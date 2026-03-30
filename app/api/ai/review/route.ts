@@ -1,17 +1,5 @@
 // ============================================================
 // FILE: app/api/ai/review/route.ts
-// Author: Sajjan
-// Purpose: Next.js API route — receives a prompt from the frontend,
-//          forwards it to HuggingFace, returns the AI response.
-//
-// Uses the existing callWithRetry from huggingface-client.ts.
-// Do NOT add new API keys or create a new HuggingFace client here.
-//
-// Test with curl:
-//   curl -X POST http://localhost:3000/api/ai/review \
-//        -H "Content-Type: application/json" \
-//        -d '{"prompt": "Say hello"}'
-// ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { callWithRetry } from '@/src/services/ai/huggingface-client';
