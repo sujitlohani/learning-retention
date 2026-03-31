@@ -33,13 +33,10 @@ const DIFF_CONFIG: Record<ClassroomDifficulty, { label: string; desc: string; co
   hard:   { label: 'Advanced',     desc: 'Complex algorithms that push your limits',             color: 'var(--danger)'  },
 };
 
-// ─── Helper: count solved per language using submissions ──────────────────────
-// Uses submissions (which store language) instead of solvedIds (which don't)
 function getSolvedForLang(progress: ReturnType<typeof useClassroom>['progress'], langId: string): number {
   return progress.submissions?.filter(s => s.language === langId && s.passed).length ?? 0;
 }
 
-// Same but filtered by difficulty too (for LevelStep)
 function getSolvedForLangAndDiff(
   progress: ReturnType<typeof useClassroom>['progress'],
   langId: string,
@@ -50,7 +47,6 @@ function getSolvedForLangAndDiff(
   ).length ?? 0;
 }
 
-// Smart argument parser
 function parseArgs(input: string): unknown[] {
   if (!input?.trim()) return [];
   const args: unknown[] = [];
@@ -91,6 +87,46 @@ function highlight(code: string, lang: ClassroomLanguage) {
       </div>
     );
   });
+}
+
+// ─── Loading screen shown while AI generates questions ────────────────────────
+
+function LoadingQuestions({ language, difficulty }: { language: ClassroomLanguage; difficulty: ClassroomDifficulty }) {
+  const cfg = LANG_CONFIG[language];
+  const diff = DIFF_CONFIG[difficulty];
+  const [dot, setDot] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setDot(d => (d + 1) % 4), 400);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="max-w-xl mx-auto px-6 py-32 flex flex-col items-center gap-6 text-center">
+      <div className="relative">
+        <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: `color-mix(in srgb, ${diff.color} 12%, transparent)` }}>
+          <Sparkles className="w-10 h-10 animate-pulse" style={{ color: diff.color }} />
+        </div>
+      </div>
+      <div>
+        <p className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+          Generating your questions{'.'.repeat(dot)}
+        </p>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          AI is creating 3 fresh {diff.label.toLowerCase()} {language} challenges just for you
+        </p>
+      </div>
+      <div className="flex gap-2">
+        {[0, 1, 2].map(i => (
+          <motion.div key={i}
+            animate={{ scale: [1, 1.3, 1], opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 0.8, delay: i * 0.2, repeat: Infinity }}
+            className="w-2.5 h-2.5 rounded-full"
+            style={{ background: diff.color }}
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ─── Overall Result Screen ────────────────────────────────────────────────────
@@ -162,12 +198,7 @@ function OverallResult({ results, questions, onBack }: { results: QuestionResult
 // ─── Language Step ────────────────────────────────────────────────────────────
 
 function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage) => void; progress: ReturnType<typeof useClassroom>['progress'] }) {
-  const total = classroomQuestions.length;
-
-  // Only show "Your Progress" for languages where user has actually solved something in THAT language
-  const activeLanguages = CLASSROOM_LANGUAGES.filter(lang =>
-    getSolvedForLang(progress, lang.id) > 0
-  );
+  const activeLanguages = CLASSROOM_LANGUAGES.filter(lang => getSolvedForLang(progress, lang.id) > 0);
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-10">
@@ -184,12 +215,11 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
         )}
       </div>
 
-      {/* Language grid — uses per-language submission count */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {CLASSROOM_LANGUAGES.map((lang, i) => {
           const cfg = LANG_CONFIG[lang.id as ClassroomLanguage];
           const langTotal = classroomQuestions.filter(q => !!q.starterCode[lang.id as ClassroomLanguage]).length;
-          const solved = getSolvedForLang(progress, lang.id); // ← FIX: per-language count
+          const solved = getSolvedForLang(progress, lang.id);
           const pct = langTotal > 0 ? Math.round((solved / langTotal) * 100) : 0;
           return (
             <motion.button key={lang.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
@@ -206,7 +236,7 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
               </div>
               <div className="w-full space-y-1">
                 <div className="flex justify-between text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>
-                  <span>{solved}/{langTotal} solved</span><span>{pct}%</span>
+                  <span>{solved} solved</span><span>{pct}%</span>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
                   <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: pct === 100 ? 'var(--success)' : cfg.color }} />
@@ -217,7 +247,6 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
         })}
       </div>
 
-      {/* Your Progress — only shows for languages user has actually used */}
       {activeLanguages.length > 0 && (
         <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-10 space-y-3">
           <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Your progress</h2>
@@ -225,10 +254,8 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
             {activeLanguages.map(lang => {
               const cfg = LANG_CONFIG[lang.id as ClassroomLanguage];
               const langTotal = classroomQuestions.filter(q => !!q.starterCode[lang.id as ClassroomLanguage]).length;
-              const solved = getSolvedForLang(progress, lang.id); // ← FIX: per-language count
+              const solved = getSolvedForLang(progress, lang.id);
               const pct = langTotal > 0 ? Math.round((solved / langTotal) * 100) : 0;
-              const easyTotal = classroomQuestions.filter(q => q.difficulty === 'easy' && !!q.starterCode[lang.id as ClassroomLanguage]).length;
-              const levelLabel = easyTotal > 0 ? 'beginner' : 'intermediate';
               return (
                 <button key={lang.id} onClick={() => onSelect(lang.id as ClassroomLanguage)}
                   className="group p-5 rounded-xl border transition-all cursor-pointer hover:shadow-md text-left"
@@ -236,7 +263,7 @@ function LanguageStep({ onSelect, progress }: { onSelect: (l: ClassroomLanguage)
                   <div className="flex items-start justify-between">
                     <div className="min-w-0">
                       <h3 className="font-semibold text-[15px]" style={{ color: 'var(--text-primary)' }}>{lang.label}</h3>
-                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{langTotal} problems · {levelLabel}</p>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{solved} solved</p>
                     </div>
                     <div className="text-3xl font-bold shrink-0 ml-2" style={{ color: pct === 100 ? 'var(--success)' : cfg.color }}>{pct}</div>
                   </div>
@@ -263,27 +290,28 @@ function LevelStep({ language, onSelect, onBack, progress }: { language: Classro
       <button onClick={onBack} className="flex items-center gap-1.5 text-sm font-medium mb-8 transition-opacity hover:opacity-60" style={{ color: 'var(--text-muted)' }}>
         <ArrowLeft className="w-4 h-4" /> Back to languages
       </button>
-      <div className="flex items-center gap-4 mb-10">
+      <div className="flex items-center gap-4 mb-6">
         {cfg.logo}
         <div>
           <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>{langMeta.label}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>Select your level</p>
         </div>
       </div>
+      <div className="mb-8 p-3 rounded-xl flex items-center gap-2 text-sm" style={{ background: 'var(--bg-surface)', borderColor: 'var(--border)', border: '1px solid' }}>
+        <Sparkles className="w-4 h-4 shrink-0" style={{ color: 'var(--accent)' }} />
+        <span style={{ color: 'var(--text-muted)' }}>AI will generate 3 fresh questions when you pick a level</span>
+      </div>
       <div className="flex flex-col gap-3">
         {(['easy', 'medium', 'hard'] as ClassroomDifficulty[]).map((diff, i) => {
           const d = DIFF_CONFIG[diff];
           const qs = classroomQuestions.filter(q => q.difficulty === diff && !!q.starterCode[language]);
-          const total = qs.length;
-          // ← FIX: count solved by matching language AND questionId from submissions
           const solved = getSolvedForLangAndDiff(progress, language, qs.map(q => q.id));
-          const pct = total > 0 ? Math.round((solved / total) * 100) : 0;
           return (
             <motion.button key={diff} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-              onClick={() => onSelect(diff)} disabled={total === 0}
-              className="group flex items-center gap-5 px-6 py-5 rounded-2xl border-2 text-left transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              onClick={() => onSelect(diff)}
+              className="group flex items-center gap-5 px-6 py-5 rounded-2xl border-2 text-left transition-all duration-200 hover:-translate-y-0.5"
               style={{ borderColor: 'var(--border)', background: 'var(--bg-surface)' }}
-              onMouseEnter={e => { if (total > 0) (e.currentTarget as HTMLElement).style.borderColor = d.color; }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = d.color; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; }}
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `color-mix(in srgb, ${d.color} 12%, transparent)` }}>
@@ -293,17 +321,12 @@ function LevelStep({ language, onSelect, onBack, progress }: { language: Classro
                 <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                   <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>{d.label}</span>
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-full capitalize" style={{ color: d.color, background: `color-mix(in srgb, ${d.color} 12%, transparent)` }}>{diff}</span>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>{total} problems</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'var(--bg-raised)', color: 'var(--text-muted)' }}>
+                    <Sparkles className="w-3 h-3" /> AI generated
+                  </span>
                 </div>
-                <p className="text-sm mb-2" style={{ color: 'var(--text-muted)' }}>{d.desc}</p>
-                {total > 0 && (
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}><span>{solved}/{total} solved</span><span>{pct}%</span></div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-raised)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: d.color }} />
-                    </div>
-                  </div>
-                )}
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{d.desc}</p>
+                {solved > 0 && <p className="text-[11px] mt-1 font-bold" style={{ color: d.color }}>{solved} solved so far</p>}
               </div>
               <ChevronRight className="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" style={{ color: d.color }} />
             </motion.button>
@@ -367,7 +390,7 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
         const res: TestResult[] = [];
         for (const tc of question.testCases) {
           try {
-            const fnNames = ['twoSum','reverseString','fib','isPalindrome','search','maxSubArray','containsDuplicate','isAnagram','lengthOfLongestSubstring','threeSum','trap','wordBreak','solution','two_sum','reverse_string','max_sub_array','is_palindrome'];
+            const fnNames = ['twoSum','reverseString','fib','isPalindrome','search','maxSubArray','containsDuplicate','isAnagram','lengthOfLongestSubstring','threeSum','trap','wordBreak','solution','two_sum','reverse_string','max_sub_array','is_palindrome','answer','solve','compute','calculate','findAnswer','getResult'];
             const getter = new Function(`${code};\nreturn ${fnNames.map(n=>`typeof ${n}!=='undefined'?${n}`).join(':')}:null`);
             const fn = getter();
             if (!fn) throw new Error('Function not found — check your function name.');
@@ -427,7 +450,6 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
   };
 
   const allPassed = testResults?.every(r => r.passed) ?? false;
-  // ← FIX: check solved for this specific language
   const isSolved = progress.submissions?.some(s => s.questionId === question.id && s.language === language && s.passed) ?? false;
 
   return (
@@ -447,11 +469,10 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
       </div>
 
       <div className="mb-6">
-        <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)' }}>Code Challenge</div>
+        <div className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)' }}>AI Challenge</div>
         <div className="text-sm font-medium mb-3" style={{ color: 'var(--text-muted)' }}>Question {questionIdx + 1} of {totalQuestions}</div>
         <div className="flex gap-1.5">
           {questions.map((q, i) => {
-            // ← FIX: dot is green only if solved in this specific language
             const qSolved = progress.submissions?.some(s => s.questionId === q.id && s.language === language && s.passed) ?? false;
             return (
               <div key={q.id} className="w-2.5 h-2.5 rounded-full transition-all"
@@ -473,8 +494,7 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
       </motion.div>
 
       <div className="px-3 py-2 rounded-lg text-xs mb-4" style={{ background:'var(--bg-raised)', color:'var(--text-muted)' }}>
-        {isJsLang
-          ? 'ℹ Write your code below. Your function must return a value — not print it.'
+        {isJsLang ? 'ℹ Write your code below. Your function must return a value — not print it.'
           : `ℹ Write your ${language.toUpperCase()} code below. On Vercel, AI will evaluate it. Locally, compare your output manually.`}
       </div>
 
@@ -606,7 +626,11 @@ function QuestionView({ question, language, questionIdx, totalQuestions, questio
 // ─── Root ──────────────────────────────────────────────────────────────────────
 
 export function ClassroomPage() {
-  const { step, setStep, language, selectLanguage, selectLevel, questions, questionIdx, goToQuestion, currentQuestion, progress, submitAnswer } = useClassroom();
+  const {
+    step, setStep, language, difficulty, selectLanguage, selectLevel,
+    questions, questionsState, questionsError,
+    questionIdx, goToQuestion, currentQuestion, progress, submitAnswer,
+  } = useClassroom();
   const [showDice, setShowDice] = useState(false);
   const [showOverallResult, setShowOverallResult] = useState(false);
   const [sessionResults, setSessionResults] = useState<QuestionResult[]>([]);
@@ -635,16 +659,33 @@ export function ClassroomPage() {
             <OverallResult results={sessionResults} questions={questions}
               onBack={() => { setShowOverallResult(false); setSessionResults([]); setStep('level'); }} />
           </motion.div>
+
         ) : step === 'language' ? (
           <motion.div key="lang" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
             <LanguageStep onSelect={selectLanguage} progress={progress} />
           </motion.div>
+
         ) : step === 'level' ? (
           <motion.div key="level" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
             <LevelStep language={language} onSelect={selectLevel} onBack={() => setStep('language')} progress={progress} />
           </motion.div>
+
+        ) : step === 'coding' && questionsState === 'loading' ? (
+          // ── AI is generating questions ──
+          <motion.div key="loading" initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
+            <LoadingQuestions language={language} difficulty={difficulty} />
+          </motion.div>
+
         ) : step === 'coding' && currentQuestion ? (
           <motion.div key={`q-${questionIdx}`} initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}>
+            {/* Show fallback notice if AI failed */}
+            {questionsState === 'error' && questionsError && (
+              <div className="max-w-2xl mx-auto px-6 pt-4">
+                <div className="px-3 py-2 rounded-lg text-xs" style={{ background:'color-mix(in srgb, var(--warning) 8%, transparent)', color:'var(--warning)', border:'1px solid var(--warning)' }}>
+                  ⚠ {questionsError}
+                </div>
+              </div>
+            )}
             <QuestionView
               question={currentQuestion} questions={questions} language={language}
               questionIdx={questionIdx} totalQuestions={questions.length} progress={progress}
@@ -655,6 +696,7 @@ export function ClassroomPage() {
               onShowDice={() => setShowDice(true)}
             />
           </motion.div>
+
         ) : (
           <motion.div key="empty" initial={{ opacity:0 }} animate={{ opacity:1 }} className="max-w-xl mx-auto px-6 py-20 text-center">
             <Code2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
